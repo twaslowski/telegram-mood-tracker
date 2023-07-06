@@ -1,14 +1,14 @@
 from dataclasses import dataclass
-from mood import Mood
-from numeric_metric import NumericMetric
+from src.data.mood import Mood
+from src.data.numeric_metric import NumericMetric
 from src.data.appetite import Appetite
 
 
 @dataclass
 class MoodRecord:
-    mood: Mood
-    appetite: Appetite
-    energy: NumericMetric
-    sleep: NumericMetric
-    anxiety: NumericMetric
-    back_pain: NumericMetric
+    mood: Mood = None
+    appetite: Appetite = None
+    energy: NumericMetric = None
+    sleep: NumericMetric = None
+    anxiety: NumericMetric = None
+    back_pain: NumericMetric = None

@@ -1,14 +1,22 @@
-from pymongo import MongoClient
-from src.data.record import MoodRecord
+import pymongo
+
+mongo_url = "mongodb://localhost:27017/"
+mongo_client = pymongo.MongoClient(mongo_url)
+records_db = mongo_client["records"]
+records = records_db["records"]
 
 
-class MoodRecordDB:
-    def __init__(self, db_url: str, db_name: str):
-        self.client = MongoClient(db_url)
-        self.db = self.client[db_name]
+def init() -> None:
+    records.create_collection("records")
 
-    def save_record(self, record: MoodRecord):
-        self.db.records.insert_one(record.__dict__)
 
-    def get_records(self):
-        return [MoodRecord(**record) for record in self.db.records.find()]
+def save_record(record: dict) -> None:
+    records.insert_one(record)
+
+
+def list_records() -> list:
+    return list(records.find({}))
+
+
+def delete_all() -> None:
+    records.delete_many({})
