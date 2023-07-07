@@ -3,3 +3,4 @@ venv
 .idea
 log
 __pycache__
+ec2-key-pair.pem

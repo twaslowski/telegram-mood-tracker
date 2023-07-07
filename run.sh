@@ -10,6 +10,7 @@ ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 export PYTHONPATH=$PYTHONPATH:$ROOT_DIR
 
 # Install dependencies
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
