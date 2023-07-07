@@ -3,7 +3,7 @@ docker ps --format '{{.Names}}' | grep -q mood-tracker-mongo
 if [ "$?" -eq 0 ]; then
   echo "mongodb is already running"
 else
-  docker run -d -p 27017:27017 --name mood-tracker-mongo mongo:latest
+  docker run -d -p 27018:27017 --name mood-tracker-mongo mongo:latest
 fi
 
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
