@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder, Application, CommandHandler, CallbackQueryHandler, MessageHandler
 from telegram import Update
 
-from src.handlers.command_handlers import main_handler, button
+from src.command_handlers import main_handler, button
 
 load_dotenv()
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
