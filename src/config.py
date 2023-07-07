@@ -22,14 +22,22 @@ metrics_configuration = {
             "INCREASED_APPETITE": 1
         },
     },
+    "weed": {
+        "type": "enum",
+        "prompt": "Weed: Have you smoked?",
+        "values": {
+            "🌳": 1,
+            "❌": 0
+        },
+    },
     "energy": {
         "type": "numeric",
         "prompt": "Energy: How much energy do you have right now?",
         "range": (1, 11),
     },
-    "anxiety": {
+    "stress": {
         "type": "numeric",
-        "prompt": "Anxiety: Do you feel anxious/on edge?",
+        "prompt": "Stress: How much are you currently under?",
         "range": (1, 11),
     },
     "irritability": {
