@@ -27,6 +27,16 @@ metrics_configuration = {
         "prompt": "Energy: How much energy do you have right now?",
         "range": (1, 11),
     },
+    "anxiety": {
+        "type": "numeric",
+        "prompt": "Anxiety: Do you feel anxious/on edge?",
+        "range": (1, 11),
+    },
+    "irritability": {
+        "type": "numeric",
+        "prompt": "Irritability: Are you more or less irritable than usual?",
+        "range": (1, 11),
+    },
     "back_pain": {
         "type": "numeric",
         "prompt": "Back pain: How much back pain do you have right now?",
