@@ -19,7 +19,6 @@ user_data = init_user_data()
 async def main_handler(update: Update, _) -> None:
     logging.info(f"received message: {update}")
     for metric, config in metrics_configuration.items():
-        print(metric, config, user_data[metric])
         if config['type'] == 'enum' and user_data[metric] is None:
             logging.info(f"collecting information on metric {metric}, configured with {config}")
             return await handle_enum_metric(update, config['prompt'], config['values'])
@@ -33,12 +32,9 @@ async def button(update: Update, _) -> None:
     global user_data
     query = update.callback_query
     await query.answer()
-    logging.info(f"Query: {query}")
     metric = query.message.text.split(":")[0].lower().replace(" ", "_")
 
     user_data[metric] = query.data
-    logging.info(f"Selected option for metric {metric}: {query.data}")
-    logging.info(f"updated user data: {user_data}")
     if all(user_data.values()):
         user_data['timestamp'] = datetime.datetime.now().isoformat()
         await cleanup(update)

@@ -15,10 +15,9 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 def init_app() -> Application:
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", main_handler))
+    app.add_handler(CommandHandler("record", main_handler))
     app.add_handler(MessageHandler(None, main_handler))
     app.add_handler(CallbackQueryHandler(button))
-    # app.add_handler(CommandHandler("record", handle_reset))
-    # app.add_error_handler(handle_error)
     return app
 
 
