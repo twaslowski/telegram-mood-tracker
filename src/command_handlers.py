@@ -3,13 +3,13 @@ import logging
 
 from telegram import Update
 
-from src.config import metrics_configuration
+from src.config import metrics
 from src.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.persistence import save_record
 
 
 def init_user_data():
-    return {key: None for key in metrics_configuration.keys()}
+    return {key: None for key in metrics.keys()}
 
 
 # create user data from config, but with all values set to None
@@ -18,7 +18,7 @@ user_data = init_user_data()
 
 async def main_handler(update: Update, _) -> None:
     logging.info(f"received message: {update}")
-    for metric, config in metrics_configuration.items():
+    for metric, config in metrics.items():
         if config['type'] == 'enum' and user_data[metric] is None:
             logging.info(f"collecting information on metric {metric}, configured with {config}")
             return await handle_enum_metric(update, config['prompt'], config['values'])

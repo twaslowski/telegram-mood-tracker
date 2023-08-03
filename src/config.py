@@ -1,4 +1,6 @@
-metrics_configuration = {
+import datetime
+
+metrics = {
     "mood": {
         "prompt": "Mood: How do you feel right now?",
         "type": "enum",
@@ -54,5 +56,10 @@ metrics_configuration = {
         "type": "numeric",
         "prompt": "Sleep: How much sleep did you get last night?",
         "range": (4, 12),
-    },
+    }
 }
+
+notifications = [
+    datetime.time(hour=8, minute=00, second=00),
+    datetime.time(hour=18, minute=00, second=00)
+]
