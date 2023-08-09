@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder, Application, CommandHandler, CallbackQueryHandler, MessageHandler
 from telegram import Update
 
-from src.command_handlers import main_handler, button
+from src.command_handlers import main_handler, button, timestamp_handler
 from src.config import notifications
 from src.reminder import reminder
 
@@ -24,6 +24,7 @@ def init_app() -> Application:
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", main_handler))
     app.add_handler(CommandHandler("record", main_handler))
+    app.add_handler(CommandHandler("timestamp", timestamp_handler))
     app.add_handler(MessageHandler(None, main_handler))
     app.add_handler(CallbackQueryHandler(button))
     init_reminders(app)

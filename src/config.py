@@ -63,3 +63,11 @@ notifications = [
     datetime.time(hour=8, minute=00, second=00),
     datetime.time(hour=18, minute=00, second=00)
 ]
+
+timestamp_mod = {
+    "Offset": {
+        "type": "numeric",
+        "prompt": "How many hours do you want to offset the timestamp by?",
+        "range": (1, 12),
+    }
+}
