@@ -16,3 +16,5 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 python src/app.py &
+# store PID
+echo $! > .pid

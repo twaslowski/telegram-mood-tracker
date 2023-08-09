@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder, Application, CommandHandler, CallbackQueryHandler, MessageHandler
 from telegram import Update
 
-from src.command_handlers import main_handler, button, timestamp_handler
+from src.handlers.command_handlers import main_handler, button, timestamp_handler
 from src.config import notifications
 from src.reminder import reminder
 

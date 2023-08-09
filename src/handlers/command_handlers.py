@@ -4,7 +4,7 @@ import logging
 from telegram import Update
 
 from src.config import metrics
-from src.metrics_handlers import handle_enum_metric, handle_numeric_metric
+from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.persistence import save_record, get_latest_record, update_latest_record
 
 
