@@ -60,8 +60,9 @@ metrics = {
 }
 
 notifications = [
-    datetime.time(hour=8, minute=00, second=00),
-    datetime.time(hour=18, minute=00, second=00)
+    # two hour offset makes these 8am and 6pm
+    datetime.time(hour=6, minute=00, second=00),
+    datetime.time(hour=16, minute=00, second=00)
 ]
 
 timestamp_mod = {
