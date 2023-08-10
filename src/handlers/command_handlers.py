@@ -47,7 +47,7 @@ async def button(update: Update, _) -> None:
     if metric == 'timestamp':
         record['timestamp'] = modify_timestamp(record['timestamp'], int(query.data)).isoformat()
         logging.info(f"Timestamp updated to {record['timestamp']}")
-        await query.message.edit_text(text="Timestamp updated.")
+        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id, text="Timestamp updated.")
     else:
         record[metric] = query.data
 
@@ -57,7 +57,8 @@ async def button(update: Update, _) -> None:
     if all(value is not None for value in record.values()):
         record['completed'] = True
         update_latest_record(record)
-        await query.message.edit_text(text="Record completed. Thank you!")
+        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
+                                                           text="Record completed. Thank you!")
     else:
         await main_handler(update, None)
 
