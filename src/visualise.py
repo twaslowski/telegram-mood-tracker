@@ -6,7 +6,7 @@ import pandas as pd
 from pymongo import MongoClient
 
 
-def visualize_monthly_data(year: str = None, month: str = None):
+def visualize_monthly_data(year: int = None, month: int = None):
     # Connect to MongoDB (replace with your connection details)
     client = MongoClient("mongodb://localhost:27017/")
     db = client.records
@@ -72,7 +72,9 @@ def visualize_monthly_data(year: str = None, month: str = None):
     plt.tight_layout()
 
     # Save the plot
-    plt.savefig(f'graphs/mood_sleep_{year}_{month}.jpg', format='jpg', dpi=300)
+    file_path = f'graphs/mood_sleep_{year}_{month}.jpg'
+    plt.savefig(file_path, format='jpg', dpi=300)
+    return file_path
 
 
 if __name__ == '__main__':

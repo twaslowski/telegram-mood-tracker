@@ -1,11 +1,13 @@
 import datetime
 import logging
+from datetime import datetime
 
 from telegram import Update
 
 from src.config import metrics
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.persistence import save_record, get_latest_record, update_latest_record
+from src.visualise import visualize_monthly_data
 
 
 def init_record():
@@ -32,6 +34,14 @@ async def main_handler(update: Update, _) -> None:
             elif config['type'] == 'numeric' and latest_record[metric] is None:
                 logging.info(f"collecting information on metric {metric}, configured with {config}")
                 return await handle_numeric_metric(update, config['prompt'], config['range'])
+
+
+async def visualizer(update: Update, _) -> None:
+    now = datetime.now()
+    year = now.year
+    month = now.month
+    path = visualize_monthly_data(year, month)
+    await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
 
 
 async def button(update: Update, _) -> None:
