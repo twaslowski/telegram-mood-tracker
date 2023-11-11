@@ -35,12 +35,13 @@ async def main_handler(update: Update, _) -> None:
                 return await handle_numeric_metric(update, config['prompt'], config['range'])
 
 
-async def graph_handler(update: Update, _) -> None:
+async def graph_handler(update: Update, context) -> None:
     now = datetime.datetime.now()
     year = now.year
-    month = now.month
-    path = visualize_monthly_data(year, month)
-    await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
+    months = [8, 9, 10, 11]
+    for month in months:
+        path = visualize_monthly_data(year, month)
+        await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
 
 
 async def button(update: Update, _) -> None:
