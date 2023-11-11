@@ -1,6 +1,5 @@
 import datetime
 import logging
-from datetime import datetime
 
 from telegram import Update
 
@@ -37,7 +36,7 @@ async def main_handler(update: Update, _) -> None:
 
 
 async def graph_handler(update: Update, _) -> None:
-    now = datetime.now()
+    now = datetime.datetime.now()
     year = now.year
     month = now.month
     path = visualize_monthly_data(year, month)
