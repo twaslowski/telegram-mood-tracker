@@ -36,7 +36,7 @@ async def main_handler(update: Update, _) -> None:
                 return await handle_numeric_metric(update, config['prompt'], config['range'])
 
 
-async def visualizer(update: Update, _) -> None:
+async def graph_handler(update: Update, _) -> None:
     now = datetime.now()
     year = now.year
     month = now.month
