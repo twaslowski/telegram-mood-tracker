@@ -68,7 +68,7 @@ def visualize_monthly_data(year: str = None, month: str = None):
     plt.tight_layout()
 
     # Save the plot
-    plt.savefig(f'mood_sleep_{year}_{month}.jpg', format='jpg', dpi=300)
+    plt.savefig(f'../graphs/mood_sleep_{year}_{month}.jpg', format='jpg', dpi=300)
 
 
 if __name__ == '__main__':
