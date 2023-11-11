@@ -36,6 +36,8 @@ def visualize_monthly_data(year: str = None, month: str = None):
     # Calculate daily averages
     daily_avg = df.groupby('timestamp')[['mood', 'sleep']].mean().reset_index()
 
+    date_range = pd.date_range(start=first_day, end=last_day).date
+
     plt.style.use("seaborn-v0_8-dark")
 
     # Plotting
@@ -47,18 +49,18 @@ def visualize_monthly_data(year: str = None, month: str = None):
     ax2 = ax1.twinx()
 
     # Mood plot on ax1
-    ax1.plot(daily_avg['timestamp'], daily_avg['mood'], marker='o', color='blue', label='Mood', markersize=4,
-             linestyle='-')
+    ax1.plot(date_range, daily_avg.set_index('timestamp').reindex(date_range)['mood'], marker='o', color='blue',
+             label='Mood', markersize=3, linestyle='-')
     ax1.set_xlabel('Date')
     ax1.set_ylabel('Mood', color='blue')
     ax1.tick_params(axis='y', labelcolor='blue')
     ax1.set_ylim(-5, 5)
 
     # Sleep plot on ax2
-    ax2.plot(daily_avg['timestamp'], daily_avg['sleep'], marker='o', color='green', label='Sleep', markersize=4,
-             linestyle='--')
-    ax2.set_ylabel('Sleep', color='green')
-    ax2.tick_params(axis='y', labelcolor='green')
+    ax2.plot(date_range, daily_avg.set_index('timestamp').reindex(date_range)['sleep'], marker='o', color='red',
+             label='Sleep', markersize=3, linestyle='--')
+    ax2.set_ylabel('Sleep', color='red')
+    ax2.tick_params(axis='y', labelcolor='red')
 
     # Title and layout
     plt.title(f'Average Mood and Sleep for {month}/{year}')
