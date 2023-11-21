@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder, Application, CommandHandler, CallbackQueryHandler, MessageHandler
 from telegram import Update
 
-from src.handlers.command_handlers import main_handler, button, graph_handler
-from src.config import notifications
+from src.handlers.command_handlers import main_handler, button, graph_handler, init_user
+import src.config as config
 from src.reminder import reminder
 
 load_dotenv()
@@ -16,17 +16,15 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 def init_reminders(app: Application) -> None:
     j = app.job_queue
-    for notification_time in notifications:
+    for notification_time in config.config['notifications']:
         j.run_daily(reminder, days=(0, 1, 2, 3, 4, 5, 6), time=notification_time)
 
 
 def init_app() -> Application:
     app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", main_handler))
+    app.add_handler(CommandHandler("start", init_user))
     app.add_handler(CommandHandler("graph", graph_handler))
     app.add_handler(CommandHandler("record", main_handler))
-    # app.add_handler(CommandHandler("timestamp", timestamp_handler))
-    app.add_handler(MessageHandler(None, main_handler))
     app.add_handler(CallbackQueryHandler(button))
     init_reminders(app)
     return app
