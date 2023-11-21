@@ -39,13 +39,38 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.assertIsNone(command_handlers.user_record_registration_state.get(1))
 
     async def test_record_registration(self):
+        """
+        Tests the state transition from recording Metric A to Metric B.
+        Does not cover the state transition from Metric N to Finished.
+        """
+        # given
         persistence.get_user_config = Mock(return_value=test_metrics)
+        command_handlers.handle_numeric_metric = AsyncMock()
+        command_handlers.handle_enum_metric = AsyncMock()
+
+        # when
         await command_handlers.main_handler(self.update, None)
-        # should be called twice:
-        # first to inform the user the record has been instantiated, second time to get the first metric
-        self.assertEqual(2, self.update.effective_user.get_bot().send_message.call_count)
-        # verify the first item has been removed
-        self.assertEqual(command_handlers.user_record_registration_state.get(1)[0]['name'], 'energy')
+
+        # then
+        self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
+        self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
+
+        # user answers first question
+        # given
+        button_update = AsyncMock()
+        button_update.effective_user.id = 1
+        query = AsyncMock()
+        query.data = 'NEUTRAL'
+        button_update.callback_query = query
+
+        # when
+        await command_handlers.button(button_update, None)
+
+        # then
+        # first metric is set in the temporary record
+        self.assertEqual(command_handlers.temp_records.get(1)['mood'], 'NEUTRAL')
+        # in response, the second record is queried
+        self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
 
 test_metrics = [

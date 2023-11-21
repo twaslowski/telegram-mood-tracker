@@ -60,8 +60,8 @@ async def main_handler(update: Update, _) -> None:
         init_record(user_id)
         await main_handler(update, None)
     else:
-        metric = user_record_registration_state[user_id].pop(0)
-        logging.info(f"collecting information on metric {metric}")
+        metric = user_record_registration_state[user_id][0]
+        logging.info(f"collecting information on metric {metric['name']}")
         if metric['type'] == 'enum':
             await handle_enum_metric(update, metric['prompt'], metric['values'])
         elif metric['type'] == 'numeric':
@@ -74,16 +74,18 @@ async def button(update: Update, _) -> None:
     """
     query = update.callback_query
     await query.answer()
-    metric = query.message.text.split(":")[0].lower().replace(" ", "_")
 
+    # get current record registration state; remove the metric that was just answered
+    user_id = update.effective_user.id
+    metric = user_record_registration_state.get(user_id).pop(0)['name']
+
+    # update temporary record
     record = temp_records[update.effective_user.id]
     record[metric] = query.data
 
-    persistence.update_latest_record(record)
-
     # check if record is complete
     if all(value is not None for value in record.values()):
-        record['completed'] = True
+        print(record)
         persistence.update_latest_record(record)
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
                                                            text="Record completed. Thank you!")
