@@ -7,16 +7,13 @@ from telegram import Update
 import src.persistence as persistence
 from src.config import config
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
-from src.state import State
 from src.visualise import visualize_monthly_data
 
-user_states = {}
+# state map to keep track of the current question
+user_record_registration_state = ExpiringDict(max_len=100, max_age_seconds=300)
 
+# in-memory storage for user records before they get persisted; if a user doesn't finish a record, it will be deleted
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
-
-
-def get_user_state(user_id: int) -> dict:
-    return user_states[user_id]
 
 
 async def init_user(update: Update, _) -> None:
@@ -35,12 +32,21 @@ async def init_user(update: Update, _) -> None:
 
 
 def init_record(user_id: int):
+    """
+    Creates a new record for the user with the given user_id.
+    Additionally, updates the state map to move through the questions easier.
+    :param user_id:
+    """
+    # create temporary record from user configuration
     metrics = persistence.get_user_config(user_id)
     record = {metric['name']: None for metric in metrics}
     record['timestamp'] = datetime.datetime.now().isoformat()
     logging.info(f"Creating temporary record for user {user_id}: {record}")
     temp_records[user_id] = record
-    return metrics
+
+    # update state map
+    user_record_registration_state[user_id] = metrics
+    return
 
 
 async def main_handler(update: Update, _) -> None:
@@ -49,50 +55,32 @@ async def main_handler(update: Update, _) -> None:
     created, creates records and sends out the prompts to populate them.
     """
     user_id = update.effective_user.id
-    state = get_user_state(user_id)
-    if not state:
-        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id, text="Creating record.")
-        persistence.save_record(init_record(user_id))
-        await main_handler(update, None)
-    elif state != State.RECORDING:
+    if not temp_records.get(user_id):
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                           text="Aborting previous operations. Creating record.")
+                                                           text="Creating a new record for you ...")
+        init_record(user_id)
+        await main_handler(update, None)
     else:
         # check first field that is not set
-        for metric in config['metrics'].items():
-            if config['type'] == 'enum' and latest_record[metric] is None:
+        for metric in temp_records[user_id]:
+            if config['type'] == 'enum':
                 logging.info(f"collecting information on metric {metric}, configured with {config}")
                 return await handle_enum_metric(update, metric['prompt'], metric['values'])
-            elif config['type'] == 'numeric' and latest_record[metric] is None:
+            elif config['type'] == 'numeric':
                 logging.info(f"collecting information on metric {metric}, configured with {config}")
                 return await handle_numeric_metric(update, metric['prompt'], metric['range'])
 
 
-async def graph_handler(update: Update, context) -> None:
-    now = datetime.datetime.now()
-    year = now.year
-    months = [8, 9, 10, 11]
-    for month in months:
-        path = visualize_monthly_data(year, month)
-        await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
-
-
 async def button(update: Update, _) -> None:
-    """Callback handler for the buttons that are sent out to populate the metrics."""
-    # retrieve query data
+    """
+    Processes the inputs from the InlineKeyboardButtons and maintains the temporary record.
+    """
     query = update.callback_query
     await query.answer()
     metric = query.message.text.split(":")[0].lower().replace(" ", "_")
 
-    record = persistence.get_latest_record()
-
-    # update record
-    if metric == 'timestamp':
-        record['timestamp'] = modify_timestamp(record['timestamp'], int(query.data)).isoformat()
-        logging.info(f"Timestamp updated to {record['timestamp']}")
-        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id, text="Timestamp updated.")
-    else:
-        record[metric] = query.data
+    record = temp_records[update.effective_user.id]
+    record[metric] = query.data
 
     persistence.update_latest_record(record)
 
@@ -104,6 +92,15 @@ async def button(update: Update, _) -> None:
                                                            text="Record completed. Thank you!")
     else:
         await main_handler(update, None)
+
+
+async def graph_handler(update: Update, context) -> None:
+    now = datetime.datetime.now()
+    year = now.year
+    months = [8, 9, 10, 11]
+    for month in months:
+        path = visualize_monthly_data(year, month)
+        await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
 
 
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
