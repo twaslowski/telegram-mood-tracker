@@ -1,6 +1,7 @@
 import datetime
 import logging
 
+from expiringdict import ExpiringDict
 from telegram import Update
 
 import src.persistence as persistence
@@ -8,11 +9,10 @@ from src.config import config
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.state import State
 from src.visualise import visualize_monthly_data
-from expiringdict import ExpiringDict
 
 user_states = {}
 
-records = ExpiringDict(max_len=100, max_age_seconds=300)
+temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
 
 
 def get_user_state(user_id: int) -> dict:
@@ -35,10 +35,12 @@ async def init_user(update: Update, _) -> None:
 
 
 def init_record(user_id: int):
-    record = persistence.get_user_config(user_id)
-    records[user_id] = record
+    metrics = persistence.get_user_config(user_id)
+    record = {metric['name']: None for metric in metrics}
     record['timestamp'] = datetime.datetime.now().isoformat()
-    return record
+    logging.info(f"Creating temporary record for user {user_id}: {record}")
+    temp_records[user_id] = record
+    return metrics
 
 
 async def main_handler(update: Update, _) -> None:

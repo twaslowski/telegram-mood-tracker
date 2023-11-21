@@ -43,7 +43,7 @@ def get_all_user_notifications() -> dict:
 
 
 def get_user_config(user_id: int) -> dict:
-    return user.find_one({'user_id': user_id}['metrics'])
+    return user.find_one({'user_id': user_id})['metrics']
 
 
 def delete_all() -> None:
