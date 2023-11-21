@@ -5,7 +5,6 @@ from expiringdict import ExpiringDict
 from telegram import Update
 
 import src.persistence as persistence
-from src.config import config
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.visualise import visualize_monthly_data
 
@@ -16,7 +15,7 @@ user_record_registration_state = ExpiringDict(max_len=100, max_age_seconds=300)
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
 
 
-async def init_user(update: Update, _) -> None:
+def init_user(update: Update, _) -> None:
     """
     Creates user based on the user_id included in the update object.
     :param update: Update from the Telegram bot.
@@ -61,14 +60,12 @@ async def main_handler(update: Update, _) -> None:
         init_record(user_id)
         await main_handler(update, None)
     else:
-        # check first field that is not set
-        for metric in temp_records[user_id]:
-            if config['type'] == 'enum':
-                logging.info(f"collecting information on metric {metric}, configured with {config}")
-                return await handle_enum_metric(update, metric['prompt'], metric['values'])
-            elif config['type'] == 'numeric':
-                logging.info(f"collecting information on metric {metric}, configured with {config}")
-                return await handle_numeric_metric(update, metric['prompt'], metric['range'])
+        metric = user_record_registration_state[user_id].pop(0)
+        logging.info(f"collecting information on metric {metric}")
+        if metric['type'] == 'enum':
+            await handle_enum_metric(update, metric['prompt'], metric['values'])
+        elif metric['type'] == 'numeric':
+            await handle_numeric_metric(update, metric['prompt'], metric['range'])
 
 
 async def button(update: Update, _) -> None:
