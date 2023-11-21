@@ -1,4 +1,8 @@
+import datetime
+
 import pymongo
+
+import src.config as config
 
 mongo_url = "mongodb://localhost:27017/"
 mongo_client = pymongo.MongoClient(mongo_url)
@@ -6,15 +10,9 @@ mood_tracker = mongo_client["mood_tracker"]
 records = mood_tracker["records"]
 user = mood_tracker["user"]
 
-import src.config as config
-
 
 def save_record(record: dict) -> None:
     records.insert_one(record)
-
-
-def list_records() -> list:
-    return list(records.find({}))
 
 
 def get_latest_record() -> dict:
@@ -39,6 +37,14 @@ def find_user(user_id: int) -> dict:
 def create_user(user_id: int) -> None:
     user.insert_one(
         {"user_id": user_id, "metrics": config.config['metrics'], "notifications": config.config['notifications']})
+
+
+def get_all_user_notifications() -> dict:
+    """
+    Returns dict of user_id to their respective notification times
+    :return: dict of user_id: [notification_time]
+    """
+    return {u['user_id']: [datetime.time.fromisoformat(t) for t in u['notifications']] for u in user.find()}
 
 
 def delete_all() -> None:

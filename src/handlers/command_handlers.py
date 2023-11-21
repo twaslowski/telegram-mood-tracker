@@ -9,7 +9,7 @@ from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_met
 from src.visualise import visualize_monthly_data
 
 
-def init_user(update: Update, _) -> None:
+async def init_user(update: Update, _) -> None:
     user_id = update.effective_user.id
     if not persistence.find_user(user_id):
         logging.info(f"Creating user {user_id}")
