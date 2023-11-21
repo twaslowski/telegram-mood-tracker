@@ -25,11 +25,6 @@ def update_latest_record(record: dict) -> None:
     records.replace_one({"_id": latest["_id"]}, latest)
 
 
-def delete_latest_record():
-    latest = get_latest_record()
-    records.delete_one({"_id": latest["_id"]})
-
-
 def find_user(user_id: int) -> dict:
     return user.find_one({"user_id": user_id})
 
@@ -45,6 +40,10 @@ def get_all_user_notifications() -> dict:
     :return: dict of user_id: [notification_time]
     """
     return {u['user_id']: [datetime.time.fromisoformat(t) for t in u['notifications']] for u in user.find()}
+
+
+def get_user_config(user_id: int) -> dict:
+    return user.find_one({'user_id': user_id}['metrics'])
 
 
 def delete_all() -> None:

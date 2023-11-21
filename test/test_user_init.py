@@ -22,6 +22,7 @@ class TestUser(IsolatedAsyncioTestCase):
         user = persistence.user.find_one({"user_id": 1})
         self.assertIsNotNone(user)
         self.assertIsNotNone(user['metrics'])
+        self.assertEqual(len(user['metrics']), 8)
         self.assertIsNotNone(user['notifications'])
 
     async def test_no_double_registration(self):

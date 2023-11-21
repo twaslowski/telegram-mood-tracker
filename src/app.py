@@ -11,10 +11,14 @@ from src.reminder import reminder
 
 load_dotenv()
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, filename="log")
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 
 def init_reminders(app: Application) -> None:
+    """
+    Adds reminders to the job queue for all users that have configured reminders.
+    :param app: The initialised Telegram app object.
+    """
     j = app.job_queue
     for user_notification_configuration in persistence.get_all_user_notifications().items():
         for notification_time in user_notification_configuration[1]:
@@ -27,6 +31,7 @@ def init_app() -> Application:
     app.add_handler(CommandHandler("start", init_user))
     app.add_handler(CommandHandler("graph", graph_handler))
     app.add_handler(CommandHandler("record", main_handler))
+    # app.add_handler(CommandHandler("undo", main_handler))
     app.add_handler(CallbackQueryHandler(button))
     init_reminders(app)
     return app

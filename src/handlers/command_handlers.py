@@ -6,20 +6,38 @@ from telegram import Update
 import src.persistence as persistence
 from src.config import config
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
+from src.state import State
 from src.visualise import visualize_monthly_data
+from expiringdict import ExpiringDict
+
+user_states = {}
+
+records = ExpiringDict(max_len=100, max_age_seconds=300)
+
+
+def get_user_state(user_id: int) -> dict:
+    return user_states[user_id]
 
 
 async def init_user(update: Update, _) -> None:
+    """
+    Creates user based on the user_id included in the update object.
+    :param update: Update from the Telegram bot.
+    :param _: CallbackContext: is irrelevant
+    :return:
+    """
     user_id = update.effective_user.id
     if not persistence.find_user(user_id):
         logging.info(f"Creating user {user_id}")
         persistence.create_user(user_id)
+    else:
+        logging.info(f"Received /start, but user {user_id} already exists")
 
 
-def init_record():
-    record = {key: None for key in config['metrics'].keys()}
+def init_record(user_id: int):
+    record = persistence.get_user_config(user_id)
+    records[user_id] = record
     record['timestamp'] = datetime.datetime.now().isoformat()
-    record['completed'] = False
     return record
 
 
@@ -28,11 +46,15 @@ async def main_handler(update: Update, _) -> None:
     Main handler for the bot. This is what starts the query process; determines whether a new record needs to be
     created, creates records and sends out the prompts to populate them.
     """
-    latest_record = persistence.get_latest_record()
-    if not latest_record or latest_record.get('completed', True):
+    user_id = update.effective_user.id
+    state = get_user_state(user_id)
+    if not state:
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id, text="Creating record.")
-        persistence.save_record(init_record())
+        persistence.save_record(init_record(user_id))
         await main_handler(update, None)
+    elif state != State.RECORDING:
+        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
+                                                           text="Aborting previous operations. Creating record.")
     else:
         # check first field that is not set
         for metric in config['metrics'].items():
