@@ -24,14 +24,16 @@ class TestRecord(IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self) -> None:
         persistence.user.delete_many({})
+        persistence.records.delete_many({})
 
     async def test_init_and_invalidate_record(self):
         # create record
+        persistence.get_user_config = Mock(return_value=test_metrics)
         init_user(self.update, None)
         init_record(1)
         self.assertIsNotNone(command_handlers.temp_records.get(1))
         self.assertEqual(command_handlers.user_record_registration_state.get(1),
-                         persistence.user.find_one({'user_id': 1})['metrics'])
+                         test_metrics)
         # let expiry time elapse
         time.sleep(6)
         # after being emptied, the dict contains an empty list, as opposed to being empty entirely
@@ -42,6 +44,7 @@ class TestRecord(IsolatedAsyncioTestCase):
         """
         Tests the state transition from recording Metric A to Metric B.
         Does not cover the state transition from Metric N to Finished.
+        # todo: add test for that
         """
         # given
         persistence.get_user_config = Mock(return_value=test_metrics)
@@ -71,6 +74,52 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.assertEqual(command_handlers.temp_records.get(1)['mood'], 'NEUTRAL')
         # in response, the second record is queried
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
+
+    async def test_finish_record_creation(self):
+        """
+        Tests state transition from recording Metric N to Finished.
+        :return:
+        """
+        persistence.get_user_config = Mock(return_value=test_metrics[:1])
+        command_handlers.handle_numeric_metric = AsyncMock()
+        command_handlers.handle_enum_metric = AsyncMock()
+
+        # when
+        await command_handlers.main_handler(self.update, None)
+
+        # then
+        self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
+        self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
+
+        # user answers first question
+        # given
+        button_update = AsyncMock()
+        button_update.effective_user.id = 1
+
+        # Mock get_bot to return a mock bot object
+        mock_bot = AsyncMock()
+        button_update.effective_user.get_bot = Mock(return_value=mock_bot)
+
+        # Since send_message is async, use AsyncMock for it
+        mock_bot.send_message = AsyncMock()
+
+        # define query result
+        query = AsyncMock()
+        query.data = 'NEUTRAL'
+        button_update.callback_query = query
+
+        # when
+        await command_handlers.button(button_update, None)
+
+        # then
+        # verify that the temporary record has been cleaned
+        self.assertIsNone(command_handlers.temp_records.get(1))
+        self.assertIsNone(command_handlers.user_record_registration_state.get(1))
+
+        # verify record was created
+        user_records = persistence.find_records_for_user(1)
+        self.assertEqual(1, len(user_records))
+        self.assertEqual(user_records[0]['record']['mood'], 'NEUTRAL')
 
 
 test_metrics = [

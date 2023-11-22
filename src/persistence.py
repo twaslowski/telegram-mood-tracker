@@ -48,3 +48,11 @@ def get_user_config(user_id: int) -> dict:
 
 def delete_all() -> None:
     records.delete_many({})
+
+
+def create_record(user_id: int, record: dict):
+    records.insert_one({"user_id": user_id, "record": record})
+
+
+def find_records_for_user(user_id: int) -> list:
+    return list(records.find({"user_id": user_id}))

@@ -85,8 +85,9 @@ async def button(update: Update, _) -> None:
 
     # check if record is complete
     if all(value is not None for value in record.values()):
-        print(record)
-        persistence.update_latest_record(record)
+        persistence.create_record(user_id, record)
+        del temp_records[user_id]
+        del user_record_registration_state[user_id]
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
                                                            text="Record completed. Thank you!")
     else:
