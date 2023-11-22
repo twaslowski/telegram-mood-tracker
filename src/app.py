@@ -28,6 +28,7 @@ def init_reminders(app: Application) -> None:
 
 def init_app() -> Application:
     app = ApplicationBuilder().token(TOKEN).build()
+    persistence.user.delete_many({})
     app.add_handler(CommandHandler("start", init_user))
     app.add_handler(CommandHandler("graph", graph_handler))
     app.add_handler(CommandHandler("record", main_handler))

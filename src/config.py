@@ -1,9 +1,9 @@
 import datetime
 
-config = {
+defaults = {
     "metrics": [
         {
-            "name": "mood",
+            "name": "Mood",
             "prompt": "How do you feel right now?",
             "type": "enum",
             "values": {
@@ -17,7 +17,7 @@ config = {
             },
         },
         {
-            "name": "appetite",
+            "name": "Appetite",
             "type": "enum",
             "prompt": "Are you eating enough?",
             "values": {
@@ -28,7 +28,7 @@ config = {
             },
         },
         {
-            "name": "weed",
+            "name": "Weed",
             "type": "enum",
             "prompt": "Have you smoked?",
             "values": {
@@ -37,31 +37,31 @@ config = {
             },
         },
         {
-            "name": "energy",
+            "name": "Energy",
             "type": "numeric",
             "prompt": "How much energy do you have right now?",
             "range": (1, 11),
         },
         {
-            "name": "stress",
+            "name": "Stress",
             "type": "numeric",
-            "prompt": "How much are you currently under?",
+            "prompt": "What's your current anxiety like?",
             "range": (1, 11),
         },
         {
-            "name": "irritability",
+            "name": "Irritability",
             "type": "numeric",
-            "prompt": "Are you more or less irritable than usual?",
+            "prompt": "How irritable are you right now?",
             "range": (1, 11),
         },
         {
-            "name": "back_pain",
+            "name": "Back pain",
             "type": "numeric",
             "prompt": "How much back pain do you have right now?",
             "range": (1, 11),
         },
         {
-            "name": "sleep",
+            "name": "Sleep",
             "type": "numeric",
             "prompt": "How much sleep did you get last night?",
             "range": (4, 12),

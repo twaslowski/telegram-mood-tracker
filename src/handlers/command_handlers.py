@@ -5,6 +5,7 @@ from expiringdict import ExpiringDict
 from telegram import Update
 
 import src.persistence as persistence
+from src.config import defaults
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.visualise import visualize_monthly_data
 
@@ -13,6 +14,11 @@ user_record_registration_state = ExpiringDict(max_len=100, max_age_seconds=300)
 
 # in-memory storage for user records before they get persisted; if a user doesn't finish a record, it will be deleted
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
+
+bullet_point_list = '\n'.join([f"- {metric['name'].capitalize()}" for metric in defaults['metrics']])
+introduction_text = "Hi! You can track your mood with me. Simply type /record to get started. By default, " \
+                    f"I will track the following metrics: \n " \
+                    f"{bullet_point_list}"
 
 
 async def init_user(update: Update, _) -> None:
@@ -26,6 +32,8 @@ async def init_user(update: Update, _) -> None:
     if not persistence.find_user(user_id):
         logging.info(f"Creating user {user_id}")
         persistence.create_user(user_id)
+        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
+                                                           text=introduction_text)
     else:
         logging.info(f"Received /start, but user {user_id} already exists")
 

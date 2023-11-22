@@ -30,8 +30,11 @@ def find_user(user_id: int) -> dict:
 
 
 def create_user(user_id: int) -> None:
-    user.insert_one(
-        {"user_id": user_id, "metrics": config.config['metrics'], "notifications": config.config['notifications']})
+    user.insert_one({
+        "user_id": user_id,
+        "metrics": config.defaults['metrics'],
+        "notifications": config.defaults['notifications']
+    })
 
 
 def get_all_user_notifications() -> dict:
