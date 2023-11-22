@@ -15,7 +15,7 @@ user_record_registration_state = ExpiringDict(max_len=100, max_age_seconds=300)
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
 
 
-def init_user(update: Update, _) -> None:
+async def init_user(update: Update, _) -> None:
     """
     Creates user based on the user_id included in the update object.
     :param update: Update from the Telegram bot.

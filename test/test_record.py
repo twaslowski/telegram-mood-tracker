@@ -29,7 +29,7 @@ class TestRecord(IsolatedAsyncioTestCase):
     async def test_init_and_invalidate_record(self):
         # create record
         persistence.get_user_config = Mock(return_value=test_metrics)
-        init_user(self.update, None)
+        await init_user(self.update, None)
         init_record(1)
         self.assertIsNotNone(command_handlers.temp_records.get(1))
         self.assertEqual(command_handlers.user_record_registration_state.get(1),
