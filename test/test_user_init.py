@@ -1,7 +1,7 @@
 from unittest.async_case import IsolatedAsyncioTestCase
 
 from telegram.ext import ApplicationBuilder
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
 
 import src.persistence as persistence
 from src.app import init_reminders
@@ -13,6 +13,7 @@ class TestUser(IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         update = Mock()
         update.effective_user.id = 1
+        update.effective_user.get_bot().send_message = AsyncMock()
         await init_user(update, None)
 
     async def asyncTearDown(self) -> None:
@@ -36,6 +37,7 @@ class TestUser(IsolatedAsyncioTestCase):
         # create additional user
         update = Mock()
         update.effective_user.id = 2
+        update.effective_user.get_bot().send_message = AsyncMock()
         await init_user(update, None)
 
         # init app with notification settings
