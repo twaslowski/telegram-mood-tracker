@@ -10,9 +10,6 @@ from src.domain.user import User
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.visualise import visualize_monthly_data
 
-# state map to keep track of the current question
-user_record_registration_state = ExpiringDict(max_len=100, max_age_seconds=300)
-
 # in-memory storage for user records before they get persisted; if a user doesn't finish a record, it will be deleted
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
 
@@ -47,14 +44,14 @@ def init_record(user_id: int):
     """
     # create temporary record from user configuration
     metrics = persistence.get_user_config(user_id)
-    record = {metric['name']: None for metric in metrics}
-    record['timestamp'] = datetime.datetime.now().isoformat()
+    record = {
+        'record': {metric['name']: None for metric in metrics},
+        'timestamp': datetime.datetime.now().isoformat(),
+        'config': metrics
+    }
+
     logging.info(f"Creating temporary record for user {user_id}: {record}")
     temp_records[user_id] = record
-
-    # update state map
-    user_record_registration_state[user_id] = metrics
-    return
 
 
 async def main_handler(update: Update, _) -> None:
@@ -69,8 +66,8 @@ async def main_handler(update: Update, _) -> None:
         init_record(user_id)
         await main_handler(update, None)
     else:
-        metric = user_record_registration_state[user_id][0]
-        logging.info(f"collecting information on metric {metric['name']}")
+        metric = temp_records.get(user_id)['config'][0]
+        logging.info(f"collecting information on metric {metric}")
         if metric['type'] == 'enum':
             await handle_enum_metric(update, metric['prompt'], metric['values'])
         elif metric['type'] == 'numeric':
@@ -86,20 +83,25 @@ async def button(update: Update, _) -> None:
 
     # get current record registration state; remove the metric that was just answered
     user_id = update.effective_user.id
-    metric = user_record_registration_state.get(user_id).pop(0)['name']
+    user_record = temp_records.get(user_id)
+
+    metric = user_record['config'].pop(0)['name']
+    user_record['record'][metric] = query.data
+
+    logging.info(f"User {user_id} answered {metric} with {query.data}")
 
     # update temporary record
-    record = temp_records[update.effective_user.id]
-    record[metric] = query.data
+    temp_records[user_id] = user_record
 
     # check if record is complete
-    if all(value is not None for value in record.values()):
-        persistence.create_record(user_id, record)
+    if all(value is not None for value in user_record['record'].values()):
+        logging.info(f"Record for user {user_id} is complete: {user_record['record']}")
+        persistence.create_record(user_id, user_record['record'])
         del temp_records[user_id]
-        del user_record_registration_state[user_id]
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
                                                            text="Record completed. Thank you!")
     else:
+        logging.info(f"Record for user {user_id} is not complete yet: {user_record['record']}")
         await main_handler(update, None)
 
 

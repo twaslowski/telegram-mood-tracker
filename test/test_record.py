@@ -20,7 +20,6 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.update.effective_user.id = 1
         self.update.effective_user.get_bot().send_message = AsyncMock()
         command_handlers.temp_records = ExpiringDict(max_len=100, max_age_seconds=5)
-        command_handlers.user_record_registration_state = ExpiringDict(max_len=100, max_age_seconds=5)
 
     async def asyncTearDown(self) -> None:
         persistence.user.delete_many({})
@@ -32,24 +31,20 @@ class TestRecord(IsolatedAsyncioTestCase):
         await init_user(self.update, None)
         init_record(1)
         self.assertIsNotNone(command_handlers.temp_records.get(1))
-        self.assertEqual(command_handlers.user_record_registration_state.get(1),
-                         test_metrics)
         # let expiry time elapse
         time.sleep(6)
         # after being emptied, the dict contains an empty list, as opposed to being empty entirely
         self.assertIsNone(command_handlers.temp_records.get(1))
-        self.assertIsNone(command_handlers.user_record_registration_state.get(1))
 
     async def test_record_registration(self):
         """
         Tests the state transition from recording Metric A to Metric B.
         Does not cover the state transition from Metric N to Finished.
-        # todo: add test for that
         """
         # given
         persistence.get_user_config = Mock(return_value=test_metrics)
-        command_handlers.handle_numeric_metric = AsyncMock()
         command_handlers.handle_enum_metric = AsyncMock()
+        command_handlers.handle_numeric_metric = AsyncMock()
 
         # when
         await command_handlers.main_handler(self.update, None)
@@ -71,7 +66,7 @@ class TestRecord(IsolatedAsyncioTestCase):
 
         # then
         # first metric is set in the temporary record
-        self.assertEqual(command_handlers.temp_records.get(1)['mood'], 'NEUTRAL')
+        self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'NEUTRAL')
         # in response, the second record is queried
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
@@ -81,7 +76,6 @@ class TestRecord(IsolatedAsyncioTestCase):
         :return:
         """
         persistence.get_user_config = Mock(return_value=test_metrics[:1])
-        command_handlers.handle_numeric_metric = AsyncMock()
         command_handlers.handle_enum_metric = AsyncMock()
 
         # when
@@ -114,7 +108,6 @@ class TestRecord(IsolatedAsyncioTestCase):
         # then
         # verify that the temporary record has been cleaned
         self.assertIsNone(command_handlers.temp_records.get(1))
-        self.assertIsNone(command_handlers.user_record_registration_state.get(1))
 
         # verify record was created
         user_records = persistence.find_records_for_user(1)
