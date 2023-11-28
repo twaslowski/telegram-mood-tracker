@@ -11,18 +11,8 @@ records = mood_tracker["records"]
 user = mood_tracker["user"]
 
 
-def save_record(record: dict) -> None:
-    records.insert_one(record)
-
-
 def get_latest_record() -> dict:
     return records.find_one({}, sort=[("timestamp", pymongo.DESCENDING)])
-
-
-def update_latest_record(record: dict) -> None:
-    latest = get_latest_record()
-    latest.update(record)
-    records.replace_one({"_id": latest["_id"]}, latest)
 
 
 def find_user(user_id: int) -> dict:

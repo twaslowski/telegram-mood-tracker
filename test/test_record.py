@@ -19,7 +19,21 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.update = Mock()
         self.update.effective_user.id = 1
         self.update.effective_user.get_bot().send_message = AsyncMock()
+
+        # incoming button update
+        self.button_update = AsyncMock()
+        self.button_update.effective_user.id = 1
+        mock_bot = AsyncMock()
+        self.button_update.effective_user.get_bot = Mock(return_value=mock_bot)
+        query = AsyncMock()
+        query.data = 'NEUTRAL'
+        self.button_update.callback_query = query
+
+        # Since send_message is async, use AsyncMock for it
+        mock_bot.send_message = AsyncMock()
         command_handlers.temp_records = ExpiringDict(max_len=100, max_age_seconds=5)
+        command_handlers.handle_enum_metric = AsyncMock()
+        command_handlers.handle_numeric_metric = AsyncMock()
 
     async def asyncTearDown(self) -> None:
         persistence.user.delete_many({})
@@ -43,8 +57,6 @@ class TestRecord(IsolatedAsyncioTestCase):
         """
         # given
         persistence.get_user_config = Mock(return_value=test_metrics)
-        command_handlers.handle_enum_metric = AsyncMock()
-        command_handlers.handle_numeric_metric = AsyncMock()
 
         # when
         await command_handlers.main_handler(self.update, None)
@@ -53,20 +65,15 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
-        # user answers first question
-        # given
-        button_update = AsyncMock()
-        button_update.effective_user.id = 1
-        query = AsyncMock()
-        query.data = 'NEUTRAL'
-        button_update.callback_query = query
-
         # when
-        await command_handlers.button(button_update, None)
+        await command_handlers.button(self.button_update, None)
 
         # then
         # first metric is set in the temporary record
         self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'NEUTRAL')
+        self.assertEqual(command_handlers.temp_records.get(1)['record']['energy'], None)
+        # assert mood config has been removed
+        self.assertEqual(len(command_handlers.temp_records.get(1)['config']), 1)
         # in response, the second record is queried
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
@@ -76,7 +83,6 @@ class TestRecord(IsolatedAsyncioTestCase):
         :return:
         """
         persistence.get_user_config = Mock(return_value=test_metrics[:1])
-        command_handlers.handle_enum_metric = AsyncMock()
 
         # when
         await command_handlers.main_handler(self.update, None)
@@ -85,25 +91,8 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
-        # user answers first question
-        # given
-        button_update = AsyncMock()
-        button_update.effective_user.id = 1
-
-        # Mock get_bot to return a mock bot object
-        mock_bot = AsyncMock()
-        button_update.effective_user.get_bot = Mock(return_value=mock_bot)
-
-        # Since send_message is async, use AsyncMock for it
-        mock_bot.send_message = AsyncMock()
-
-        # define query result
-        query = AsyncMock()
-        query.data = 'NEUTRAL'
-        button_update.callback_query = query
-
         # when
-        await command_handlers.button(button_update, None)
+        await command_handlers.button(self.button_update, None)
 
         # then
         # verify that the temporary record has been cleaned
