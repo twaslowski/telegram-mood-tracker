@@ -6,7 +6,6 @@ from telegram import Update
 
 import src.persistence as persistence
 from src.config import defaults
-from src.domain.user import User
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.visualise import visualize_monthly_data
 
@@ -29,7 +28,7 @@ async def init_user(update: Update, _) -> None:
     user_id = update.effective_user.id
     if not persistence.find_user(user_id):
         logging.info(f"Creating user {user_id}")
-        persistence.create_user(User(user_id))
+        persistence.create_user(user_id)
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
                                                            text=introduction_text)
     else:

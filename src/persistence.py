@@ -2,8 +2,7 @@ import datetime
 
 import pymongo
 
-import src.config as config
-from src.domain.user import User
+from src import config
 
 mongo_url = "mongodb://localhost:27017/"
 mongo_client = pymongo.MongoClient(mongo_url)
@@ -30,11 +29,11 @@ def find_user(user_id: int) -> dict:
     return user.find_one({"user_id": user_id})
 
 
-def create_user(u: User) -> None:
+def create_user(user_id: int) -> None:
     user.insert_one({
-        "user_id": u.user_id,
-        "metrics": u.metrics,
-        "notifications": u.notifications
+        "user_id": user_id,
+        "metrics": config.defaults.get('metrics'),
+        "notifications": config.defaults.get('notifications')
     })
 
 
