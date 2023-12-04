@@ -27,6 +27,8 @@ def visualize_monthly_data(year: int = None, month: int = None):
 
     # Retrieve data
     data = list(collection.find(query))
+    if not data:
+        return
 
     # Process data
     df = pd.DataFrame(data)

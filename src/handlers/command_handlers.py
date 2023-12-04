@@ -79,7 +79,19 @@ async def main_handler(update: Update, _) -> None:
 
 
 def get_all_months_for_offset(time_range: int, year: int, month: int):
-    oldest_record = persistence.find_oldest_record_for_user(1)
+    """
+    Returns a list of tuples (year, month) for the given time range, i.e. how many records in the past should be considered.
+    """
+    months = [(year, month)]
+    for i in range(time_range - 1):
+        if month == 1:
+            year -= 1
+            month = 12
+        else:
+            month -= 1
+        months.append((year, month))
+    months.reverse()
+    return months
 
 
 async def handle_graph_specification(update):
