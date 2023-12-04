@@ -11,6 +11,7 @@ from src.handlers.command_handlers import init_record, button, init_user
 
 
 class TestRecord(IsolatedAsyncioTestCase):
+    expiry_time = 3
 
     async def asyncSetUp(self) -> None:
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -31,9 +32,11 @@ class TestRecord(IsolatedAsyncioTestCase):
 
         # Since send_message is async, use AsyncMock for it
         mock_bot.send_message = AsyncMock()
-        command_handlers.temp_records = ExpiringDict(max_len=100, max_age_seconds=5)
+        command_handlers.temp_records = ExpiringDict(max_len=100, max_age_seconds=self.expiry_time)
+        command_handlers.state = ExpiringDict(max_len=100, max_age_seconds=self.expiry_time)
         command_handlers.handle_enum_metric = AsyncMock()
         command_handlers.handle_numeric_metric = AsyncMock()
+        command_handlers.handle_no_known_state = AsyncMock()
 
     async def asyncTearDown(self) -> None:
         persistence.user.delete_many({})
@@ -46,9 +49,13 @@ class TestRecord(IsolatedAsyncioTestCase):
         init_record(1)
         self.assertIsNotNone(command_handlers.temp_records.get(1))
         # let expiry time elapse
-        time.sleep(6)
+        time.sleep(self.expiry_time + 1)
         # after being emptied, the dict contains an empty list, as opposed to being empty entirely
         self.assertIsNone(command_handlers.temp_records.get(1))
+
+        # when user attempts to record, they receive an error message
+        await command_handlers.button(self.button_update, None)
+        command_handlers.handle_no_known_state.called_count = 1
 
     async def test_record_registration(self):
         """
@@ -58,7 +65,7 @@ class TestRecord(IsolatedAsyncioTestCase):
         # given
         persistence.get_user_config = Mock(return_value=test_metrics)
 
-        # when
+        # when /record
         await command_handlers.main_handler(self.update, None)
 
         # then
@@ -82,7 +89,7 @@ class TestRecord(IsolatedAsyncioTestCase):
         """
         persistence.get_user_config = Mock(return_value=test_metrics[:1])
 
-        # when
+        # when /record
         await command_handlers.main_handler(self.update, None)
 
         # then
@@ -110,7 +117,7 @@ class TestRecord(IsolatedAsyncioTestCase):
         # given
         persistence.get_user_config = Mock(return_value=test_metrics)
 
-        # when
+        # when /record
         await command_handlers.main_handler(self.update, None)
 
         # then

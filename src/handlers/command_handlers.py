@@ -6,11 +6,12 @@ from telegram import Update
 
 import src.persistence as persistence
 from src.config import defaults
-from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
-from src.visualise import visualize_monthly_data
+from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric, handle_graphing_dialog
+from src.state import State
 
 # in-memory storage for user records before they get persisted; if a user doesn't finish a record, it will be deleted
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
+state = ExpiringDict(max_len=100, max_age_seconds=300)
 
 bullet_point_list = '\n'.join([f"- {metric['name'].capitalize()}" for metric in defaults['metrics']])
 introduction_text = "Hi! You can track your mood with me. Simply type /record to get started. By default, " \
@@ -63,6 +64,7 @@ async def main_handler(update: Update, _) -> None:
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
                                                            text="Creating a new record for you ...")
         init_record(user_id)
+        state[user_id] = State.RECORDING
         await main_handler(update, None)
     else:
         # find the first metric for which the record value is still None
@@ -75,30 +77,51 @@ async def main_handler(update: Update, _) -> None:
             await handle_numeric_metric(update, metric['prompt'], metric['range'])
 
 
+async def handle_graph_specification(update):
+    pass
+
+
 async def button(update: Update, _) -> None:
     """
     Processes the inputs from the InlineKeyboardButtons and maintains the temporary record.
     """
+    user = update.effective_user.id
+    user_state = state.get(user)
+    match user_state:
+        case State.GRAPHING:
+            await handle_graph_specification(update)
+        case State.RECORDING:
+            await handle_record_entry(update)
+        case _:
+            await handle_no_known_state(update)
+
+
+async def handle_no_known_state(update: Update) -> None:
+    """
+    Handles the case where the user is not in a known state.
+    """
+    no_state_message = """It doesn't appear like you're currently recording mood or graphing.
+                       Press /record to create a new record, /graph to visualise your mood progress."""
+    await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
+                                                       text=no_state_message)
+
+
+async def handle_record_entry(update):
     query = update.callback_query
     # Fetch prompt from query to figure out which question was being answered
     # If a user answers Question A, then Question B and then Question A again, the prompt will be the same
     # I don't see a better mechanism for handling this scenario.
     prompt = query.message.text
     await query.answer()
-
     # get current record registration state; remove the metric that was just answered
     user_id = update.effective_user.id
     user_record = temp_records.get(user_id)
-
     # find metric that was answered
     metric = [metric for metric in user_record['config'] if metric['prompt'] == prompt][0]
     user_record['record'][metric['name']] = query.data
-
     logging.info(f"User {user_id} answered {metric} with {query.data}")
-
     # update temporary record
     temp_records[user_id] = user_record
-
     # check if record is complete
     if all(value is not None for value in user_record['record'].values()):
         logging.info(f"Record for user {user_id} is complete: {user_record['record']}")
@@ -112,12 +135,8 @@ async def button(update: Update, _) -> None:
 
 
 async def graph_handler(update: Update, context) -> None:
-    now = datetime.datetime.now()
-    year = now.year
-    months = [8, 9, 10, 11]
-    for month in months:
-        path = visualize_monthly_data(year, month)
-        await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
+    await handle_graphing_dialog(update, context)
+    state[update.effective_user.id] = State.GRAPHING
 
 
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
