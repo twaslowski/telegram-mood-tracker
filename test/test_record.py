@@ -1,3 +1,4 @@
+import datetime
 import logging
 import time
 from unittest import IsolatedAsyncioTestCase
@@ -15,12 +16,26 @@ class TestRecord(IsolatedAsyncioTestCase):
 
     async def asyncSetUp(self) -> None:
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
         # set up update object
         self.update = Mock()
         self.update.effective_user.id = 1
         self.update.effective_user.get_bot().send_message = AsyncMock()
 
-        # incoming button update
+        # mock user response to first record
+        await self.mock_button_update()
+
+        # mock command handler methods and objects like expiring dicts
+        await self.mock_command_handler_methods()
+
+    async def mock_command_handler_methods(self):
+        command_handlers.temp_records = ExpiringDict(max_len=100, max_age_seconds=self.expiry_time)
+        command_handlers.state = ExpiringDict(max_len=100, max_age_seconds=self.expiry_time)
+        command_handlers.handle_enum_metric = AsyncMock()
+        command_handlers.handle_numeric_metric = AsyncMock()
+        command_handlers.handle_no_known_state = AsyncMock()
+
+    async def mock_button_update(self):
         self.button_update = AsyncMock()
         self.button_update.effective_user.id = 1
         mock_bot = AsyncMock()
@@ -29,14 +44,7 @@ class TestRecord(IsolatedAsyncioTestCase):
         query.data = 'NEUTRAL'
         query.message.text = 'How do you feel right now?'
         self.button_update.callback_query = query
-
-        # Since send_message is async, use AsyncMock for it
         mock_bot.send_message = AsyncMock()
-        command_handlers.temp_records = ExpiringDict(max_len=100, max_age_seconds=self.expiry_time)
-        command_handlers.state = ExpiringDict(max_len=100, max_age_seconds=self.expiry_time)
-        command_handlers.handle_enum_metric = AsyncMock()
-        command_handlers.handle_numeric_metric = AsyncMock()
-        command_handlers.handle_no_known_state = AsyncMock()
 
     async def asyncTearDown(self) -> None:
         persistence.user.delete_many({})
@@ -107,6 +115,7 @@ class TestRecord(IsolatedAsyncioTestCase):
         user_records = persistence.find_records_for_user(1)
         self.assertEqual(1, len(user_records))
         self.assertEqual(user_records[0]['record']['mood'], 'NEUTRAL')
+        self.assertEqual(datetime.datetime, type(user_records[0]['timestamp']))
 
     async def test_double_answer_works_as_intended(self):
         """

@@ -8,6 +8,7 @@ import src.persistence as persistence
 from src.config import defaults
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric, handle_graphing_dialog
 from src.state import State
+from src.visualise import visualize_monthly_data
 
 # in-memory storage for user records before they get persisted; if a user doesn't finish a record, it will be deleted
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
@@ -77,8 +78,24 @@ async def main_handler(update: Update, _) -> None:
             await handle_numeric_metric(update, metric['prompt'], metric['range'])
 
 
+def get_all_months_for_offset(time_range: int, year: int, month: int):
+    oldest_record = persistence.find_oldest_record_for_user(1)
+
+
 async def handle_graph_specification(update):
-    pass
+    # await timeframe specification
+    query = update.callback_query
+    await query.answer()
+    oldest_record_timestamp = persistence.find_oldest_record_for_user(update.effective_user.id)['timestamp']
+
+    now = datetime.datetime.now()
+    time_range = update.callback_query.data
+    year = now.year
+    month = now.month
+    months = get_all_months_for_offset(time_range, year, month)
+    for month in months:
+        path = visualize_monthly_data(year, month)
+        await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
 
 
 async def button(update: Update, _) -> None:
@@ -125,7 +142,7 @@ async def handle_record_entry(update):
     # check if record is complete
     if all(value is not None for value in user_record['record'].values()):
         logging.info(f"Record for user {user_id} is complete: {user_record['record']}")
-        persistence.create_record(user_id, user_record['record'])
+        persistence.create_record(user_id, user_record['record'], user_record['timestamp'])
         del temp_records[user_id]
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
                                                            text="Record completed. Thank you!")

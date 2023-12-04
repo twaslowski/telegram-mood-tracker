@@ -27,6 +27,10 @@ def create_user(user_id: int) -> None:
     })
 
 
+def find_oldest_record_for_user(user_id: int) -> dict:
+    return records.find_one({"user_id": user_id}, sort=[("timestamp", pymongo.ASCENDING)])
+
+
 def get_all_user_notifications() -> dict:
     """
     Returns dict of user_id to their respective notification times
@@ -43,9 +47,13 @@ def delete_all() -> None:
     records.delete_many({})
 
 
-def create_record(user_id: int, record: dict):
-    records.insert_one({"user_id": user_id, "record": record})
+def create_record(user_id: int, record: dict, timestamp: str):
+    records.insert_one({"user_id": user_id, "record": record, "timestamp": timestamp})
 
 
 def find_records_for_user(user_id: int) -> list:
-    return list(records.find({"user_id": user_id}))
+    r = list(records.find({"user_id": user_id}))
+    # map timestamps
+    for record in r:
+        record['timestamp'] = datetime.datetime.fromisoformat(record['timestamp'])
+    return r
