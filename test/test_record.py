@@ -7,8 +7,7 @@ from expiringdict import ExpiringDict
 
 import src.handlers.command_handlers as command_handlers
 import src.persistence as persistence
-from src.handlers.command_handlers import init_record
-from src.handlers.command_handlers import init_user
+from src.handlers.command_handlers import init_record, button, init_user
 
 
 class TestRecord(IsolatedAsyncioTestCase):
@@ -27,6 +26,7 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.button_update.effective_user.get_bot = Mock(return_value=mock_bot)
         query = AsyncMock()
         query.data = 'NEUTRAL'
+        query.message.text = 'How do you feel right now?'
         self.button_update.callback_query = query
 
         # Since send_message is async, use AsyncMock for it
@@ -66,14 +66,12 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
         # when
-        await command_handlers.button(self.button_update, None)
+        await button(self.button_update, None)
 
         # then
         # first metric is set in the temporary record
         self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'NEUTRAL')
         self.assertEqual(command_handlers.temp_records.get(1)['record']['energy'], None)
-        # assert mood config has been removed
-        self.assertEqual(len(command_handlers.temp_records.get(1)['config']), 1)
         # in response, the second record is queried
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
@@ -92,7 +90,7 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
         # when
-        await command_handlers.button(self.button_update, None)
+        await button(self.button_update, None)
 
         # then
         # verify that the temporary record has been cleaned
@@ -102,6 +100,42 @@ class TestRecord(IsolatedAsyncioTestCase):
         user_records = persistence.find_records_for_user(1)
         self.assertEqual(1, len(user_records))
         self.assertEqual(user_records[0]['record']['mood'], 'NEUTRAL')
+
+    async def test_double_answer_works_as_intended(self):
+        """
+        Verify that a user answer the same question works as intended (i.e. the previous record is overwritten).
+        Extends `test_record_registration`
+        :return:
+        """
+        # given
+        persistence.get_user_config = Mock(return_value=test_metrics)
+
+        # when
+        await command_handlers.main_handler(self.update, None)
+
+        # then
+        self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
+        self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
+
+        # when
+        await button(self.button_update, None)
+
+        # then
+        self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'NEUTRAL')
+        self.assertEqual(command_handlers.temp_records.get(1)['record']['energy'], None)
+
+        # given user answers the same question again
+        query = AsyncMock()
+        query.data = 'MODERATELY_ELEVATED'
+        query.message.text = 'How do you feel right now?'
+        self.button_update.callback_query = query
+
+        # when
+        await button(self.button_update, None)
+
+        # then
+        self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'MODERATELY_ELEVATED')
+        self.assertEqual(command_handlers.temp_records.get(1)['record']['energy'], None)
 
 
 test_metrics = [

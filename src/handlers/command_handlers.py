@@ -65,7 +65,9 @@ async def main_handler(update: Update, _) -> None:
         init_record(user_id)
         await main_handler(update, None)
     else:
-        metric = temp_records.get(user_id)['config'][0]
+        # find the first metric for which the record value is still None
+        metric = [metric for metric in temp_records[user_id]['config'] if
+                  temp_records[user_id]['record'][metric['name']] is None][0]
         logging.info(f"collecting information on metric {metric}")
         if metric['type'] == 'enum':
             await handle_enum_metric(update, metric['prompt'], metric['values'])
@@ -78,14 +80,19 @@ async def button(update: Update, _) -> None:
     Processes the inputs from the InlineKeyboardButtons and maintains the temporary record.
     """
     query = update.callback_query
+    # Fetch prompt from query to figure out which question was being answered
+    # If a user answers Question A, then Question B and then Question A again, the prompt will be the same
+    # I don't see a better mechanism for handling this scenario.
+    prompt = query.message.text
     await query.answer()
 
     # get current record registration state; remove the metric that was just answered
     user_id = update.effective_user.id
     user_record = temp_records.get(user_id)
 
-    metric = user_record['config'].pop(0)['name']
-    user_record['record'][metric] = query.data
+    # find metric that was answered
+    metric = [metric for metric in user_record['config'] if metric['prompt'] == prompt][0]
+    user_record['record'][metric['name']] = query.data
 
     logging.info(f"User {user_id} answered {metric} with {query.data}")
 

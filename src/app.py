@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, Application, CommandHandler, CallbackQueryHandler
 
 import src.persistence as persistence
-from src.handlers.command_handlers import main_handler, button, graph_handler, init_user
+from src.handlers.command_handlers import main_handler, graph_handler, init_user, button
 from src.reminder import reminder
 
 load_dotenv()
