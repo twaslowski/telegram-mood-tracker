@@ -1,32 +1,37 @@
 import calendar
+import logging
 from datetime import datetime
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
 from pymongo import MongoClient
 
 
-def visualize_monthly_data(year: int = None, month: int = None):
+def visualize_monthly_data(user_id: int, month: Tuple[int, int] = None):
     # Connect to MongoDB (replace with your connection details)
     client = MongoClient("mongodb://localhost:27017/")
-    db = client.records
+    db = client.mood_tracker
     collection = db.records
 
-    if year is None or month is None:
-        now = datetime.now()
-        year = now.year
-        month = now.month
+    (year, month) = month
 
     # Calculate the first and last day of the given month
     first_day = datetime(year, month, 1)
     last_day = datetime(year, month, calendar.monthrange(year, month)[1])
 
+    logging.info(f"Retrieving data for between {first_day} and {last_day} for user {user_id}")
     # Filter records for the specified month
     query = {"timestamp": {"$gte": first_day.strftime('%Y-%m-%dT%H:%M:%S'),
-                           "$lte": last_day.strftime('%Y-%m-%dT%H:%M:%S')}}
+                           "$lte": last_day.strftime('%Y-%m-%dT%H:%M:%S')},
+             "user_id": user_id}
 
-    # Retrieve data
     data = list(collection.find(query))
+
+    data = [{'timestamp': data['timestamp'], 'mood': data['record']['Mood'], 'sleep': data['record']['Sleep']}
+            for data in data]
+    logging.info(f"Found {len(data)} records for {month}/{year}")
+
     if not data:
         return
 
@@ -63,7 +68,7 @@ def visualize_monthly_data(year: int = None, month: int = None):
     # Sleep plot on ax2
     ax2.plot(date_range, daily_avg.set_index('timestamp').reindex(date_range)['sleep'], marker='o', color='red',
              label='Sleep', markersize=3, linestyle='--')
-    ax2.axhline(y=8, color='gray', linestyle='--', linewidth=0.5) # sleep baseline
+    ax2.axhline(y=8, color='gray', linestyle='--', linewidth=0.5)  # sleep baseline
     ax2.set_ylabel('Sleep', color='red')
     ax2.tick_params(axis='y', labelcolor='red')
     ax2.set_ylim(4, 12)

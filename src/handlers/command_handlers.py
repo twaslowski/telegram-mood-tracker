@@ -98,16 +98,16 @@ async def handle_graph_specification(update):
     # await timeframe specification
     query = update.callback_query
     await query.answer()
-    oldest_record_timestamp = persistence.find_oldest_record_for_user(update.effective_user.id)['timestamp']
 
     now = datetime.datetime.now()
-    time_range = update.callback_query.data
+    time_range = int(update.callback_query.data)
     year = now.year
     month = now.month
     months = get_all_months_for_offset(time_range, year, month)
     for month in months:
-        path = visualize_monthly_data(year, month)
-        await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
+        path = visualize_monthly_data(update.effective_user.id, month)
+        if path:
+            await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
 
 
 async def button(update: Update, _) -> None:
