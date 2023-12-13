@@ -172,22 +172,27 @@ async def offset_handler(update: Update, context) -> None:
     incorrect_state_message = """You can only use /offset while recording a record.
     Press /record to create a new record."""
     success_message = "The timestamp of your record has been updated to {}."
-
-    if not state[update.effective_user.id] == State.RECORDING:
-        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                           text=incorrect_state_message)
-    else:
+    invalid_args_message = "Please provide an offset in days like this: /offset 1"
+    user_state = state.get(update.effective_user.id)
+    if user_state is not None and state[update.effective_user.id] == State.RECORDING:
+        if len(context.args) != 1:
+            await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
+                                                               text=invalid_args_message)
         offset = int(context.args[0])
         user_id = update.effective_user.id
         record = temp_records[user_id]
         record['timestamp'] = modify_timestamp(record['timestamp'], offset).isoformat()
         temp_records[user_id] = record
         logging.info(f"Updated timestamp for user {user_id} to {record['timestamp']}")
+        # so i got kind of lazy on this one. splitting an iso-formatted timestamp just returns the date section.
         await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                           text=success_message.format(record['timestamp']))
-        return await main_handler(update, None)
+                                                           text=success_message.format(
+                                                               record['timestamp'].split('T')[0]))
+    else:
+        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
+                                                           text=incorrect_state_message)
 
 
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
     timestamp = datetime.datetime.fromisoformat(timestamp)
-    return timestamp - datetime.timedelta(hours=offset)
+    return timestamp - datetime.timedelta(days=offset)

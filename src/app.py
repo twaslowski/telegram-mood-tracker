@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, Application, CommandHandler, CallbackQueryHandler
 
 import src.persistence as persistence
-from src.handlers.command_handlers import main_handler, graph_handler, init_user, button
+from src.handlers.command_handlers import main_handler, graph_handler, init_user, button, offset_handler
 from src.reminder import reminder
 
 load_dotenv()
@@ -28,10 +28,10 @@ def init_reminders(app: Application) -> None:
 
 def init_app() -> Application:
     app = ApplicationBuilder().token(TOKEN).build()
-    persistence.user.delete_many({})
     app.add_handler(CommandHandler("start", init_user))
     app.add_handler(CommandHandler("graph", graph_handler))
     app.add_handler(CommandHandler("record", main_handler))
+    app.add_handler(CommandHandler("offset", offset_handler))
     # app.add_handler(CommandHandler("undo", main_handler))
     app.add_handler(CallbackQueryHandler(button))
     init_reminders(app)

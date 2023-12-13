@@ -171,8 +171,8 @@ class TestRecord(IsolatedAsyncioTestCase):
         await command_handlers.offset_handler(self.update, offset_context)
 
         # then
-        self.assertEqual(datetime.datetime.fromisoformat(command_handlers.temp_records.get(1)['timestamp']).hour,
-                         datetime.datetime.now().hour - 1)
+        self.assertEqual(datetime.datetime.fromisoformat(command_handlers.temp_records.get(1)['timestamp']).day,
+                         datetime.datetime.now().day - 1)
 
 
 test_metrics = [
