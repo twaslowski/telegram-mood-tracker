@@ -153,6 +153,27 @@ class TestRecord(IsolatedAsyncioTestCase):
         self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'MODERATELY_ELEVATED')
         self.assertEqual(command_handlers.temp_records.get(1)['record']['energy'], None)
 
+    async def test_record_with_offset(self):
+        # given
+        persistence.get_user_config = Mock(return_value=test_metrics)
+
+        # when /record
+        await command_handlers.main_handler(self.update, None)
+
+        # then
+        self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
+        self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
+
+        offset_context = Mock()
+        offset_context.args = [1]
+
+        # when
+        await command_handlers.offset_handler(self.update, offset_context)
+
+        # then
+        self.assertEqual(datetime.datetime.fromisoformat(command_handlers.temp_records.get(1)['timestamp']).hour,
+                         datetime.datetime.now().hour - 1)
+
 
 test_metrics = [
     {

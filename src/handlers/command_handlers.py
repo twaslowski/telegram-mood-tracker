@@ -168,6 +168,26 @@ async def graph_handler(update: Update, context) -> None:
     state[update.effective_user.id] = State.GRAPHING
 
 
+async def offset_handler(update: Update, context) -> None:
+    incorrect_state_message = """You can only use /offset while recording a record.
+    Press /record to create a new record."""
+    success_message = "The timestamp of your record has been updated to {}."
+
+    if not state[update.effective_user.id] == State.RECORDING:
+        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
+                                                           text=incorrect_state_message)
+    else:
+        offset = int(context.args[0])
+        user_id = update.effective_user.id
+        record = temp_records[user_id]
+        record['timestamp'] = modify_timestamp(record['timestamp'], offset).isoformat()
+        temp_records[user_id] = record
+        logging.info(f"Updated timestamp for user {user_id} to {record['timestamp']}")
+        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
+                                                           text=success_message.format(record['timestamp']))
+        return await main_handler(update, None)
+
+
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
     timestamp = datetime.datetime.fromisoformat(timestamp)
     return timestamp - datetime.timedelta(hours=offset)

@@ -1,7 +1,7 @@
 import datetime
 import logging
 from unittest import IsolatedAsyncioTestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
 
 import src.persistence
 from src.handlers.command_handlers import init_user, get_all_months_for_offset
@@ -17,13 +17,14 @@ class TestGraph(IsolatedAsyncioTestCase):
                 },
                 'timestamp': datetime.datetime.now().replace(month=6),
                 'user_id': 1})
-        self.initialise_user()
+        await self.initialise_user()
 
     @staticmethod
-    def initialise_user():
-        update = Mock()
+    async def initialise_user():
+        update = AsyncMock()
         update.effective_user.id = 1
-        init_user(update, None)
+        update.effective_user.get_bot = Mock(return_value=AsyncMock())
+        await init_user(update, None)
 
     async def test_should_graph_for_correct_months(self):
         self.assertEqual([(2021, 6)], get_all_months_for_offset(1, 2021, 6))
