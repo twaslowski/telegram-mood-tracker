@@ -1,4 +1,5 @@
 import datetime
+import emoji
 
 defaults = {
     "metrics": [
@@ -7,13 +8,13 @@ defaults = {
             "prompt": "How do you feel right now?",
             "type": "enum",
             "values": {
-                "\U0001F92A": 3,
-                "\uE415": 2,
-                "\U0001F642": 1,
-                "\U0001F636": 0,
-                "\U0001F615": -1,
-                "\u2639\uFE0F": -2,
-                "\uE11C": -3
+                f"{emoji.emojize(':zany_face:')}": 3,
+                f"{emoji.emojize(':grinning_face_with_smiling_eyes:')}": 2,
+                f"{emoji.emojize(':slightly_smiling_face:')}": 1,
+                f"{emoji.emojize(':face_without_mouth:')}": 0,
+                f"{emoji.emojize(':slightly_frowning_face:')}": -1,
+                f"{emoji.emojize(':frowning_face:')}": -2,
+                f"{emoji.emojize(':skull:')}": -3
             },
         },
         {

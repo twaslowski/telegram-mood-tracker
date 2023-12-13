@@ -31,4 +31,4 @@ Raspberry Pi or on a free tier AWS EC2 t2.micro instance. The requirements are:
 
     $ git clone git@github.com:TobiasWaslowski/telegram-mood-tracker.git && cd telegram-mood-tracker
     $ echo $YOUR_TELEGRAM_TOKEN > .env
-    $ ./run.sh
+    $ ./scripts/run.sh
