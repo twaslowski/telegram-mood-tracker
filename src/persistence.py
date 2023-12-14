@@ -61,3 +61,32 @@ def find_records_for_user(user_id: int) -> list:
     for record in r:
         record['timestamp'] = datetime.datetime.fromisoformat(record['timestamp'])
     return r
+
+
+def migrate() -> None:
+    """
+    Migrate from old format to new format
+    """
+    old_db = mongo_client['records']
+    new_db = mongo_client['mood_tracker']
+
+    # Select your collection
+    old_collection = old_db.records
+    new_collection = new_db.records
+
+    for doc in old_collection.find():
+        new_doc = {
+            "user_id": os.environ['CHAT_ID'],  # my own personal chat id
+            "timestamp": doc["timestamp"],
+            "record": doc["record"]
+        }
+        new_collection.insert_one(new_doc)
+
+    print("Migration completed.")
+
+    # Close the MongoDB connection
+    mongo_client.close()
+
+
+if __name__ == '__main__':
+    migrate()
