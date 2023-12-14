@@ -116,13 +116,12 @@ async def button(update: Update, _) -> None:
     """
     user = update.effective_user.id
     user_state = state.get(user)
-    match user_state:
-        case State.GRAPHING:
-            await handle_graph_specification(update)
-        case State.RECORDING:
-            await handle_record_entry(update)
-        case _:
-            await handle_no_known_state(update)
+    if user_state is State.GRAPHING:
+        await handle_graph_specification(update)
+    if user_state is State.RECORDING:
+        await handle_record_entry(update)
+    else:
+        await handle_no_known_state(update)
 
 
 async def handle_no_known_state(update: Update) -> None:
