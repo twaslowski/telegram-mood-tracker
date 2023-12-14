@@ -1,10 +1,14 @@
 import datetime
+import os
 
 import pymongo
+from dotenv import load_dotenv
 
 from src import config
 
-mongo_url = "mongodb://localhost:27017/"
+load_dotenv()
+
+mongo_url = f"mongodb://{os.environ.get('MONGO_CONNECTION_STRING')}/"
 mongo_client = pymongo.MongoClient(mongo_url)
 mood_tracker = mongo_client["mood_tracker"]
 records = mood_tracker["records"]
