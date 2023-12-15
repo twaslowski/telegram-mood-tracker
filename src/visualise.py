@@ -2,15 +2,18 @@ import calendar
 import logging
 from datetime import datetime
 from typing import Tuple
+import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
 from pymongo import MongoClient
 
+from dotenv import load_dotenv
 
 def visualize_monthly_data(user_id: int, month: Tuple[int, int] = None):
+    load_dotenv()
     # Connect to MongoDB (replace with your connection details)
-    client = MongoClient("mongodb://localhost:27017/")
+    client = MongoClient(f"mongodb://{os.environ.get('MONGO_CONNECTION_STRING')}/")
     db = client.mood_tracker
     collection = db.records
 
