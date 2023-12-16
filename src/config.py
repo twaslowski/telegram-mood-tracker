@@ -4,7 +4,7 @@ import emoji
 defaults = {
     "metrics": [
         {
-            "name": "Mood",
+            "name": "mood",
             "prompt": "How do you feel right now?",
             "type": "enum",
             "values": {
@@ -18,7 +18,7 @@ defaults = {
             },
         },
         {
-            "name": "Sleep",
+            "name": "sleep",
             "type": "numeric",
             "prompt": "How much sleep did you get last night?",
             "range": (4, 12),

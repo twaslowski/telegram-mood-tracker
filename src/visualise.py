@@ -31,7 +31,7 @@ def visualize_monthly_data(user_id: int, month: Tuple[int, int] = None):
 
     data = list(collection.find(query))
 
-    data = [{'timestamp': data['timestamp'], 'mood': data['record']['Mood'], 'sleep': data['record']['Sleep']}
+    data = [{'timestamp': data['timestamp'], 'mood': data['record']['mood'], 'sleep': data['record']['sleep']}
             for data in data]
     logging.info(f"Found {len(data)} records for {month}/{year}")
 
