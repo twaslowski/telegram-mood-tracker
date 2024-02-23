@@ -63,6 +63,23 @@ def find_records_for_user(user_id: int) -> list:
     return r
 
 
+def zeroes(days: int):
+    """
+    Inserts records with default values for missed days within a date range.
+    start_date (datetime.date): The start date of the range.
+    end_date (datetime.date): The end date of the range.
+    """
+
+    user_id = 1965256751
+    default_record = {"sleep": "8", "mood": "0"}
+    start = datetime.datetime.now().isoformat()
+    date_range = [modify_timestamp(start, n).isoformat() for n in range(days)]
+
+    for date in date_range:
+        print(f"Inserting neutral record for timestamp {date}")
+        create_record(user_id, default_record, date)
+
+
 def migrate() -> None:
     """
     Migrate from old format to new format
@@ -88,5 +105,10 @@ def migrate() -> None:
     mongo_client.close()
 
 
+def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
+    timestamp = datetime.datetime.fromisoformat(timestamp)
+    return timestamp - datetime.timedelta(days=offset)
+
+
 if __name__ == '__main__':
-    migrate()
+    zeroes(17)
