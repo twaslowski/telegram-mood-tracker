@@ -30,8 +30,8 @@ async def test_registration(update):
 
     # now it exists
     assert persistence.find_user(1) is not None
-    assert persistence.find_user(1)["metrics"] is not None
-    assert persistence.find_user(1)["notifications"] is not None
+    assert persistence.find_user(1).metrics is not None
+    assert persistence.find_user(1).notifications is not None
 
     # introductory text has been sent
     assert update.effective_user.get_bot().send_message.called

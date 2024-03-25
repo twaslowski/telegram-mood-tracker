@@ -21,8 +21,11 @@ def get_latest_record() -> dict:
     return records.find_one({}, sort=[("timestamp", pymongo.DESCENDING)])
 
 
-def find_user(user_id: int) -> User:
-    return user.find_one({"user_id": user_id})
+def find_user(user_id: int) -> User | None:
+    result = user.find_one({"user_id": user_id})
+    if result:
+        return User(**result)
+    return None
 
 
 def create_user(user_id: int) -> None:
@@ -50,11 +53,6 @@ def get_all_user_notifications() -> dict:
         u["user_id"]: [datetime.time.fromisoformat(t) for t in u["notifications"]]
         for u in user.find()
     }
-
-
-# this function seems rather strange. Why not retrieve the user and access their metrics directly? todo remove?
-def get_user_config(user_id: int) -> dict:
-    return user.find_one({"user_id": user_id})["metrics"]
 
 
 def delete_all() -> None:

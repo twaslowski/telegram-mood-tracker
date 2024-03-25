@@ -8,6 +8,7 @@ from expiringdict import ExpiringDict
 import src.handlers.command_handlers as command_handlers
 import src.persistence as persistence
 from src.handlers.command_handlers import init_record, button, init_user
+from src.model.user import User
 
 expiry_time = 1
 
@@ -47,13 +48,22 @@ def patch_command_handler_methods():
     command_handlers.handle_no_known_state = AsyncMock()
 
 
+@pytest.fixture
+def user() -> User:
+    return User(user_id=1, metrics=test_metrics, notifications=[])
+
+
+@pytest.fixture(autouse=True)
+def patch_persistence_methods(mocker, user):
+    mocker.patch("src.persistence.find_user", return_value=user)
+
+
 @pytest.mark.asyncio
 async def test_init_and_expire_record(update, button_update):
     """
     Create a record and let it expire.
     """
     # create record
-    persistence.get_user_config = Mock(return_value=test_metrics)
     await init_user(update, None)
     init_record(1)
     assert command_handlers.temp_records.get(1) is not None
@@ -73,9 +83,6 @@ async def test_record_registration(button_update, update):
     Tests the state transition from recording Metric A to Metric B.
     Does not cover the state transition from Metric N to Finished.
     """
-    # given
-    persistence.get_user_config = Mock(return_value=test_metrics)
-
     # when user calls /record
     await command_handlers.main_handler(update, None)
 
@@ -94,12 +101,13 @@ async def test_record_registration(button_update, update):
 
 
 @pytest.mark.asyncio
-async def test_finish_record_creation(update, button_update):
+async def test_finish_record_creation(update, button_update, mocker, user):
     """
     Tests state transition from recording Metric N to Finished.
     """
     # given only one metric is defined
-    persistence.get_user_config = Mock(return_value=test_metrics[:1])
+    mocker.patch("src.persistence.find_user", return_value=user)
+    user.metrics = [test_metrics[0]]
 
     # when user calls /record
     await command_handlers.main_handler(update, None)
@@ -125,9 +133,6 @@ async def test_double_answer_works_as_intended(update, button_update):
     Extends `test_record_registration`
     :return:
     """
-    # given
-    persistence.get_user_config = Mock(return_value=test_metrics)
-
     # when user calls /record
     await command_handlers.main_handler(update, None)
 
@@ -152,9 +157,6 @@ async def test_double_answer_works_as_intended(update, button_update):
 
 @pytest.mark.asyncio
 async def test_record_with_offset(update):
-    # given
-    persistence.get_user_config = Mock(return_value=test_metrics)
-
     # when user calls /record
     await command_handlers.main_handler(update, None)
 

@@ -53,7 +53,7 @@ def init_record(user_id: int):
     :param user_id:
     """
     # create temporary record from user configuration
-    metrics = persistence.get_user_config(user_id)
+    metrics = persistence.find_user(user_id).metrics
     record = {
         "record": {metric["name"]: None for metric in metrics},
         "timestamp": datetime.datetime.now().isoformat(),
