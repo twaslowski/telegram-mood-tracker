@@ -5,6 +5,7 @@ import pymongo
 from dotenv import load_dotenv
 
 from src import config
+from src.model.user import User
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ def get_latest_record() -> dict:
     return records.find_one({}, sort=[("timestamp", pymongo.DESCENDING)])
 
 
-def find_user(user_id: int) -> dict:
+def find_user(user_id: int) -> User:
     return user.find_one({"user_id": user_id})
 
 

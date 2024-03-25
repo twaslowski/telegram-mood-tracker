@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "telegram-mood-tracker"
+version = "0.1.0"
+description = ""
+authors = ["Tobias Waslowski <tobiaswaslowski@gmail.com>"]
+readme = "README.md"
+
+# core dependencies
+[tool.poetry.dependencies]
+python = "3.11.7"
+matplotlib = "^3.8.3"
+pillow = "^10.2.0"
+pymongo = "^4.6.2"
+python-telegram-bot = "^21.0.1"
+pydantic = "^2.6.4"
+python-dotenv = "^1.0.1"
+emoji = "^2.10.1"
+expiringdict = "^1.2.2"
+pandas = "^2.2.1"
+
+[tool.poetry.group.generative.dependencies]
+json5 = "^0.9.14"
+
+# testing, linting, utilities
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.8.0"
+pytest = "^7.4.4"
+pytest-mock = "^3.12.0"
+poetry-plugin-export = "^1.5.0"
+urllib3 = "<2"
+mongomock = "^4.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
