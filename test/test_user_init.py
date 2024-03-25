@@ -11,7 +11,7 @@ from src.handlers.command_handlers import init_user
 
 @pytest.fixture(autouse=True)
 def patch_mongodb():
-    with patch.object(persistence, 'user', new=mongomock.MongoClient().db.collection):
+    with patch.object(persistence, "user", new=mongomock.MongoClient().db.collection):
         yield
 
 
@@ -37,8 +37,8 @@ async def test_registration(update):
 
     # now it exists
     assert persistence.find_user(1) is not None
-    assert persistence.find_user(1)['metrics'] is not None
-    assert persistence.find_user(1)['notifications'] is not None
+    assert persistence.find_user(1)["metrics"] is not None
+    assert persistence.find_user(1)["notifications"] is not None
 
     # introductory text has been sent
     assert update.effective_user.get_bot().send_message.called
@@ -64,6 +64,6 @@ async def test_notifications(update):
     await init_user(update, None)
 
     # init app with notification settings
-    app = ApplicationBuilder().token('some-token').build()
+    app = ApplicationBuilder().token("some-token").build()
     init_reminders(app)
     assert len(app.job_queue.jobs()) == 1

@@ -11,6 +11,7 @@ class MetricType(Enum):
     numeric range we can work with numbers more directly.
     Probably this distinction is introducing unnecessary complexity and should be removed eventually.
     """
+
     NUMERIC = 0
     ENUM = 1
 

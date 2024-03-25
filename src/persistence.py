@@ -26,15 +26,19 @@ def find_user(user_id: int) -> User:
 
 
 def create_user(user_id: int) -> None:
-    user.insert_one({
-        "user_id": user_id,
-        "metrics": config.defaults.get('metrics'),
-        "notifications": config.defaults.get('notifications')
-    })
+    user.insert_one(
+        {
+            "user_id": user_id,
+            "metrics": config.defaults.get("metrics"),
+            "notifications": config.defaults.get("notifications"),
+        }
+    )
 
 
 def find_oldest_record_for_user(user_id: int) -> dict:
-    return records.find_one({"user_id": user_id}, sort=[("timestamp", pymongo.ASCENDING)])
+    return records.find_one(
+        {"user_id": user_id}, sort=[("timestamp", pymongo.ASCENDING)]
+    )
 
 
 def get_all_user_notifications() -> dict:
@@ -42,11 +46,14 @@ def get_all_user_notifications() -> dict:
     Returns dict of user_id to their respective notification times
     :return: dict of user_id: [notification_time]
     """
-    return {u['user_id']: [datetime.time.fromisoformat(t) for t in u['notifications']] for u in user.find()}
+    return {
+        u["user_id"]: [datetime.time.fromisoformat(t) for t in u["notifications"]]
+        for u in user.find()
+    }
 
 
 def get_user_config(user_id: int) -> dict:
-    return user.find_one({'user_id': user_id})['metrics']
+    return user.find_one({"user_id": user_id})["metrics"]
 
 
 def delete_all() -> None:
@@ -61,7 +68,7 @@ def find_records_for_user(user_id: int) -> list:
     r = list(records.find({"user_id": user_id}))
     # map timestamps
     for record in r:
-        record['timestamp'] = datetime.datetime.fromisoformat(record['timestamp'])
+        record["timestamp"] = datetime.datetime.fromisoformat(record["timestamp"])
     return r
 
 
@@ -86,8 +93,8 @@ def migrate() -> None:
     """
     Migrate from old format to new format
     """
-    old_db = mongo_client['records']
-    new_db = mongo_client['mood_tracker']
+    old_db = mongo_client["records"]
+    new_db = mongo_client["mood_tracker"]
 
     # Select your collection
     old_collection = old_db.records
@@ -95,9 +102,9 @@ def migrate() -> None:
 
     for doc in old_collection.find():
         new_doc = {
-            "user_id": os.environ['CHAT_ID'],  # my own personal chat id
+            "user_id": os.environ["CHAT_ID"],  # my own personal chat id
             "timestamp": doc["timestamp"],
-            "record": doc["record"]
+            "record": doc["record"],
         }
         new_collection.insert_one(new_doc)
 
@@ -112,5 +119,5 @@ def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
     return timestamp - datetime.timedelta(days=offset)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     zeroes(17)

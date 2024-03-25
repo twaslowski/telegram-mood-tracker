@@ -15,7 +15,10 @@ class TestRecord(IsolatedAsyncioTestCase):
     expiry_time = 3
 
     async def asyncSetUp(self) -> None:
-        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+        logging.basicConfig(
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            level=logging.INFO,
+        )
 
         # set up update object
         self.update = Mock()
@@ -29,8 +32,12 @@ class TestRecord(IsolatedAsyncioTestCase):
         await self.mock_command_handler_methods()
 
     async def mock_command_handler_methods(self):
-        command_handlers.temp_records = ExpiringDict(max_len=100, max_age_seconds=self.expiry_time)
-        command_handlers.state = ExpiringDict(max_len=100, max_age_seconds=self.expiry_time)
+        command_handlers.temp_records = ExpiringDict(
+            max_len=100, max_age_seconds=self.expiry_time
+        )
+        command_handlers.state = ExpiringDict(
+            max_len=100, max_age_seconds=self.expiry_time
+        )
         command_handlers.handle_enum_metric = AsyncMock()
         command_handlers.handle_numeric_metric = AsyncMock()
         command_handlers.handle_no_known_state = AsyncMock()
@@ -41,8 +48,8 @@ class TestRecord(IsolatedAsyncioTestCase):
         mock_bot = AsyncMock()
         self.button_update.effective_user.get_bot = Mock(return_value=mock_bot)
         query = AsyncMock()
-        query.data = 'NEUTRAL'
-        query.message.text = 'How do you feel right now?'
+        query.data = "NEUTRAL"
+        query.message.text = "How do you feel right now?"
         self.button_update.callback_query = query
         mock_bot.send_message = AsyncMock()
 
@@ -77,7 +84,9 @@ class TestRecord(IsolatedAsyncioTestCase):
         await command_handlers.main_handler(self.update, None)
 
         # then
-        self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
+        self.assertEqual(
+            1, self.update.effective_user.get_bot().send_message.call_count
+        )
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
         # when
@@ -85,8 +94,10 @@ class TestRecord(IsolatedAsyncioTestCase):
 
         # then
         # first metric is set in the temporary record
-        self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'NEUTRAL')
-        self.assertEqual(command_handlers.temp_records.get(1)['record']['energy'], None)
+        self.assertEqual(
+            command_handlers.temp_records.get(1)["record"]["mood"], "NEUTRAL"
+        )
+        self.assertEqual(command_handlers.temp_records.get(1)["record"]["energy"], None)
         # in response, the second record is queried
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
@@ -101,7 +112,9 @@ class TestRecord(IsolatedAsyncioTestCase):
         await command_handlers.main_handler(self.update, None)
 
         # then
-        self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
+        self.assertEqual(
+            1, self.update.effective_user.get_bot().send_message.call_count
+        )
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
         # when
@@ -114,8 +127,8 @@ class TestRecord(IsolatedAsyncioTestCase):
         # verify record was created
         user_records = persistence.find_records_for_user(1)
         self.assertEqual(1, len(user_records))
-        self.assertEqual(user_records[0]['record']['mood'], 'NEUTRAL')
-        self.assertEqual(datetime.datetime, type(user_records[0]['timestamp']))
+        self.assertEqual(user_records[0]["record"]["mood"], "NEUTRAL")
+        self.assertEqual(datetime.datetime, type(user_records[0]["timestamp"]))
 
     async def test_double_answer_works_as_intended(self):
         """
@@ -130,28 +143,35 @@ class TestRecord(IsolatedAsyncioTestCase):
         await command_handlers.main_handler(self.update, None)
 
         # then
-        self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
+        self.assertEqual(
+            1, self.update.effective_user.get_bot().send_message.call_count
+        )
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
         # when
         await button(self.button_update, None)
 
         # then
-        self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'NEUTRAL')
-        self.assertEqual(command_handlers.temp_records.get(1)['record']['energy'], None)
+        self.assertEqual(
+            command_handlers.temp_records.get(1)["record"]["mood"], "NEUTRAL"
+        )
+        self.assertEqual(command_handlers.temp_records.get(1)["record"]["energy"], None)
 
         # given user answers the same question again
         query = AsyncMock()
-        query.data = 'MODERATELY_ELEVATED'
-        query.message.text = 'How do you feel right now?'
+        query.data = "MODERATELY_ELEVATED"
+        query.message.text = "How do you feel right now?"
         self.button_update.callback_query = query
 
         # when
         await button(self.button_update, None)
 
         # then
-        self.assertEqual(command_handlers.temp_records.get(1)['record']['mood'], 'MODERATELY_ELEVATED')
-        self.assertEqual(command_handlers.temp_records.get(1)['record']['energy'], None)
+        self.assertEqual(
+            command_handlers.temp_records.get(1)["record"]["mood"],
+            "MODERATELY_ELEVATED",
+        )
+        self.assertEqual(command_handlers.temp_records.get(1)["record"]["energy"], None)
 
     async def test_record_with_offset(self):
         # given
@@ -161,7 +181,9 @@ class TestRecord(IsolatedAsyncioTestCase):
         await command_handlers.main_handler(self.update, None)
 
         # then
-        self.assertEqual(1, self.update.effective_user.get_bot().send_message.call_count)
+        self.assertEqual(
+            1, self.update.effective_user.get_bot().send_message.call_count
+        )
         self.assertEqual(1, command_handlers.handle_enum_metric.call_count)
 
         offset_context = Mock()
@@ -171,8 +193,12 @@ class TestRecord(IsolatedAsyncioTestCase):
         await command_handlers.offset_handler(self.update, offset_context)
 
         # then
-        self.assertEqual(datetime.datetime.fromisoformat(command_handlers.temp_records.get(1)['timestamp']).day,
-                         datetime.datetime.now().day - 1)
+        self.assertEqual(
+            datetime.datetime.fromisoformat(
+                command_handlers.temp_records.get(1)["timestamp"]
+            ).day,
+            datetime.datetime.now().day - 1,
+        )
 
 
 test_metrics = [
@@ -187,7 +213,7 @@ test_metrics = [
             "NEUTRAL": 0,
             "MILDLY_DEPRESSED": -1,
             "MODERATELY_DEPRESSED": -2,
-            "SEVERELY_DEPRESSED": -3
+            "SEVERELY_DEPRESSED": -3,
         },
     },
     {
@@ -195,5 +221,5 @@ test_metrics = [
         "type": "numeric",
         "prompt": "How much energy do you have right now?",
         "range": (1, 11),
-    }
+    },
 ]

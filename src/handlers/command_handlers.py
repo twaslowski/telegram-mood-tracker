@@ -6,7 +6,11 @@ from telegram import Update
 
 import src.persistence as persistence
 from src.config import defaults
-from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric, handle_graphing_dialog
+from src.handlers.metrics_handlers import (
+    handle_enum_metric,
+    handle_numeric_metric,
+    handle_graphing_dialog,
+)
 from src.state import State
 from src.visualise import visualize_monthly_data
 
@@ -14,10 +18,14 @@ from src.visualise import visualize_monthly_data
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
 state = ExpiringDict(max_len=100, max_age_seconds=300)
 
-bullet_point_list = '\n'.join([f"- {metric['name'].capitalize()}" for metric in defaults['metrics']])
-introduction_text = "Hi! You can track your mood with me. Simply type /record to get started. By default, " \
-                    f"I will track the following metrics: \n " \
-                    f"{bullet_point_list}"
+bullet_point_list = "\n".join(
+    [f"- {metric['name'].capitalize()}" for metric in defaults["metrics"]]
+)
+introduction_text = (
+    "Hi! You can track your mood with me. Simply type /record to get started. By default, "
+    f"I will track the following metrics: \n "
+    f"{bullet_point_list}"
+)
 
 
 async def init_user(update: Update, _) -> None:
@@ -31,8 +39,9 @@ async def init_user(update: Update, _) -> None:
     if not persistence.find_user(user_id):
         logging.info(f"Creating user {user_id}")
         persistence.create_user(user_id)
-        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                           text=introduction_text)
+        await update.effective_user.get_bot().send_message(
+            chat_id=update.effective_user.id, text=introduction_text
+        )
     else:
         logging.info(f"Received /start, but user {user_id} already exists")
 
@@ -46,9 +55,9 @@ def init_record(user_id: int):
     # create temporary record from user configuration
     metrics = persistence.get_user_config(user_id)
     record = {
-        'record': {metric['name']: None for metric in metrics},
-        'timestamp': datetime.datetime.now().isoformat(),
-        'config': metrics
+        "record": {metric["name"]: None for metric in metrics},
+        "timestamp": datetime.datetime.now().isoformat(),
+        "config": metrics,
     }
 
     logging.info(f"Creating temporary record for user {user_id}: {record}")
@@ -62,20 +71,24 @@ async def main_handler(update: Update, _) -> None:
     """
     user_id = update.effective_user.id
     if not temp_records.get(user_id):
-        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                           text="Creating a new record for you ...")
+        await update.effective_user.get_bot().send_message(
+            chat_id=update.effective_user.id, text="Creating a new record for you ..."
+        )
         init_record(user_id)
         state[user_id] = State.RECORDING
         await main_handler(update, None)
     else:
         # find the first metric for which the record value is still None
-        metric = [metric for metric in temp_records[user_id]['config'] if
-                  temp_records[user_id]['record'][metric['name']] is None][0]
+        metric = [
+            metric
+            for metric in temp_records[user_id]["config"]
+            if temp_records[user_id]["record"][metric["name"]] is None
+        ][0]
         logging.info(f"collecting information on metric {metric}")
-        if metric['type'] == 'enum':
-            await handle_enum_metric(update, metric['prompt'], metric['values'])
-        elif metric['type'] == 'numeric':
-            await handle_numeric_metric(update, metric['prompt'], metric['range'])
+        if metric["type"] == "enum":
+            await handle_enum_metric(update, metric["prompt"], metric["values"])
+        elif metric["type"] == "numeric":
+            await handle_numeric_metric(update, metric["prompt"], metric["range"])
 
 
 def get_all_months_for_offset(time_range: int, year: int, month: int):
@@ -107,7 +120,9 @@ async def handle_graph_specification(update):
     for month in months:
         path = visualize_monthly_data(update.effective_user.id, month)
         if path:
-            await update.effective_user.get_bot().send_photo(update.effective_user.id, open(path, 'rb'))
+            await update.effective_user.get_bot().send_photo(
+                update.effective_user.id, open(path, "rb")
+            )
 
 
 async def button(update: Update, _) -> None:
@@ -130,8 +145,9 @@ async def handle_no_known_state(update: Update) -> None:
     """
     no_state_message = """It doesn't appear like you're currently recording mood or graphing.
                        Press /record to create a new record, /graph to visualise your mood progress."""
-    await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                       text=no_state_message)
+    await update.effective_user.get_bot().send_message(
+        chat_id=update.effective_user.id, text=no_state_message
+    )
 
 
 async def handle_record_entry(update):
@@ -145,20 +161,27 @@ async def handle_record_entry(update):
     user_id = update.effective_user.id
     user_record = temp_records.get(user_id)
     # find metric that was answered
-    metric = [metric for metric in user_record['config'] if metric['prompt'] == prompt][0]
-    user_record['record'][metric['name']] = query.data
+    metric = [metric for metric in user_record["config"] if metric["prompt"] == prompt][
+        0
+    ]
+    user_record["record"][metric["name"]] = query.data
     logging.info(f"User {user_id} answered {metric} with {query.data}")
     # update temporary record
     temp_records[user_id] = user_record
     # check if record is complete
-    if all(value is not None for value in user_record['record'].values()):
+    if all(value is not None for value in user_record["record"].values()):
         logging.info(f"Record for user {user_id} is complete: {user_record['record']}")
-        persistence.create_record(user_id, user_record['record'], user_record['timestamp'])
+        persistence.create_record(
+            user_id, user_record["record"], user_record["timestamp"]
+        )
         del temp_records[user_id]
-        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                           text="Record completed. Thank you!")
+        await update.effective_user.get_bot().send_message(
+            chat_id=update.effective_user.id, text="Record completed. Thank you!"
+        )
     else:
-        logging.info(f"Record for user {user_id} is not complete yet: {user_record['record']}")
+        logging.info(
+            f"Record for user {user_id} is not complete yet: {user_record['record']}"
+        )
         await main_handler(update, None)
 
 
@@ -175,21 +198,24 @@ async def offset_handler(update: Update, context) -> None:
     user_state = state.get(update.effective_user.id)
     if user_state is not None and state[update.effective_user.id] == State.RECORDING:
         if len(context.args) != 1:
-            await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                               text=invalid_args_message)
+            await update.effective_user.get_bot().send_message(
+                chat_id=update.effective_user.id, text=invalid_args_message
+            )
         offset = int(context.args[0])
         user_id = update.effective_user.id
         record = temp_records[user_id]
-        record['timestamp'] = modify_timestamp(record['timestamp'], offset).isoformat()
+        record["timestamp"] = modify_timestamp(record["timestamp"], offset).isoformat()
         temp_records[user_id] = record
         logging.info(f"Updated timestamp for user {user_id} to {record['timestamp']}")
         # so i got kind of lazy on this one. splitting an iso-formatted timestamp just returns the date section.
-        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                           text=success_message.format(
-                                                               record['timestamp'].split('T')[0]))
+        await update.effective_user.get_bot().send_message(
+            chat_id=update.effective_user.id,
+            text=success_message.format(record["timestamp"].split("T")[0]),
+        )
     else:
-        await update.effective_user.get_bot().send_message(chat_id=update.effective_user.id,
-                                                           text=incorrect_state_message)
+        await update.effective_user.get_bot().send_message(
+            chat_id=update.effective_user.id, text=incorrect_state_message
+        )
 
 
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:

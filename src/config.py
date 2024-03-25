@@ -14,7 +14,7 @@ defaults = {
                 f"{emoji.emojize(':face_without_mouth:')}": 0,
                 f"{emoji.emojize(':slightly_frowning_face:')}": -1,
                 f"{emoji.emojize(':frowning_face:')}": -2,
-                f"{emoji.emojize(':skull:')}": -3
+                f"{emoji.emojize(':skull:')}": -3,
             },
         },
         {
@@ -22,9 +22,7 @@ defaults = {
             "type": "numeric",
             "prompt": "How much sleep did you get last night?",
             "range": (4, 12),
-        }
+        },
     ],
-    "notifications": [
-        datetime.time(hour=18, minute=00, second=00).isoformat()
-    ]
+    "notifications": [datetime.time(hour=18, minute=00, second=00).isoformat()],
 }
