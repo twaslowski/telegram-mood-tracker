@@ -1,46 +1,69 @@
-from unittest.async_case import IsolatedAsyncioTestCase
+from unittest.mock import Mock, AsyncMock, patch
 
+import mongomock
+import pytest
 from telegram.ext import ApplicationBuilder
-from unittest.mock import Mock, AsyncMock
 
 import src.persistence as persistence
 from src.app import init_reminders
 from src.handlers.command_handlers import init_user
 
 
-class TestUser(IsolatedAsyncioTestCase):
+@pytest.fixture(autouse=True)
+def patch_mongodb():
+    with patch.object(persistence, 'user', new=mongomock.MongoClient().db.collection):
+        yield
 
-    async def asyncSetUp(self) -> None:
-        update = Mock()
-        update.effective_user.id = 1
-        update.effective_user.get_bot().send_message = AsyncMock()
-        await init_user(update, None)
 
-    async def asyncTearDown(self) -> None:
-        persistence.user.delete_many({})
+@pytest.fixture
+def update():
+    update = Mock()
+    update.effective_user.id = 1
+    update.effective_user.get_bot().send_message = AsyncMock()
+    return update
 
-    async def test_registration(self):
-        user = persistence.user.find_one({"user_id": 1})
-        self.assertIsNotNone(user)
-        self.assertIsNotNone(user['metrics'])
-        self.assertEqual(len(user['metrics']), 2)
-        self.assertIsNotNone(user['notifications'])
 
-    async def test_no_double_registration(self):
-        update = Mock()
-        update.effective_user.id = 1
-        await init_user(update, None)
-        users = persistence.user.find({"user_id": 1})
-        self.assertEqual(len(list(users)), 1)
+def test_querying_nonexistent_user_returns_none():
+    assert persistence.find_user(1) is None
 
-    async def test_notifications(self):
-        # create additional user
-        update = Mock()
-        update.effective_user.id = 2
-        update.effective_user.get_bot().send_message = AsyncMock()
-        await init_user(update, None)
 
-        # init app with notification settings
-        app = ApplicationBuilder().token('some-token').build()
-        init_reminders(app)
-        self.assertEqual(len(app.job_queue.jobs()), 4)
+@pytest.mark.asyncio
+async def test_registration(update):
+    # user does not exist
+    assert persistence.find_user(1) is None
+
+    # create user
+    await init_user(update, None)
+
+    # now it exists
+    assert persistence.find_user(1) is not None
+    assert persistence.find_user(1)['metrics'] is not None
+    assert persistence.find_user(1)['notifications'] is not None
+
+    # introductory text has been sent
+    assert update.effective_user.get_bot().send_message.called
+
+
+@pytest.mark.asyncio
+async def test_no_double_registration(update):
+    # user does not exist
+    assert persistence.find_user(1) is None
+
+    # user is created
+    await init_user(update, None)
+    assert update.effective_user.get_bot().send_message.call_count == 1
+
+    # user creation is not repeated
+    await init_user(update, None)
+    assert update.effective_user.get_bot().send_message.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_notifications(update):
+    # create additional user
+    await init_user(update, None)
+
+    # init app with notification settings
+    app = ApplicationBuilder().token('some-token').build()
+    init_reminders(app)
+    assert len(app.job_queue.jobs()) == 1

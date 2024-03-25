@@ -9,7 +9,8 @@ from src.model.user import User
 
 load_dotenv()
 
-mongo_url = f"mongodb://{os.environ.get('MONGO_CONNECTION_STRING')}/"
+# use bracket notation over .get() to fail explicitly if environment variable is not supplied
+mongo_url = f"mongodb://{os.environ['MONGO_CONNECTION_STRING']}/"
 mongo_client = pymongo.MongoClient(mongo_url)
 mood_tracker = mongo_client["mood_tracker"]
 records = mood_tracker["records"]
