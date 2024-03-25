@@ -52,6 +52,7 @@ def get_all_user_notifications() -> dict:
     }
 
 
+# this function seems rather strange. Why not retrieve the user and access their metrics directly? todo remove?
 def get_user_config(user_id: int) -> dict:
     return user.find_one({"user_id": user_id})["metrics"]
 

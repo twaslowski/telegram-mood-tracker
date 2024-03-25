@@ -4,10 +4,11 @@ version = "0.1.0"
 description = ""
 authors = ["Tobias Waslowski <tobiaswaslowski@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 # core dependencies
 [tool.poetry.dependencies]
-python = "3.11.7"
+python = "3.11.8"
 matplotlib = "^3.8.3"
 pillow = "^10.2.0"
 pymongo = "^4.6.2"

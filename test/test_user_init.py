@@ -1,18 +1,11 @@
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, AsyncMock
 
-import mongomock
 import pytest
 from telegram.ext import ApplicationBuilder
 
 import src.persistence as persistence
 from src.app import init_reminders
 from src.handlers.command_handlers import init_user
-
-
-@pytest.fixture(autouse=True)
-def patch_mongodb():
-    with patch.object(persistence, "user", new=mongomock.MongoClient().db.collection):
-        yield
 
 
 @pytest.fixture
