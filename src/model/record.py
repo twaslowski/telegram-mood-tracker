@@ -1,13 +1,34 @@
 from datetime import datetime
 
 from pydantic import BaseModel
-from dataclasses import dataclass
 
 from src.model.metric import Metric
 
 
+class DatabaseRecord(BaseModel):
+    """
+    This exists for backwards-compatibility, as an abstraction layer to deal with my previous bad decisions.
+    It wraps the existing database record structure and allows me to build on top of it with relative ease.
+    """
+
+    _id: str
+    user_id: int
+    record: dict[str, int]
+    timestamp: str  # iso-formatted
+
+    def to_record(self) -> "Record":
+        return Record(
+            user_id=self.user_id,
+            data=[RecordData(metric_name=k, value=v) for k, v in self.record.items()],
+            timestamp=datetime.fromisoformat(self.timestamp),
+        )
+
+
 class RecordData(BaseModel):
-    # chosen like this for backward compatibility
+    """
+    Represents an instance of a metric, i.e. the metric name and a corresponding value.
+    """
+
     metric_name: str
     value: int | None
 
@@ -21,7 +42,7 @@ class Record(BaseModel):
     # this name is very unintuitive, as it overloads the meaning of the word "record"
     # it is chosen like this for backward compatibility,
     # but it should be migrated to something like 'data' or 'record_data' in the future
-    record: list[RecordData]
+    data: list[RecordData]
     # gets serialized to an ISO 8601 string
     timestamp: datetime
 
@@ -32,14 +53,13 @@ class Record(BaseModel):
 # todo: usually I use pydantic, but here the post-init is easier to do with python's native dataclass
 # i don't think mixing them is a good idea; there's no necessity for a lot of data validation anyhow,
 # so maybe we can move away from pydantic entirely?
-@dataclass
-class TempRecord:
+class TempRecord(BaseModel):
     """
     Record that are kept in the in-memory ExpiringDict while being completed.
     """
 
     metrics: list[Metric]
-    data: list[RecordData] = None  # initialised in __post_init__
+    data: list[RecordData] = None  # initialised in __init__
     timestamp: datetime = datetime.now()
 
     # todo create tests
@@ -60,7 +80,8 @@ class TempRecord:
     def is_complete(self) -> bool:
         return all([x.value is not None for x in self.data])
 
-    def __post_init__(self):
+    def __init__(self, **data):
+        super().__init__(**data)
         self.data = [
             RecordData(metric_name=metric.name, value=None) for metric in self.metrics
         ]

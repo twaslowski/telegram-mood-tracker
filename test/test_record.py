@@ -99,7 +99,9 @@ async def test_record_registration(button_update, update):
 
     # first metric is set in the temporary record
     # omit this in further tests
-    assert command_handlers.get_temp_record(1).find_data("mood").value == 3  # value of emoji.emojize(':zany_face:')
+    assert (
+        command_handlers.get_temp_record(1).find_data("mood").value == 3
+    )  # value of emoji.emojize(':zany_face:')
     assert command_handlers.get_temp_record(1).find_data("sleep").value is None
 
 
@@ -125,8 +127,10 @@ async def test_finish_record_creation(update, button_update, mocker, user):
     # verify record was created
     user_records = record_repository.find_records_for_user(1)
     assert len(user_records) == 1
-    assert user_records[0].find_data('mood') == 3  # value of emoji.emojize(':zany_face:')
-    assert type(user_records[0]["timestamp"]) == datetime.datetime
+    assert (
+        user_records[0].find_data("mood").value == 3
+    )  # value of emoji.emojize(':zany_face:')
+    assert user_records[0].timestamp  # is not None
 
 
 @pytest.mark.asyncio

@@ -70,7 +70,7 @@ def create_temporary_record(user_id: int):
     # create temporary record from user configuration
     # todo handle find_user() == None?
     metrics = user_repository.find_user(user_id).metrics
-    record = TempRecord(metrics)
+    record = TempRecord(metrics=metrics)
 
     logging.info(f"Creating temporary record for user {user_id}: {record}")
     # Store temporary record in the record ExpiringDict
@@ -187,7 +187,9 @@ async def handle_record_entry(update: Update) -> None:
         )
     # send out next metric prompt
     else:
-        logging.info(f"Record for user {user_id} is not complete yet: {user_record.data}")
+        logging.info(
+            f"Record for user {user_id} is not complete yet: {user_record.data}"
+        )
         await record_handler(update, None)
 
 
@@ -224,8 +226,8 @@ async def offset_handler(update: Update, context) -> None:
     invalid_args_message = "Please provide an offset in days like this: /offset 1"
     user_state = APPLICATION_STATE.get(update.effective_user.id)
     if (
-            user_state is not None
-            and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
+        user_state is not None
+        and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
     ):
         if len(context.args) != 1:
             await update.effective_user.get_bot().send_message(

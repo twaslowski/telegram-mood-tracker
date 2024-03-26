@@ -4,7 +4,7 @@ import os
 import pymongo
 from dotenv import load_dotenv
 
-from src.model.record import Record
+from src.model.record import Record, RecordData, DatabaseRecord
 
 # use bracket notation over .get() to fail explicitly if environment variable is not supplied
 mongo_url = os.getenv("MONGODB_HOST", "localhost:27017")
@@ -19,11 +19,10 @@ def get_latest_record() -> Record:
     #     return parse_record(dict(result))
 
 
-def parse_record(result: dict):
-    result = dict(result)
-    assert result["timestamp"]
-    result["timestamp"] = datetime.datetime.fromisoformat(result["timestamp"])
-    return Record(**result)
+def parse_record(result: dict) -> Record:
+    result = DatabaseRecord(**result)
+    # transform the record data to a list of RecordData objects
+    return result.to_record()
 
 
 def create_record(user_id: int, record_data: dict, timestamp: str):
