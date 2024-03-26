@@ -4,7 +4,7 @@ import logging
 from expiringdict import ExpiringDict
 from telegram import Update
 
-import src.repository.persistence as persistence
+import src.repository.record_repository as record_repository
 from src.config import defaults
 from src.handlers.metrics_handlers import (
     handle_enum_metric,
@@ -173,7 +173,7 @@ async def handle_record_entry(update):
     # check if record is complete
     if all(value is not None for value in user_record["record"].values()):
         logging.info(f"Record for user {user_id} is complete: {user_record['record']}")
-        persistence.create_record(
+        record_repository.create_record(
             user_id, user_record["record"], user_record["timestamp"]
         )
         del temp_records[user_id]

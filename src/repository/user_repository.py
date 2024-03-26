@@ -5,7 +5,7 @@ from src.model.notification import Notification
 from src.model.user import User
 from src import config
 
-mongo_url = os.getenv("MONGO_CONNECTION_STRING", "mongodb://localhost:27017/")
+mongo_url = os.getenv("MONGODB_HOST", "localhost:27017")
 mongo_client = pymongo.MongoClient(mongo_url)
 mood_tracker = mongo_client["mood_tracker"]
 user = mood_tracker["user"]

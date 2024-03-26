@@ -1,22 +1,14 @@
 import datetime
-import logging
 import os
 
 import pymongo
 from dotenv import load_dotenv
 
-from src import config
-from src.model.notification import Notification
-from src.model.user import User
-
-load_dotenv()
-
 # use bracket notation over .get() to fail explicitly if environment variable is not supplied
-mongo_url = f"mongodb://{os.environ['MONGO_CONNECTION_STRING']}/"
-mongo_client = pymongo.MongoClient(mongo_url)
+mongo_url = os.getenv("MONGODB_HOST", "localhost:27017")
+mongo_client = pymongo.MongoClient(f'mongodb://{mongo_url}/')
 mood_tracker = mongo_client["mood_tracker"]
 records = mood_tracker["records"]
-user = mood_tracker["user"]
 
 
 def find_oldest_record_for_user(user_id: int) -> dict:
@@ -27,10 +19,6 @@ def find_oldest_record_for_user(user_id: int) -> dict:
 
 def get_latest_record() -> dict:
     return records.find_one({}, sort=[("timestamp", pymongo.DESCENDING)])
-
-
-def delete_all() -> None:
-    records.delete_many({})
 
 
 def create_record(user_id: int, record: dict, timestamp: str):
@@ -62,35 +50,6 @@ def zeroes(days: int):
         create_record(user_id, default_record, date)
 
 
-def migrate() -> None:
-    """
-    Migrate from old format to new format
-    """
-    old_db = mongo_client["records"]
-    new_db = mongo_client["mood_tracker"]
-
-    # Select your collection
-    old_collection = old_db.records
-    new_collection = new_db.records
-
-    for doc in old_collection.find():
-        new_doc = {
-            "user_id": os.environ["CHAT_ID"],  # my own personal chat id
-            "timestamp": doc["timestamp"],
-            "record": doc["record"],
-        }
-        new_collection.insert_one(new_doc)
-
-    print("Migration completed.")
-
-    # Close the MongoDB connection
-    mongo_client.close()
-
-
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
     timestamp = datetime.datetime.fromisoformat(timestamp)
     return timestamp - datetime.timedelta(days=offset)
-
-
-if __name__ == "__main__":
-    zeroes(17)

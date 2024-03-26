@@ -6,7 +6,7 @@ import pytest
 from expiringdict import ExpiringDict
 
 import src.handlers.command_handlers as command_handlers
-import src.repository.persistence as persistence
+import src.repository.record_repository as record_repository
 from src.handlers.command_handlers import init_record, button, init_user
 from src.model.user import User
 
@@ -54,7 +54,7 @@ def user() -> User:
 
 
 @pytest.fixture(autouse=True)
-def patch_persistence_methods(mocker, user):
+def patch_repository_methods(mocker, user):
     mocker.patch("src.repository.user_repository.find_user", return_value=user)
 
 
@@ -120,7 +120,7 @@ async def test_finish_record_creation(update, button_update, mocker, user):
     assert command_handlers.temp_records.get(1) is None
 
     # verify record was created
-    user_records = persistence.find_records_for_user(1)
+    user_records = record_repository.find_records_for_user(1)
     assert len(user_records) == 1
     assert user_records[0]["record"]["mood"] == "NEUTRAL"
     assert type(user_records[0]["timestamp"]) == datetime.datetime

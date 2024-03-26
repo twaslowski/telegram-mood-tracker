@@ -3,7 +3,7 @@ from unittest.mock import patch
 import mongomock
 import pytest
 
-from src.repository import user_repository, persistence
+from src.repository import user_repository, record_repository
 
 
 @pytest.fixture(autouse=True)
@@ -15,6 +15,6 @@ def patch_user_collection():
 @pytest.fixture(autouse=True)
 def patch_records_collection():
     with patch.object(
-            persistence, "records", new=mongomock.MongoClient().db.collection
+            record_repository, "records", new=mongomock.MongoClient().db.collection
     ):
         yield
