@@ -33,11 +33,7 @@ def create_record(user_id: int, record_data: dict, timestamp: str):
 
 
 def find_records_for_user(user_id: int) -> list[Record]:
-    r = list(records.find({"user_id": user_id}))
-    # map timestamps
-    for record in r:
-        record["timestamp"] = datetime.datetime.fromisoformat(record["timestamp"])
-    return r
+    return [parse_record(r) for r in list(records.find({"user_id": user_id}))]
 
 
 def zeroes(days: int):

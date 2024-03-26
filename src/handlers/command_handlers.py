@@ -148,61 +148,84 @@ async def handle_no_known_state(update: Update) -> None:
     )
 
 
-async def handle_record_entry(update):
+async def handle_record_entry(update: Update) -> None:
+    """
+    When a button update is received while the user is recording a record, this function is called.
+    It represents the entering of a piece of record data, e.g. mood or sleep.
+    Broadly, this function has to figure out which metric was being answered based on the prompt in the query;
+    then, it has to update the temporary record with the answer.
+    Lastly, it has to check if the record is complete and store it in the database if it is.
+
+    This mechanism of figuring out which metric has been answered is a bit convoluted, but ultimately the only way
+    to do it if you want to be able to handle duplicate inputs for any given metrics.
+    :param update: Telegram update object
+    :return:
+    """
+    # retrieve query prompt and answer
+    user_id = update.effective_user.id
     query = update.callback_query
-    # Fetch prompt from query to figure out which question was being answered
-    # If a user answers Question A, then Question B and then Question A again, the prompt will be the same
-    # I don't see a better mechanism for handling this scenario.
     prompt = query.message.text
     await query.answer()
-    # get current record registration state; remove the metric that was just answered
-    user_id = update.effective_user.id
+
+    # retrieve current record
     user_record = get_temp_record(user_id)
     if not user_record:
         logging.error(f"User {user_id} does not have a temporary record")
         return await handle_no_known_state(update)
-    # find metric that was answered
-    metric_name = user_record.find_metric(prompt).name
-    record_data = user_record.find_data(metric_name)
-    record_data.value = query.data
-    logging.info(f"User {user_id} answered {metric_name} with {query.data}")
-    # update temporary record
+
+    # find metric that was answered and update the record
+    metric = user_record.find_metric(prompt)
+    logging.info(f"User {user_id} answered {metric.name} with {query.data}")
+    user_record.update_data(metric.name, metric.get_value(query.data))
     temp_records[user_id] = user_record
+
     # check if record is complete
-    if all(
-        value is not None
-        for value in [record_data.value for record_data in user_record.data]
-    ):
-        logging.info(f"Record for user {user_id} is complete: {user_record}")
-        record_repository.create_record(
-            user_id,
-            {
-                # todo refactor this
-                record_data.metric_name: record_data.value
-                for record_data in user_record.data
-            },
-            user_record.timestamp.isoformat(),
-        )
-        del temp_records[user_id]
+    if user_record.is_complete():
+        store_record(user_id, user_record)
         await update.effective_user.get_bot().send_message(
             chat_id=update.effective_user.id, text="Record completed. Thank you!"
         )
+    # send out next metric prompt
     else:
-        logging.info(
-            f"Record for user {user_id} is not complete yet: {user_record.data}"
-        )
+        logging.info(f"Record for user {user_id} is not complete yet: {user_record.data}")
         await record_handler(update, None)
 
 
+def store_record(user_id: int, user_record: TempRecord):
+    """
+    Stores a temporary record in the database.
+    :param user_id: user to whom the record belongs
+    :param user_record: the temporary record being saved
+    :return:
+    """
+    logging.info(f"Record for user {user_id} is complete: {user_record}")
+    record_repository.create_record(
+        user_id,
+        {
+            # todo refactor this
+            record_data.metric_name: record_data.value
+            for record_data in user_record.data
+        },
+        user_record.timestamp.isoformat(),
+    )
+    del temp_records[user_id]
+
+
 async def offset_handler(update: Update, context) -> None:
+    """
+    Handles the /offset command.
+    :param update: Telegram update object
+    :param context: holds the arguments passed to the command
+    :return:
+    """
     incorrect_state_message = """You can only use /offset while recording a record.
     Press /record to create a new record."""
     success_message = "The timestamp of your record has been updated to {}."
     invalid_args_message = "Please provide an offset in days like this: /offset 1"
     user_state = APPLICATION_STATE.get(update.effective_user.id)
     if (
-        user_state is not None
-        and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
+            user_state is not None
+            and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
     ):
         if len(context.args) != 1:
             await update.effective_user.get_bot().send_message(

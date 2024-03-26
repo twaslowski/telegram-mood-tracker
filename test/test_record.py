@@ -2,6 +2,7 @@ import datetime
 import time
 from unittest.mock import Mock, AsyncMock
 
+import emoji
 import pytest
 from expiringdict import ExpiringDict
 
@@ -9,6 +10,7 @@ import src.handlers.command_handlers as command_handlers
 import src.repository.record_repository as record_repository
 from src.config import default_metrics
 from src.handlers.command_handlers import create_temporary_record, button, create_user
+from src.model.metric import Metric
 from src.model.user import User
 
 expiry_time = 1
@@ -23,7 +25,7 @@ def button_update():
     mock_bot = AsyncMock()
     button_update.effective_user.get_bot = Mock(return_value=mock_bot)
     query = AsyncMock()
-    query.data = "NEUTRAL"
+    query.data = f"{emoji.emojize(':zany_face:')}"
     query.message.text = "How do you feel right now?"
     button_update.callback_query = query
     mock_bot.send_message = AsyncMock()
@@ -97,7 +99,7 @@ async def test_record_registration(button_update, update):
 
     # first metric is set in the temporary record
     # omit this in further tests
-    assert command_handlers.get_temp_record(1).find_data("mood").value == "NEUTRAL"
+    assert command_handlers.get_temp_record(1).find_data("mood").value == 3  # value of emoji.emojize(':zany_face:')
     assert command_handlers.get_temp_record(1).find_data("sleep").value is None
 
 
@@ -123,7 +125,7 @@ async def test_finish_record_creation(update, button_update, mocker, user):
     # verify record was created
     user_records = record_repository.find_records_for_user(1)
     assert len(user_records) == 1
-    assert user_records[0]["record"]["mood"] == "NEUTRAL"
+    assert user_records[0].find_data('mood') == 3  # value of emoji.emojize(':zany_face:')
     assert type(user_records[0]["timestamp"]) == datetime.datetime
 
 
@@ -142,7 +144,7 @@ async def test_double_answer_works_as_intended(update, button_update):
 
     # given user answers the same question again
     query = AsyncMock()
-    query.data = "MODERATELY_ELEVATED"
+    query.data = f"{emoji.emojize(':zany_face:')}"
     query.message.text = "How do you feel right now?"
     button_update.callback_query = query
 
@@ -152,7 +154,7 @@ async def test_double_answer_works_as_intended(update, button_update):
     # then the record is updated
     assert (
         command_handlers.get_temp_record(1).find_data("mood").value
-        == "MODERATELY_ELEVATED"
+        == 3  # value of emoji.emojize(':zany_face:')
     )
     assert command_handlers.get_temp_record(1).find_data("sleep").value is None
 
