@@ -22,7 +22,7 @@ def default_metrics() -> list[Metric]:
         ),
         Metric(
             name="sleep",
-            user_prompt="How much energy do you have right now?",
+            user_prompt="How much sleep did you get today?",
             values={str(i): i for i in range(4, 12)},
         ),
     ]

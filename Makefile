@@ -8,3 +8,6 @@ run:
 
 fmt:
 	@bash -c 'pre-commit run black --all-files'
+
+build:
+	@bash scripts/build.sh

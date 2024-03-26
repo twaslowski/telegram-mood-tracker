@@ -53,9 +53,7 @@ async def create_user(update: Update, _) -> None:
     if not user_repository.find_user(user_id):
         logging.info(f"Creating user {user_id}")
         user_repository.create_user(user_id)
-        await update.effective_user.get_bot().send_message(
-            chat_id=update.effective_user.id, text=introduction_text
-        )
+        await send(update, text=introduction_text)
     # User already exists
     else:
         logging.info(f"Received /start, but user {user_id} already exists")
@@ -143,9 +141,7 @@ async def handle_no_known_state(update: Update) -> None:
     """
     no_state_message = """It doesn't appear like you're currently recording mood or graphing.
                        Press /record to create a new record, /graph to visualise your mood progress."""
-    await update.effective_user.get_bot().send_message(
-        chat_id=update.effective_user.id, text=no_state_message
-    )
+    await send(update, text=no_state_message)
 
 
 async def handle_record_entry(update: Update) -> None:
@@ -182,9 +178,7 @@ async def handle_record_entry(update: Update) -> None:
     # check if record is complete
     if user_record.is_complete():
         store_record(user_id, user_record)
-        await update.effective_user.get_bot().send_message(
-            chat_id=update.effective_user.id, text="Record completed. Thank you!"
-        )
+        await send(update, text="Record completed. Thank you!")
     # send out next metric prompt
     else:
         logging.info(
@@ -230,24 +224,23 @@ async def offset_handler(update: Update, context) -> None:
         and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
     ):
         if len(context.args) != 1:
-            await update.effective_user.get_bot().send_message(
-                chat_id=update.effective_user.id, text=invalid_args_message
-            )
+            await send(update, text=invalid_args_message)
         offset = int(context.args[0])
         user_id = update.effective_user.id
+
+        # overwrite temp record; it's assumed the record exists since the user state is RECORDING
+        # state inconsistencies are not accounted for here
         record = temp_records[user_id]
         record.timestamp = modify_timestamp(record.timestamp, offset)
         temp_records[user_id] = record
         logging.info(f"Updated timestamp for user {user_id} to {record.timestamp}")
         # so i got kind of lazy on this one. splitting an iso-formatted timestamp just returns the date section.
-        await update.effective_user.get_bot().send_message(
-            chat_id=update.effective_user.id,
+        await send(
+            update,
             text=success_message.format(record.timestamp.isoformat().split("T")[0]),
         )
     else:
-        await update.effective_user.get_bot().send_message(
-            chat_id=update.effective_user.id, text=incorrect_state_message
-        )
+        await send(update, text=incorrect_state_message)
 
 
 def modify_timestamp(timestamp: datetime.datetime, offset: int) -> datetime.datetime:
