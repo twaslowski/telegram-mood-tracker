@@ -5,7 +5,7 @@ from src.model.metric import Metric
 
 class RecordData(BaseModel):
     metric: Metric
-    value: str  # todo this can be done better
+    value: int
 
 
 class Record(BaseModel):

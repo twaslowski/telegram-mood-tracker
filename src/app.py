@@ -33,18 +33,16 @@ def init_reminders(app: Application) -> None:
     :param app: The initialised Telegram app object.
     """
     j = app.job_queue
-    for (
-        user_notification_configuration
-    ) in persistence.get_all_user_notifications().items():
-        for notification_time in user_notification_configuration[1]:
-            logging.info(
-                f"Setting up notifications for {notification_time} for user {user_notification_configuration[0]}"
-            )
+    for user in persistence.find_all_users():
+        user_id = user.user_id
+        notifications = user.notifications
+        logging.info(f"Setting up notifications for for user {user_id}")
+        for notification in notifications:
             j.run_daily(
                 reminder,
                 days=(0, 1, 2, 3, 4, 5, 6),
-                chat_id=user_notification_configuration[0],
-                time=notification_time,
+                chat_id=user_id,
+                time=notification.time,
             )
 
 

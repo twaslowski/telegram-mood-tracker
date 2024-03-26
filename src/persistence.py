@@ -1,10 +1,12 @@
 import datetime
+import logging
 import os
 
 import pymongo
 from dotenv import load_dotenv
 
 from src import config
+from src.model.notification import Notification
 from src.model.user import User
 
 load_dotenv()
@@ -17,15 +19,21 @@ records = mood_tracker["records"]
 user = mood_tracker["user"]
 
 
-def get_latest_record() -> dict:
-    return records.find_one({}, sort=[("timestamp", pymongo.DESCENDING)])
-
-
 def find_user(user_id: int) -> User | None:
     result = user.find_one({"user_id": user_id})
     if result:
-        return User(**result)
+        return parse_user(dict(result))
     return None
+
+
+def parse_user(result: dict) -> User:
+    result = dict(result)
+    print(result)
+    # still not perfect from a typing point of view, but the hack is limited to the persistence layer
+    result["notifications"] = [
+        Notification(**notification) for notification in result["notifications"]
+    ]
+    return User(**result)
 
 
 def create_user(user_id: int) -> None:
@@ -33,9 +41,16 @@ def create_user(user_id: int) -> None:
         {
             "user_id": user_id,
             "metrics": config.defaults.get("metrics"),
-            "notifications": config.defaults.get("notifications"),
+            "notifications": [
+                notification.model_dump()
+                for notification in config.default_notifications()
+            ],
         }
     )
+
+
+def find_all_users() -> list[User]:
+    return [parse_user(dict(u)) for u in user.find()]
 
 
 def find_oldest_record_for_user(user_id: int) -> dict:
@@ -44,15 +59,8 @@ def find_oldest_record_for_user(user_id: int) -> dict:
     )
 
 
-def get_all_user_notifications() -> dict:
-    """
-    Returns dict of user_id to their respective notification times
-    :return: dict of user_id: [notification_time]
-    """
-    return {
-        u["user_id"]: [datetime.time.fromisoformat(t) for t in u["notifications"]]
-        for u in user.find()
-    }
+def get_latest_record() -> dict:
+    return records.find_one({}, sort=[("timestamp", pymongo.DESCENDING)])
 
 
 def delete_all() -> None:

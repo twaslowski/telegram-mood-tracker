@@ -1,6 +1,8 @@
 import datetime
 import emoji
 
+from src.model.notification import Notification
+
 defaults = {
     "metrics": [
         {
@@ -23,6 +25,16 @@ defaults = {
             "prompt": "How much sleep did you get last night?",
             "range": (4, 12),
         },
-    ],
-    "notifications": [datetime.time(hour=18, minute=00, second=00).isoformat()],
+    ]
 }
+
+
+def default_notifications() -> list[Notification]:
+    return [
+        Notification(
+            **{
+                "text": "How was your day?",
+                "time": datetime.time(20, 0),
+            }
+        )
+    ]

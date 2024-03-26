@@ -53,6 +53,7 @@ def init_record(user_id: int):
     :param user_id:
     """
     # create temporary record from user configuration
+    # todo handle find_user() == None?
     metrics = persistence.find_user(user_id).metrics
     record = {
         "record": {metric["name"]: None for metric in metrics},
