@@ -7,6 +7,7 @@ from expiringdict import ExpiringDict
 
 import src.handlers.command_handlers as command_handlers
 import src.repository.record_repository as record_repository
+from src.config import default_metrics
 from src.handlers.command_handlers import create_temporary_record, button, create_user
 from src.model.user import User
 
@@ -43,7 +44,7 @@ def patch_command_handler_methods():
         max_len=100, max_age_seconds=expiry_time
     )
     command_handlers.state = ExpiringDict(max_len=100, max_age_seconds=expiry_time)
-    command_handlers.handle_enum_metric = AsyncMock()
+    command_handlers.prompt_user_for_metric = AsyncMock()
     command_handlers.handle_numeric_metric = AsyncMock()
     command_handlers.handle_no_known_state = AsyncMock()
 
@@ -66,11 +67,11 @@ async def test_init_and_expire_record(update, button_update):
     # create record
     await create_user(update, None)
     create_temporary_record(1)
-    assert command_handlers.temp_records.get(1) is not None
+    assert command_handlers.get_temp_record(1) is not None
     # let expiry time elapse
     time.sleep(expiry_time + 1)
     # after being emptied, the dict contains an empty list, as opposed to being empty entirely
-    assert command_handlers.temp_records.get(1) is None
+    assert command_handlers.get_temp_record(1) is None
 
     # when user attempts to record, they receive an error message
     await command_handlers.button(button_update, None)
@@ -89,15 +90,15 @@ async def test_record_registration(button_update, update):
     # bot responds with first metric user prompt
     # omit this in further tests
     assert update.effective_user.get_bot().send_message.call_count == 1
-    assert command_handlers.handle_enum_metric.call_count == 1
+    assert command_handlers.prompt_user_for_metric.call_count == 1
 
     # when user response is received
     await button(button_update, None)
 
     # first metric is set in the temporary record
     # omit this in further tests
-    assert command_handlers.temp_records.get(1)["record"]["mood"] == "NEUTRAL"
-    assert command_handlers.temp_records.get(1)["record"]["energy"] is None
+    assert command_handlers.get_temp_record(1).find_data("mood").value == "NEUTRAL"
+    assert command_handlers.get_temp_record(1).find_data("sleep").value is None
 
 
 @pytest.mark.asyncio
@@ -150,9 +151,10 @@ async def test_double_answer_works_as_intended(update, button_update):
 
     # then the record is updated
     assert (
-        command_handlers.temp_records.get(1)["record"]["mood"] == "MODERATELY_ELEVATED"
+        command_handlers.get_temp_record(1).find_data("mood").value
+        == "MODERATELY_ELEVATED"
     )
-    assert command_handlers.temp_records.get(1)["record"]["energy"] is None
+    assert command_handlers.get_temp_record(1).find_data("sleep").value is None
 
 
 @pytest.mark.asyncio
@@ -167,32 +169,9 @@ async def test_record_with_offset(update):
 
     # then the temp record's timestamp should be offset by 1 day
     assert (
-        datetime.datetime.fromisoformat(
-            command_handlers.temp_records.get(1)["timestamp"]
-        ).day
+        command_handlers.get_temp_record(1).timestamp.day
         == datetime.datetime.now().day - 1
     )
 
 
-test_metrics = [
-    {
-        "name": "mood",
-        "prompt": "How do you feel right now?",
-        "type": "enum",
-        "values": {
-            "SEVERELY_ELEVATED": 3,
-            "MODERATELY_ELEVATED": 2,
-            "MILDLY_ELEVATED": -1,
-            "NEUTRAL": 0,
-            "MILDLY_DEPRESSED": -1,
-            "MODERATELY_DEPRESSED": -2,
-            "SEVERELY_DEPRESSED": -3,
-        },
-    },
-    {
-        "name": "energy",
-        "type": "numeric",
-        "prompt": "How much energy do you have right now?",
-        "range": (1, 11),
-    },
-]
+test_metrics = default_metrics()

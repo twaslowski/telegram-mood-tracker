@@ -8,4 +8,5 @@ async def send(update: Update, text: str):
     :param text: The message to send.
     """
     await update.effective_user.get_bot().send_message(
-        chat_id=update.effective_user.id, text=text)
+        chat_id=update.effective_user.id, text=text
+    )

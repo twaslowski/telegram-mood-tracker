@@ -7,14 +7,27 @@ from telegram import Update
 import src.repository.record_repository as record_repository
 from src.config import default_metrics
 from src.handlers.graphing import handle_graph_specification
-from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
+from src.handlers.metrics_handlers import prompt_user_for_metric
 from src.handlers.util import send
+from src.model.metric import Metric
+from src.model.record import TempRecord
 from src.repository import user_repository
 from src.state import State, APPLICATION_STATE
 
-# in-memory storage for user records before they get persisted; if a user doesn't finish a record, it will be deleted
-# Initially populated with a dict defined in create_temporary_record()
+"""
+The temp_records data structures holds unfinished records for up to five minutes while users are creating them.
+This is a key-value data structure, with the keys being the user id and the value being exactly one temporary record.
+"""
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
+
+
+def get_temp_record(user_id: int) -> TempRecord | None:
+    """
+    Utility method to make typing easier when accessing the temp_records structure
+    :param user_id: user_id for which to retrieve temporary record
+    :return: TempRecord if available, else None
+    """
+    return temp_records.get(user_id)
 
 
 async def create_user(update: Update, _) -> None:
@@ -57,16 +70,29 @@ def create_temporary_record(user_id: int):
     # create temporary record from user configuration
     # todo handle find_user() == None?
     metrics = user_repository.find_user(user_id).metrics
-    record = {
-        "record": {metric["name"]: None for metric in metrics},
-        "timestamp": datetime.datetime.now().isoformat(),
-        "config": metrics,
-    }
+    record = TempRecord(metrics)
 
     logging.info(f"Creating temporary record for user {user_id}: {record}")
     # Store temporary record in the record ExpiringDict
     temp_records[user_id] = record
     APPLICATION_STATE[user_id] = State.RECORDING
+
+
+def find_first_metric(temp_record: TempRecord) -> Metric:
+    """
+    Finds the first metric in the record that has not been answered yet.
+    :param temp_record: The temporary record.
+    :return: The first metric that has not been answered yet.
+    """
+    # todo is there a scenario first_unanswered_data is None, i.e. all metrics have been answered already?
+    first_unanswered_data = list(filter(lambda x: x.value is None, temp_record.data))[
+        0
+    ]  # RecordData instance
+    return list(
+        filter(
+            lambda x: x.name == first_unanswered_data.metric_name, temp_record.metrics
+        )
+    )[0]
 
 
 async def record_handler(update: Update, _) -> None:
@@ -85,17 +111,12 @@ async def record_handler(update: Update, _) -> None:
         await record_handler(update, None)
     else:
         # find the first metric for which the record value is still None
-        metric = [
-            metric
-            for metric in temp_records[user_id]["config"]
-            if temp_records[user_id]["record"][metric["name"]] is None
-        ][0]
+        temp_record = get_temp_record(user_id)
+        metric = find_first_metric(temp_record)
+
         logging.info(f"collecting information on metric {metric}")
         # this needs to be refactored, since I want to get rid of this distinction entirely eventually
-        if metric["type"] == "enum":
-            await handle_enum_metric(update, metric["prompt"], metric["values"])
-        elif metric["type"] == "numeric":
-            await handle_numeric_metric(update, metric["prompt"], metric["range"])
+        await prompt_user_for_metric(update, metric)
 
 
 async def button(update: Update, _) -> None:
@@ -136,24 +157,31 @@ async def handle_record_entry(update):
     await query.answer()
     # get current record registration state; remove the metric that was just answered
     user_id = update.effective_user.id
-    try:
-        user_record = temp_records[user_id]
-    except KeyError:
+    user_record = get_temp_record(user_id)
+    if not user_record:
         logging.error(f"User {user_id} does not have a temporary record")
         return await handle_no_known_state(update)
     # find metric that was answered
-    metric = [metric for metric in user_record["config"] if metric["prompt"] == prompt][
-        0
-    ]
-    user_record["record"][metric["name"]] = query.data
-    logging.info(f"User {user_id} answered {metric} with {query.data}")
+    metric_name = user_record.find_metric(prompt).name
+    record_data = user_record.find_data(metric_name)
+    record_data.value = query.data
+    logging.info(f"User {user_id} answered {metric_name} with {query.data}")
     # update temporary record
     temp_records[user_id] = user_record
     # check if record is complete
-    if all(value is not None for value in user_record["record"].values()):
-        logging.info(f"Record for user {user_id} is complete: {user_record['record']}")
+    if all(
+        value is not None
+        for value in [record_data.value for record_data in user_record.data]
+    ):
+        logging.info(f"Record for user {user_id} is complete: {user_record}")
         record_repository.create_record(
-            user_id, user_record["record"], user_record["timestamp"]
+            user_id,
+            {
+                # todo refactor this
+                record_data.metric_name: record_data.value
+                for record_data in user_record.data
+            },
+            user_record.timestamp.isoformat(),
         )
         del temp_records[user_id]
         await update.effective_user.get_bot().send_message(
@@ -161,7 +189,7 @@ async def handle_record_entry(update):
         )
     else:
         logging.info(
-            f"Record for user {user_id} is not complete yet: {user_record['record']}"
+            f"Record for user {user_id} is not complete yet: {user_record.data}"
         )
         await record_handler(update, None)
 
@@ -173,8 +201,8 @@ async def offset_handler(update: Update, context) -> None:
     invalid_args_message = "Please provide an offset in days like this: /offset 1"
     user_state = APPLICATION_STATE.get(update.effective_user.id)
     if (
-            user_state is not None
-            and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
+        user_state is not None
+        and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
     ):
         if len(context.args) != 1:
             await update.effective_user.get_bot().send_message(
@@ -183,13 +211,13 @@ async def offset_handler(update: Update, context) -> None:
         offset = int(context.args[0])
         user_id = update.effective_user.id
         record = temp_records[user_id]
-        record["timestamp"] = modify_timestamp(record["timestamp"], offset).isoformat()
+        record.timestamp = modify_timestamp(record.timestamp, offset)
         temp_records[user_id] = record
-        logging.info(f"Updated timestamp for user {user_id} to {record['timestamp']}")
+        logging.info(f"Updated timestamp for user {user_id} to {record.timestamp}")
         # so i got kind of lazy on this one. splitting an iso-formatted timestamp just returns the date section.
         await update.effective_user.get_bot().send_message(
             chat_id=update.effective_user.id,
-            text=success_message.format(record["timestamp"].split("T")[0]),
+            text=success_message.format(record.timestamp.isoformat().split("T")[0]),
         )
     else:
         await update.effective_user.get_bot().send_message(
@@ -197,6 +225,5 @@ async def offset_handler(update: Update, context) -> None:
         )
 
 
-def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
-    timestamp = datetime.datetime.fromisoformat(timestamp)
+def modify_timestamp(timestamp: datetime.datetime, offset: int) -> datetime.datetime:
     return timestamp - datetime.timedelta(days=offset)
