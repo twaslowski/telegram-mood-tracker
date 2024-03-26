@@ -27,7 +27,7 @@ async def handle_numeric_metric(
     )
 
 
-async def handle_graphing_dialog(update: Update, context) -> None:
+async def handle_graphing_dialog(update: Update, _) -> None:
     bot = update.effective_user.get_bot()
     keyboard = [
         [InlineKeyboardButton("Last month", callback_data="1")],

@@ -7,7 +7,7 @@ from expiringdict import ExpiringDict
 
 import src.handlers.command_handlers as command_handlers
 import src.repository.record_repository as record_repository
-from src.handlers.command_handlers import init_record, button, init_user
+from src.handlers.command_handlers import create_temporary_record, button, create_user
 from src.model.user import User
 
 expiry_time = 1
@@ -64,8 +64,8 @@ async def test_init_and_expire_record(update, button_update):
     Create a record and let it expire.
     """
     # create record
-    await init_user(update, None)
-    init_record(1)
+    await create_user(update, None)
+    create_temporary_record(1)
     assert command_handlers.temp_records.get(1) is not None
     # let expiry time elapse
     time.sleep(expiry_time + 1)
@@ -84,7 +84,7 @@ async def test_record_registration(button_update, update):
     Does not cover the state transition from Metric N to Finished.
     """
     # when user calls /record
-    await command_handlers.main_handler(update, None)
+    await command_handlers.record_handler(update, None)
 
     # bot responds with first metric user prompt
     # omit this in further tests
@@ -110,7 +110,7 @@ async def test_finish_record_creation(update, button_update, mocker, user):
     user.metrics = [test_metrics[0]]
 
     # when user calls /record
-    await command_handlers.main_handler(update, None)
+    await command_handlers.record_handler(update, None)
 
     # when user response is received
     await button(button_update, None)
@@ -134,7 +134,7 @@ async def test_double_answer_works_as_intended(update, button_update):
     :return:
     """
     # when user calls /record
-    await command_handlers.main_handler(update, None)
+    await command_handlers.record_handler(update, None)
 
     # when user responds with metric
     await button(button_update, None)
@@ -158,7 +158,7 @@ async def test_double_answer_works_as_intended(update, button_update):
 @pytest.mark.asyncio
 async def test_record_with_offset(update):
     # when user calls /record
-    await command_handlers.main_handler(update, None)
+    await command_handlers.record_handler(update, None)
 
     # when the user offsets the record by 1 day
     offset_context = Mock()

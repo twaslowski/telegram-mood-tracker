@@ -4,7 +4,7 @@ from unittest import IsolatedAsyncioTestCase
 from unittest.mock import Mock, AsyncMock
 
 import src.repository.record_repository
-from src.handlers.command_handlers import init_user, get_all_months_for_offset
+from src.handlers.command_handlers import create_user, get_all_months_for_offset
 
 
 class TestGraph(IsolatedAsyncioTestCase):
@@ -20,7 +20,7 @@ class TestGraph(IsolatedAsyncioTestCase):
         update = AsyncMock()
         update.effective_user.id = 1
         update.effective_user.get_bot = Mock(return_value=AsyncMock())
-        await init_user(update, None)
+        await create_user(update, None)
 
     async def test_should_graph_for_correct_months(self):
         self.assertEqual([(2021, 6)], get_all_months_for_offset(1, 2021, 6))

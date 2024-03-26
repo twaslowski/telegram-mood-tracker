@@ -13,9 +13,9 @@ from telegram.ext import (
 
 import src.repository.user_repository as user_repository
 from src.handlers.command_handlers import (
-    main_handler,
+    record_handler,
     graph_handler,
-    init_user,
+    create_user,
     button,
     offset_handler,
 )
@@ -56,9 +56,9 @@ def init_app() -> Application:
     :return:
     """
     app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", init_user))
+    app.add_handler(CommandHandler("start", create_user))
     app.add_handler(CommandHandler("graph", graph_handler))
-    app.add_handler(CommandHandler("record", main_handler))
+    app.add_handler(CommandHandler("record", record_handler))
     app.add_handler(CommandHandler("offset", offset_handler))
     app.add_handler(CallbackQueryHandler(button))
     init_reminders(app)

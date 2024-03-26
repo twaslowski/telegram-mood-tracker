@@ -19,23 +19,26 @@ from src.visualise import visualize_monthly_data
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
 state = ExpiringDict(max_len=100, max_age_seconds=300)
 
-bullet_point_list = "\n".join(
-    [f"- {metric.name.capitalize()}" for metric in default_metrics()]
-)
-introduction_text = (
-    "Hi! You can track your mood with me. Simply type /record to get started. By default, "
-    f"I will track the following metrics: \n "
-    f"{bullet_point_list}"
-)
 
-
-async def init_user(update: Update, _) -> None:
+async def create_user(update: Update, _) -> None:
     """
+    Handles /start command.
     Creates user based on the user_id included in the update object.
     :param update: Update from the Telegram bot.
     :param _: CallbackContext: is irrelevant
     :return:
     """
+    # Declare introduction text.
+    bullet_point_list = "\n".join(
+        [f"- {metric.name.capitalize()}" for metric in default_metrics()]
+    )
+    introduction_text = (
+        "Hi! You can track your mood with me. Simply type /record to get started. By default, "
+        f"I will track the following metrics: \n "
+        f"{bullet_point_list}"
+    )
+
+    # Handle registration
     user_id = update.effective_user.id
     if not user_repository.find_user(user_id):
         logging.info(f"Creating user {user_id}")
@@ -43,11 +46,12 @@ async def init_user(update: Update, _) -> None:
         await update.effective_user.get_bot().send_message(
             chat_id=update.effective_user.id, text=introduction_text
         )
+    # User already exists
     else:
         logging.info(f"Received /start, but user {user_id} already exists")
 
 
-def init_record(user_id: int):
+def create_temporary_record(user_id: int):
     """
     Creates a new record for the user with the given user_id.
     Additionally, updates the state map to move through the questions easier.
@@ -63,11 +67,14 @@ def init_record(user_id: int):
     }
 
     logging.info(f"Creating temporary record for user {user_id}: {record}")
+    # Store temporary record in the record ExpiringDict
     temp_records[user_id] = record
+    state[user_id] = State.RECORDING
 
 
-async def main_handler(update: Update, _) -> None:
+async def record_handler(update: Update, _) -> None:
     """
+    Handles /record.
     Main handler for the bot. This is what starts the query process; determines whether a new record needs to be
     created, creates records and sends out the prompts to populate them.
     """
@@ -76,9 +83,10 @@ async def main_handler(update: Update, _) -> None:
         await update.effective_user.get_bot().send_message(
             chat_id=update.effective_user.id, text="Creating a new record for you ..."
         )
-        init_record(user_id)
-        state[user_id] = State.RECORDING
-        await main_handler(update, None)
+        create_temporary_record(user_id)
+        # update global state for user
+        # Recurse to start the record entry process
+        await record_handler(update, None)
     else:
         # find the first metric for which the record value is still None
         metric = [
@@ -93,9 +101,14 @@ async def main_handler(update: Update, _) -> None:
             await handle_numeric_metric(update, metric["prompt"], metric["range"])
 
 
-def get_all_months_for_offset(time_range: int, year: int, month: int):
+def get_all_months_for_offset(time_range: int, year: int, month: int) -> list[tuple[int, int]]:
     """
-    Returns a list of tuples (year, month) for the given time range, i.e. how many records in the past should be considered.
+    Determines how many months should be considered for the graph.
+    :param time_range: The number of months to consider.
+    Year and month are provided for testability purposes so that I don't have to mock datetime.datetime.now().
+    :param year: The current year.
+    :param month: The current month.
+    :return: a list of tuples (year, month) for the given time range.
     """
     months = [(year, month)]
     for i in range(time_range - 1):
@@ -110,15 +123,25 @@ def get_all_months_for_offset(time_range: int, year: int, month: int):
 
 
 async def handle_graph_specification(update):
+    """
+    Button handler to determine the timeframe for the graph.
+    :param update: button press.
+    :return: None
+    """
     # await timeframe specification
     query = update.callback_query
     await query.answer()
 
+    # calculate arguments for determining time range
     now = datetime.datetime.now()
-    time_range = int(update.callback_query.data)
     year = now.year
     month = now.month
+    time_range = int(update.callback_query.data)
+
+    # get all months for the given time range
     months = get_all_months_for_offset(time_range, year, month)
+
+    # create graphs for all months
     for month in months:
         path = visualize_monthly_data(update.effective_user.id, month)
         if path:
@@ -129,7 +152,9 @@ async def handle_graph_specification(update):
 
 async def button(update: Update, _) -> None:
     """
-    Processes the inputs from the InlineKeyboardButtons and maintains the temporary record.
+    General button handler.
+    Disambiguates between different states and forwards the query to the appropriate handler.
+    :param update: Button press.
     """
     user = update.effective_user.id
     user_state = state.get(user)
@@ -144,6 +169,8 @@ async def button(update: Update, _) -> None:
 async def handle_no_known_state(update: Update) -> None:
     """
     Handles the case where the user is not in a known state.
+    This can happen if the user has not started recording or graphing, or if the state has expired.
+    :param update: The update object.
     """
     no_state_message = """It doesn't appear like you're currently recording mood or graphing.
                        Press /record to create a new record, /graph to visualise your mood progress."""
@@ -184,7 +211,7 @@ async def handle_record_entry(update):
         logging.info(
             f"Record for user {user_id} is not complete yet: {user_record['record']}"
         )
-        await main_handler(update, None)
+        await record_handler(update, None)
 
 
 async def graph_handler(update: Update, context) -> None:
