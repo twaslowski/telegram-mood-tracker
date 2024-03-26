@@ -1,15 +1,16 @@
 import datetime
 import emoji
 
+from src.model.metric import Metric
 from src.model.notification import Notification
 
-defaults = {
-    "metrics": [
-        {
-            "name": "mood",
-            "prompt": "How do you feel right now?",
-            "type": "enum",
-            "values": {
+
+def default_metrics() -> list[Metric]:
+    return [
+        Metric(
+            name="mood",
+            user_prompt="How do you feel right now?",
+            values={
                 f"{emoji.emojize(':zany_face:')}": 3,
                 f"{emoji.emojize(':grinning_face_with_smiling_eyes:')}": 2,
                 f"{emoji.emojize(':slightly_smiling_face:')}": 1,
@@ -18,15 +19,14 @@ defaults = {
                 f"{emoji.emojize(':frowning_face:')}": -2,
                 f"{emoji.emojize(':skull:')}": -3,
             },
-        },
-        {
-            "name": "sleep",
-            "type": "numeric",
-            "prompt": "How much sleep did you get last night?",
-            "range": (4, 12),
-        },
+        ),
+        Metric(
+            name="sleep",
+            user_prompt="How much energy do you have right now?",
+            values={str(i): i for i in range(4, 12)},
+
+        )
     ]
-}
 
 
 def default_notifications() -> list[Notification]:

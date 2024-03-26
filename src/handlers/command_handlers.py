@@ -5,7 +5,7 @@ from expiringdict import ExpiringDict
 from telegram import Update
 
 import src.repository.record_repository as record_repository
-from src.config import defaults
+from src.config import default_metrics
 from src.handlers.metrics_handlers import (
     handle_enum_metric,
     handle_numeric_metric,
@@ -20,7 +20,7 @@ temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
 state = ExpiringDict(max_len=100, max_age_seconds=300)
 
 bullet_point_list = "\n".join(
-    [f"- {metric['name'].capitalize()}" for metric in defaults["metrics"]]
+    [f"- {metric.name.capitalize()}" for metric in default_metrics()]
 )
 introduction_text = (
     "Hi! You can track your mood with me. Simply type /record to get started. By default, "

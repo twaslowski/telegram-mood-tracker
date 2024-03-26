@@ -20,7 +20,6 @@ def find_user(user_id: int) -> User | None:
 
 def parse_user(result: dict) -> User:
     result = dict(result)
-    print(result)
     # still not perfect from a typing point of view, but the hack is limited to the persistence layer
     result["notifications"] = [
         Notification(**notification) for notification in result["notifications"]
@@ -32,7 +31,7 @@ def create_user(user_id: int) -> None:
     user.insert_one(
         {
             "user_id": user_id,
-            "metrics": config.defaults.get("metrics"),
+            "metrics": [metric.model_dump() for metric in config.default_metrics()],
             "notifications": [
                 notification.model_dump()
                 for notification in config.default_notifications()

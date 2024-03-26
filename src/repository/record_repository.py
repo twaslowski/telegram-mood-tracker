@@ -4,6 +4,8 @@ import os
 import pymongo
 from dotenv import load_dotenv
 
+from src.model.record import Record
+
 # use bracket notation over .get() to fail explicitly if environment variable is not supplied
 mongo_url = os.getenv("MONGODB_HOST", "localhost:27017")
 mongo_client = pymongo.MongoClient(f'mongodb://{mongo_url}/')
@@ -11,21 +13,24 @@ mood_tracker = mongo_client["mood_tracker"]
 records = mood_tracker["records"]
 
 
-def find_oldest_record_for_user(user_id: int) -> dict:
-    return records.find_one(
-        {"user_id": user_id}, sort=[("timestamp", pymongo.ASCENDING)]
-    )
-
-
-def get_latest_record() -> dict:
+def get_latest_record() -> Record:
     return records.find_one({}, sort=[("timestamp", pymongo.DESCENDING)])
+    # if result:
+    #     return parse_record(dict(result))
 
 
-def create_record(user_id: int, record: dict, timestamp: str):
-    records.insert_one({"user_id": user_id, "record": record, "timestamp": timestamp})
+def parse_record(result: dict):
+    result = dict(result)
+    assert result["timestamp"]
+    result["timestamp"] = datetime.datetime.fromisoformat(result["timestamp"])
+    return Record(**result)
 
 
-def find_records_for_user(user_id: int) -> list:
+def create_record(user_id: int, record_data: dict, timestamp: str):
+    records.insert_one({"user_id": user_id, "record": record_data, "timestamp": timestamp})
+
+
+def find_records_for_user(user_id: int) -> list[Record]:
     r = list(records.find({"user_id": user_id}))
     # map timestamps
     for record in r:

@@ -13,13 +13,6 @@ class TestGraph(IsolatedAsyncioTestCase):
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             level=logging.INFO,
         )
-        src.repository.record_repository.find_oldest_record_for_user = Mock(
-            return_value={
-                "record": {"mood": "NEUTRAL"},
-                "timestamp": datetime.datetime.now().replace(month=6),
-                "user_id": 1,
-            }
-        )
         await self.initialise_user()
 
     @staticmethod

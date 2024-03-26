@@ -1,10 +1,8 @@
 from pydantic import BaseModel
 
-from src.model.metric import Metric
-
 
 class RecordData(BaseModel):
-    metric: Metric
+    metric_name: str
     value: int
 
 
