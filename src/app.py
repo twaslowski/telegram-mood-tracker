@@ -1,5 +1,6 @@
 import logging
 import os
+from functools import partial
 
 from dotenv import load_dotenv
 from telegram import Update
@@ -38,8 +39,11 @@ def init_reminders(app: Application) -> None:
         notifications = user.notifications
         logging.info(f"Setting up notifications for for user {user_id}")
         for notification in notifications:
+            reminder_partial = partial(reminder, text=notification.text)
+            # __name__ is required by the run_daily() method
+            reminder_partial.__name__ = f"reminder_{user_id}_{notification.time}"
             j.run_daily(
-                reminder,
+                reminder_partial,
                 days=(0, 1, 2, 3, 4, 5, 6),
                 chat_id=user_id,
                 time=notification.time,
@@ -47,12 +51,15 @@ def init_reminders(app: Application) -> None:
 
 
 def init_app() -> Application:
+    """
+    App entrypoint. Defines handlers, schedules reminders.
+    :return:
+    """
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", init_user))
     app.add_handler(CommandHandler("graph", graph_handler))
     app.add_handler(CommandHandler("record", main_handler))
     app.add_handler(CommandHandler("offset", offset_handler))
-    # app.add_handler(CommandHandler("undo", main_handler))
     app.add_handler(CallbackQueryHandler(button))
     init_reminders(app)
     return app
