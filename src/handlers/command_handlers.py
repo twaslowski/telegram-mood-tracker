@@ -6,18 +6,14 @@ from telegram import Update
 
 import src.repository.record_repository as record_repository
 from src.config import default_metrics
-from src.handlers.metrics_handlers import (
-    handle_enum_metric,
-    handle_numeric_metric,
-    handle_graphing_dialog,
-)
+from src.handlers.graphing import handle_graph_specification
+from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
 from src.repository import user_repository
-from src.state import State
-from src.visualise import visualize_monthly_data
+from src.state import State, APPLICATION_STATE
 
 # in-memory storage for user records before they get persisted; if a user doesn't finish a record, it will be deleted
+# Initially populated with a dict defined in create_temporary_record()
 temp_records = ExpiringDict(max_len=100, max_age_seconds=300)
-state = ExpiringDict(max_len=100, max_age_seconds=300)
 
 
 async def create_user(update: Update, _) -> None:
@@ -69,7 +65,7 @@ def create_temporary_record(user_id: int):
     logging.info(f"Creating temporary record for user {user_id}: {record}")
     # Store temporary record in the record ExpiringDict
     temp_records[user_id] = record
-    state[user_id] = State.RECORDING
+    APPLICATION_STATE[user_id] = State.RECORDING
 
 
 async def record_handler(update: Update, _) -> None:
@@ -101,55 +97,6 @@ async def record_handler(update: Update, _) -> None:
             await handle_numeric_metric(update, metric["prompt"], metric["range"])
 
 
-def get_all_months_for_offset(time_range: int, year: int, month: int) -> list[tuple[int, int]]:
-    """
-    Determines how many months should be considered for the graph.
-    :param time_range: The number of months to consider.
-    Year and month are provided for testability purposes so that I don't have to mock datetime.datetime.now().
-    :param year: The current year.
-    :param month: The current month.
-    :return: a list of tuples (year, month) for the given time range.
-    """
-    months = [(year, month)]
-    for i in range(time_range - 1):
-        if month == 1:
-            year -= 1
-            month = 12
-        else:
-            month -= 1
-        months.append((year, month))
-    months.reverse()
-    return months
-
-
-async def handle_graph_specification(update):
-    """
-    Button handler to determine the timeframe for the graph.
-    :param update: button press.
-    :return: None
-    """
-    # await timeframe specification
-    query = update.callback_query
-    await query.answer()
-
-    # calculate arguments for determining time range
-    now = datetime.datetime.now()
-    year = now.year
-    month = now.month
-    time_range = int(update.callback_query.data)
-
-    # get all months for the given time range
-    months = get_all_months_for_offset(time_range, year, month)
-
-    # create graphs for all months
-    for month in months:
-        path = visualize_monthly_data(update.effective_user.id, month)
-        if path:
-            await update.effective_user.get_bot().send_photo(
-                update.effective_user.id, open(path, "rb")
-            )
-
-
 async def button(update: Update, _) -> None:
     """
     General button handler.
@@ -157,7 +104,7 @@ async def button(update: Update, _) -> None:
     :param update: Button press.
     """
     user = update.effective_user.id
-    user_state = state.get(user)
+    user_state = APPLICATION_STATE.get(user)
     if user_state is State.GRAPHING:
         await handle_graph_specification(update)
     if user_state is State.RECORDING:
@@ -188,7 +135,11 @@ async def handle_record_entry(update):
     await query.answer()
     # get current record registration state; remove the metric that was just answered
     user_id = update.effective_user.id
-    user_record = temp_records.get(user_id)
+    try:
+        user_record = temp_records[user_id]
+    except KeyError:
+        logging.error(f"User {user_id} does not have a temporary record")
+        return await handle_no_known_state(update)
     # find metric that was answered
     metric = [metric for metric in user_record["config"] if metric["prompt"] == prompt][
         0
@@ -214,18 +165,16 @@ async def handle_record_entry(update):
         await record_handler(update, None)
 
 
-async def graph_handler(update: Update, context) -> None:
-    await handle_graphing_dialog(update, context)
-    state[update.effective_user.id] = State.GRAPHING
-
-
 async def offset_handler(update: Update, context) -> None:
     incorrect_state_message = """You can only use /offset while recording a record.
     Press /record to create a new record."""
     success_message = "The timestamp of your record has been updated to {}."
     invalid_args_message = "Please provide an offset in days like this: /offset 1"
-    user_state = state.get(update.effective_user.id)
-    if user_state is not None and state[update.effective_user.id] == State.RECORDING:
+    user_state = APPLICATION_STATE.get(update.effective_user.id)
+    if (
+        user_state is not None
+        and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
+    ):
         if len(context.args) != 1:
             await update.effective_user.get_bot().send_message(
                 chat_id=update.effective_user.id, text=invalid_args_message

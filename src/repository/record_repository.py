@@ -8,7 +8,7 @@ from src.model.record import Record
 
 # use bracket notation over .get() to fail explicitly if environment variable is not supplied
 mongo_url = os.getenv("MONGODB_HOST", "localhost:27017")
-mongo_client = pymongo.MongoClient(f'mongodb://{mongo_url}/')
+mongo_client = pymongo.MongoClient(f"mongodb://{mongo_url}/")
 mood_tracker = mongo_client["mood_tracker"]
 records = mood_tracker["records"]
 
@@ -27,7 +27,9 @@ def parse_record(result: dict):
 
 
 def create_record(user_id: int, record_data: dict, timestamp: str):
-    records.insert_one({"user_id": user_id, "record": record_data, "timestamp": timestamp})
+    records.insert_one(
+        {"user_id": user_id, "record": record_data, "timestamp": timestamp}
+    )
 
 
 def find_records_for_user(user_id: int) -> list[Record]:

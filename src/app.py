@@ -14,11 +14,11 @@ from telegram.ext import (
 import src.repository.user_repository as user_repository
 from src.handlers.command_handlers import (
     record_handler,
-    graph_handler,
     create_user,
     button,
     offset_handler,
 )
+from src.handlers.graphing import graph_handler
 from src.reminder import reminder
 
 load_dotenv()

@@ -25,18 +25,3 @@ async def handle_numeric_metric(
     await bot.send_message(
         chat_id=update.effective_user.id, text=prompt, reply_markup=reply_markup
     )
-
-
-async def handle_graphing_dialog(update: Update, _) -> None:
-    bot = update.effective_user.get_bot()
-    keyboard = [
-        [InlineKeyboardButton("Last month", callback_data="1")],
-        [InlineKeyboardButton("Last three months", callback_data="3")],
-        [InlineKeyboardButton("All time", callback_data="12")],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await bot.send_message(
-        chat_id=update.effective_user.id,
-        text="How many months would you like me to graph?",
-        reply_markup=reply_markup,
-    )
