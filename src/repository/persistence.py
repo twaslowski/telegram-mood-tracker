@@ -19,40 +19,6 @@ records = mood_tracker["records"]
 user = mood_tracker["user"]
 
 
-def find_user(user_id: int) -> User | None:
-    result = user.find_one({"user_id": user_id})
-    if result:
-        return parse_user(dict(result))
-    return None
-
-
-def parse_user(result: dict) -> User:
-    result = dict(result)
-    print(result)
-    # still not perfect from a typing point of view, but the hack is limited to the persistence layer
-    result["notifications"] = [
-        Notification(**notification) for notification in result["notifications"]
-    ]
-    return User(**result)
-
-
-def create_user(user_id: int) -> None:
-    user.insert_one(
-        {
-            "user_id": user_id,
-            "metrics": config.defaults.get("metrics"),
-            "notifications": [
-                notification.model_dump()
-                for notification in config.default_notifications()
-            ],
-        }
-    )
-
-
-def find_all_users() -> list[User]:
-    return [parse_user(dict(u)) for u in user.find()]
-
-
 def find_oldest_record_for_user(user_id: int) -> dict:
     return records.find_one(
         {"user_id": user_id}, sort=[("timestamp", pymongo.ASCENDING)]

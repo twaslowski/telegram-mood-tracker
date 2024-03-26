@@ -3,7 +3,7 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 from telegram.ext import ApplicationBuilder
 
-import src.persistence as persistence
+import src.repository.user_repository as user_repository
 from src.app import init_reminders
 from src.handlers.command_handlers import init_user
 
@@ -17,21 +17,21 @@ def update():
 
 
 def test_querying_nonexistent_user_returns_none():
-    assert persistence.find_user(1) is None
+    assert user_repository.find_user(1) is None
 
 
 @pytest.mark.asyncio
 async def test_registration(update):
     # user does not exist
-    assert persistence.find_user(1) is None
+    assert user_repository.find_user(1) is None
 
     # create user
     await init_user(update, None)
 
     # now it exists
-    assert persistence.find_user(1) is not None
-    assert persistence.find_user(1).metrics is not None
-    assert persistence.find_user(1).notifications is not None
+    assert user_repository.find_user(1) is not None
+    assert user_repository.find_user(1).metrics is not None
+    assert user_repository.find_user(1).notifications is not None
 
     # introductory text has been sent
     assert update.effective_user.get_bot().send_message.called
@@ -40,7 +40,7 @@ async def test_registration(update):
 @pytest.mark.asyncio
 async def test_no_double_registration(update):
     # user does not exist
-    assert persistence.find_user(1) is None
+    assert user_repository.find_user(1) is None
 
     # user is created
     await init_user(update, None)

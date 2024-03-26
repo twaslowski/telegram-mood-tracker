@@ -3,7 +3,7 @@ import logging
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import Mock, AsyncMock
 
-import src.persistence
+import src.repository.persistence
 from src.handlers.command_handlers import init_user, get_all_months_for_offset
 
 
@@ -13,7 +13,7 @@ class TestGraph(IsolatedAsyncioTestCase):
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             level=logging.INFO,
         )
-        src.persistence.find_oldest_record_for_user = Mock(
+        src.repository.persistence.find_oldest_record_for_user = Mock(
             return_value={
                 "record": {"mood": "NEUTRAL"},
                 "timestamp": datetime.datetime.now().replace(month=6),

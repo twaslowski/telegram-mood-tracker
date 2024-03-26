@@ -6,7 +6,7 @@ import pytest
 from expiringdict import ExpiringDict
 
 import src.handlers.command_handlers as command_handlers
-import src.persistence as persistence
+import src.repository.persistence as persistence
 from src.handlers.command_handlers import init_record, button, init_user
 from src.model.user import User
 
@@ -55,7 +55,7 @@ def user() -> User:
 
 @pytest.fixture(autouse=True)
 def patch_persistence_methods(mocker, user):
-    mocker.patch("src.persistence.find_user", return_value=user)
+    mocker.patch("src.repository.user_repository.find_user", return_value=user)
 
 
 @pytest.mark.asyncio
@@ -106,7 +106,7 @@ async def test_finish_record_creation(update, button_update, mocker, user):
     Tests state transition from recording Metric N to Finished.
     """
     # given only one metric is defined
-    mocker.patch("src.persistence.find_user", return_value=user)
+    mocker.patch("src.repository.user_repository.find_user", return_value=user)
     user.metrics = [test_metrics[0]]
 
     # when user calls /record

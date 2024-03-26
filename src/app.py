@@ -10,7 +10,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-import src.persistence as persistence
+import src.repository.user_repository as user_repository
 from src.handlers.command_handlers import (
     main_handler,
     graph_handler,
@@ -33,7 +33,7 @@ def init_reminders(app: Application) -> None:
     :param app: The initialised Telegram app object.
     """
     j = app.job_queue
-    for user in persistence.find_all_users():
+    for user in user_repository.find_all_users():
         user_id = user.user_id
         notifications = user.notifications
         logging.info(f"Setting up notifications for for user {user_id}")

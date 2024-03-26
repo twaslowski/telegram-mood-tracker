@@ -4,13 +4,14 @@ import logging
 from expiringdict import ExpiringDict
 from telegram import Update
 
-import src.persistence as persistence
+import src.repository.persistence as persistence
 from src.config import defaults
 from src.handlers.metrics_handlers import (
     handle_enum_metric,
     handle_numeric_metric,
     handle_graphing_dialog,
 )
+from src.repository import user_repository
 from src.state import State
 from src.visualise import visualize_monthly_data
 
@@ -36,9 +37,9 @@ async def init_user(update: Update, _) -> None:
     :return:
     """
     user_id = update.effective_user.id
-    if not persistence.find_user(user_id):
+    if not user_repository.find_user(user_id):
         logging.info(f"Creating user {user_id}")
-        persistence.create_user(user_id)
+        user_repository.create_user(user_id)
         await update.effective_user.get_bot().send_message(
             chat_id=update.effective_user.id, text=introduction_text
         )
@@ -54,7 +55,7 @@ def init_record(user_id: int):
     """
     # create temporary record from user configuration
     # todo handle find_user() == None?
-    metrics = persistence.find_user(user_id).metrics
+    metrics = user_repository.find_user(user_id).metrics
     record = {
         "record": {metric["name"]: None for metric in metrics},
         "timestamp": datetime.datetime.now().isoformat(),
