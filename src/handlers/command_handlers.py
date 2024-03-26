@@ -176,7 +176,7 @@ async def handle_record_entry(update: Update) -> None:
     # find metric that was answered and update the record
     metric = user_record.find_metric(prompt)
     logging.info(f"User {user_id} answered {metric.name} with {query.data}")
-    user_record.update_data(metric.name, metric.get_value(query.data))
+    user_record.update_data(metric.name, query.data)
     temp_records[user_id] = user_record
 
     # check if record is complete

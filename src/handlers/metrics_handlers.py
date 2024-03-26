@@ -17,5 +17,7 @@ async def prompt_user_for_metric(update: Update, metric: Metric) -> None:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await bot.send_message(
-        chat_id=update.effective_user.id, text=metric.prompt, reply_markup=reply_markup
+        chat_id=update.effective_user.id,
+        text=metric.user_prompt,
+        reply_markup=reply_markup,
     )
