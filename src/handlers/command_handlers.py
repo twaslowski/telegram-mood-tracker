@@ -8,6 +8,7 @@ import src.repository.record_repository as record_repository
 from src.config import default_metrics
 from src.handlers.graphing import handle_graph_specification
 from src.handlers.metrics_handlers import handle_enum_metric, handle_numeric_metric
+from src.handlers.util import send
 from src.repository import user_repository
 from src.state import State, APPLICATION_STATE
 
@@ -71,16 +72,15 @@ def create_temporary_record(user_id: int):
 async def record_handler(update: Update, _) -> None:
     """
     Handles /record.
-    Main handler for the bot. This is what starts the query process; determines whether a new record needs to be
-    created, creates records and sends out the prompts to populate them.
+    Handles the recording process for the user. If /record is processed, it will start the recording process.
+    Otherwise, it will send out metric user prompts. The responses to those prompts are then handled by dedicated
+    button handlers, which ultimately redirect back to this function after handling their own logic.
     """
     user_id = update.effective_user.id
+    # if no record exists in the temporary records
     if not temp_records.get(user_id):
-        await update.effective_user.get_bot().send_message(
-            chat_id=update.effective_user.id, text="Creating a new record for you ..."
-        )
+        await send(update, text="Creating a new record for you ...")
         create_temporary_record(user_id)
-        # update global state for user
         # Recurse to start the record entry process
         await record_handler(update, None)
     else:
@@ -91,6 +91,7 @@ async def record_handler(update: Update, _) -> None:
             if temp_records[user_id]["record"][metric["name"]] is None
         ][0]
         logging.info(f"collecting information on metric {metric}")
+        # this needs to be refactored, since I want to get rid of this distinction entirely eventually
         if metric["type"] == "enum":
             await handle_enum_metric(update, metric["prompt"], metric["values"])
         elif metric["type"] == "numeric":
@@ -172,8 +173,8 @@ async def offset_handler(update: Update, context) -> None:
     invalid_args_message = "Please provide an offset in days like this: /offset 1"
     user_state = APPLICATION_STATE.get(update.effective_user.id)
     if (
-        user_state is not None
-        and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
+            user_state is not None
+            and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
     ):
         if len(context.args) != 1:
             await update.effective_user.get_bot().send_message(
