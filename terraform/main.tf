@@ -17,12 +17,22 @@ data "aws_caller_identity" "current" {}
 module "mood_tracker_repository" {
   source = "terraform-aws-modules/ecr/aws"
 
+  repository_type = "public"
   repository_name                 = "mood-tracker"
   repository_image_tag_mutability = "MUTABLE"
 
   repository_read_write_access_arns = [
     data.aws_caller_identity.current.arn,
   ]
+
+  public_repository_catalog_data = {
+    # description       = "telegram mood tracker"
+    # about_text        = file("${path.module}/files/ABOUT.md")
+    # usage_text        = file("${path.module}/files/USAGE.md")
+    # operating_systems = ["Linux"]
+    # architectures     = ["x86"]
+    # logo_image_blob   = filebase64("${path.module}/files/clowd.png")
+  }
 
   repository_lifecycle_policy = local.repository_lifecycle_policy
 }
