@@ -6,10 +6,14 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "telegram-mood-tracker-state"
-    key    = "mood-tracker/terraform.tfstate"
-    region = "eu-central-1"
+    bucket = "mood-tracker-bucket"
+    key    = "terraform.tfstate"
+    region = "us-east-1"
   }
+}
+
+provider "aws" {
+  region = "us-east-1"
 }
 
 data "aws_caller_identity" "current" {}
