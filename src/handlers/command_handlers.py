@@ -5,7 +5,7 @@ from expiringdict import ExpiringDict
 from telegram import Update
 
 import src.repository.record_repository as record_repository
-from src.config import default_metrics
+from src.config import load_metrics
 from src.handlers.graphing import handle_graph_specification
 from src.handlers.metrics_handlers import prompt_user_for_metric
 from src.handlers.util import send
@@ -40,7 +40,7 @@ async def create_user(update: Update, _) -> None:
     """
     # Declare introduction text.
     bullet_point_list = "\n".join(
-        [f"- {metric.name.capitalize()}" for metric in default_metrics()]
+        [f"- {metric.name.capitalize()}" for metric in load_metrics()]
     )
     introduction_text = (
         "Hi! You can track your mood with me. Simply type /record to get started. By default, "

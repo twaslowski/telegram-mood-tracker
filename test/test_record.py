@@ -2,13 +2,12 @@ import datetime
 import time
 from unittest.mock import Mock, AsyncMock
 
-import emoji
 import pytest
 from expiringdict import ExpiringDict
 
 import src.handlers.command_handlers as command_handlers
 import src.repository.record_repository as record_repository
-from src.config import default_metrics
+from src.config import load_metrics
 from src.handlers.command_handlers import create_temporary_record, button, create_user
 from src.model.user import User
 
@@ -172,4 +171,4 @@ async def test_record_with_offset(update):
     )
 
 
-test_metrics = default_metrics()
+test_metrics = load_metrics()

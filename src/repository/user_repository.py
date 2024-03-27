@@ -31,10 +31,10 @@ def create_user(user_id: int) -> None:
     user.insert_one(
         {
             "user_id": user_id,
-            "metrics": [metric.model_dump() for metric in config.default_metrics()],
+            "metrics": [metric.model_dump() for metric in config.load_metrics()],
             "notifications": [
                 notification.model_dump()
-                for notification in config.default_notifications()
+                for notification in config.load_notifications()
             ],
         }
     )
