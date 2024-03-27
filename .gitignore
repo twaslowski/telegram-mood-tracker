@@ -9,3 +9,5 @@ data
 dump/
 graphs/
 package/
+
+.terraform*

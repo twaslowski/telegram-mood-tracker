@@ -18,11 +18,3 @@ repos:
 #        entry: bash -c "pushd backend && make lint"
 #        language: python
 #        pass_filenames: false
-
-  - repo: local
-    hooks:
-      - id: test
-        name: test
-        entry: bash -c "make test"
-        language: python
-        pass_filenames: false

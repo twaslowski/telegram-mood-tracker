@@ -1,0 +1,91 @@
+name: Build
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11.6
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install pipx
+          pipx ensurepath
+          pipx install poetry
+          poetry install --with dev
+
+      - name: Run tests
+        run: |
+          make test
+
+  create_infrastructure:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: set up terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.11
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::246770851643:role/github-actions
+          aws-region: eu-central-1
+
+      - name: Create infrastructure
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
+
+  build_docker:
+    needs: create_infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::246770851643:role/github-actions
+          aws-region: eu-central-1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11.6
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install pipx
+          pipx ensurepath
+          pipx install poetry
+
+      - name: Build docker image
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        run: |
+          ./scripts/docker-util.sh build
+          ./scripts/docker-util.sh push
