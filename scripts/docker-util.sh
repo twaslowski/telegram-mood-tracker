@@ -11,8 +11,8 @@ function build_arm() {
   mkdir -p package
   poetry export -f requirements.txt -o package/requirements.txt --without-hashes
   docker build -t mood-tracker:armv8 --platform linux/arm/v8 .
-  docker tag mood-tracker:arm64v8 "public.ecr.aws/c1o1h8f4/mood-tracker:latest-arm64v8"
-  docker tag mood-tracker:arm64v8 "public.ecr.aws/c1o1h8f4/mood-tracker:${commit_sha}-arm64v8"
+  docker tag mood-tracker:armv8 "public.ecr.aws/c1o1h8f4/mood-tracker:latest-arm64v8"
+  docker tag mood-tracker:armv8 "public.ecr.aws/c1o1h8f4/mood-tracker:${commit_sha}-arm64v8"
 }
 
 function push_arm() {
