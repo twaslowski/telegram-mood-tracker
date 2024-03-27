@@ -68,6 +68,7 @@ specify emoji codes that can be mapped internally:
 metrics:
   - name: anxiety
     user_prompt: "What are your anxiety levels like right now?"
+    emoji: true
     values:
     ":face_screaming_in_fear:": 2
     ":fearful_face:": 1
