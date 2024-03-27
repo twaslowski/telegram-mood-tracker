@@ -125,5 +125,5 @@ jobs:
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         run: |
-          ./scripts/docker-util.sh build
-          ./scripts/docker-util.sh push
+          ./scripts/docker-util.sh build_arm
+          ./scripts/docker-util.sh push_arm
