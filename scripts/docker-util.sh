@@ -10,7 +10,7 @@ function build() {
 function build_arm() {
   mkdir -p package
   poetry export -f requirements.txt -o package/requirements.txt --without-hashes
-  docker buildx build -f Dockerfile-arm64v8 -t mood-tracker:arm64v8 --platform linux/arm/v8 .
+  docker build -f Dockerfile-arm64v8 -t mood-tracker:arm64v8 --platform linux/arm/v8 .
 }
 
 function push_arm() {

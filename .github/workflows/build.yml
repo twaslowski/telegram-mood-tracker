@@ -58,6 +58,8 @@ jobs:
           terraform init
           terraform apply -auto-approve
 
+  # todo: a lot of this can be consolidated into one step that builds two images
+  # additionally, i can use a lot of predefined steps, which might make my bash scripting entirely obsolete
   build_docker:
     needs: create_infrastructure
     runs-on: ubuntu-latest
