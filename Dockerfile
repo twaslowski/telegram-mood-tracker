@@ -1,12 +1,14 @@
 FROM python:3.11-slim-bullseye
 
 ENV TELEGRAM_TOKEN=""
-ENV MONGODB_HOST="localhost:27017"
+ENV MONGODB_HOST="host.docker.internal:27017"
+ENV PYTHONPATH=./
 
 # install dependencies
 COPY package/requirements.txt .
-RUN python3 -m pip install -r requirements.txt
-
 COPY src ./src/
+COPY config.yaml .
+
+RUN python3 -m pip install -r requirements.txt
 
 CMD ["python", "src/app.py"]

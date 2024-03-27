@@ -1,10 +1,7 @@
 .env
-venv
+.envrc
 .idea
-log
 __pycache__
-ec2-key-pair.pem
-data
 
 dump/
 graphs/
