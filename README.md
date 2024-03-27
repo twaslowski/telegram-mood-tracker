@@ -1,3 +1,5 @@
+![Build](https://github.com/TobiasWaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
+
 # About
 
 This is a Telegram-based Mood Tracker bot. It allows users to record their mood states and other health-related
@@ -30,6 +32,31 @@ tracking even more easy
 
 ## Quickstart 
 
+I host the Docker image for this application on a public ECR repository. All you have to do is to create your own
+Telegram via the [Botfather](https://t.me/botfather) and supply it to the container as an environment variable:
+
+    docker run --env TELEGRAM_TOKEN=$TELEGRAM_TOKEN public.ecr.aws/c1o1h8f4/mood-tracker:latest
+
+I currently provide images for x86_64 and arm64v8 for my own machines and my Raspberry Pi. If you require images
+for additional architectures, feel free to raise a ticket or build your own images.
+
 ## Specifying Metrics
+
+In the `config.yaml` you can configure your own metrics and notifications. For example, you can track your own mood
+as follows:
+
+```yaml
+metrics:
+  - name: anxiety
+    user_prompt: "What are your anxiety levels like right now?"
+    values:
+      HIGHLY_ANXIOUS: 2
+      SOMEWHAT_ANXIOUS: 1
+      CALM: 0
+```
+
+Metrics have to map to numbers under the hood for purposes of visualization and statistical evaluation (potentially).
+These will show up as [Inline Buttons](https://core.telegram.org/bots/2-0-intro#switch-to-inline-buttons) when recording
+your mood, with the labels showing up as "Highly Anxious", "Somewhat Anxious" and "Calm".
 
 # Developing
