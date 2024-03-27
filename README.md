@@ -1,34 +1,35 @@
 # About
 
-This is a Telegram-based mood tracker for individuals suffering from [bipolar disorder](https://www.nimh.nih.gov/health/topics/bipolar-disorder).
-It allows the specification of arbitrary metrics that can be tracked and persisted on a regular basis for later evaluation.
+This is a Telegram-based Mood Tracker bot. It allows users to record their mood states and other health-related
+metrics. Mood Trackers are generally "useful for people with mental health conditions — such as depression and anxiety —
+to help identify and regulate moods" [[1]](https://www.verywellmind.com/what-is-a-mood-tracker-5119337).
 
-# Motivation
+It can be difficult to get into the habit of tracking your mood. This project aims at making the process of tracking
+your mood on a daily basis as frictionless as possible, by integrating into a popular messaging app that you may
+be using on a daily basis anyway.
 
-As the US National Institute of Mental Health states: _Bipolar disorder (formerly called manic-depressive illness or manic depression)
-is a mental illness that causes unusual shifts in a person’s mood, energy, activity levels, and concentration._
+# Features
 
-One tool in the therapy process for bipolar disorder is the use of a mood tracker. Mood trackers enable individuals
-to record and track metrics like sleep, mood, medication dosages and other things over a long amount of time.
-However, which metrics should be tracked highly depends on the individual. If someone takes mood-balancing medication,
-they may be less prone to obvious mood swings, and other metrics may become more important.
+This bot comes with several features right now. The version I host is tailored to me and may be fairly basic for other
+people's usecases. As of now, you can customize the bot by hosting your own version and modifying the YAML
+configuration. However, I am currently building features to enable users to customize their metrics within Telegram.
 
-However, most mood trackers that offer such advanced features are either locked behind paywalls or lack
-easy usability. For people to build habits, such tools need to be easily accessible. This is an attempt at
-building such a tool. It is in an early MVP stage right now, where mood states can only be recorded and persisted,
-not evaluated, but this will be implemented over time.
+- You can specify the metrics you would like to track (only on self-hosted instances right now) via YAML spec
+- You can set up notifications (only on self-hosted instances right now) via YAML spec
 
-# Building and Running
+## Features in development
 
-If you would like to try this bot out on your own, you can run it on your own machine, or preferably a
-Raspberry Pi or on a free tier AWS EC2 t2.micro instance. The requirements are:
+There are more features I want to provide to users to make this bot better.
 
-- Python 3.10+
-- Docker
-- A valid Telegram API token ([learn more here](https://core.telegram.org/bots/tutorial))
+- The ability to customize metrics and notifications without having to host your own bot
+- A /baseline command that you can define as a shorthand for e.g. neutral mood and eight hours of sleep to make
+tracking even more easy
+- Customized, more powerful visualization features
 
- With those prerequisites, simply run the following commands:
+# Running
 
-    $ git clone git@github.com:TobiasWaslowski/telegram-mood-tracker.git && cd telegram-mood-tracker
-    $ echo $YOUR_TELEGRAM_TOKEN > .env
-    $ ./scripts/run.sh
+## Quickstart 
+
+## Specifying Metrics
+
+# Developing
