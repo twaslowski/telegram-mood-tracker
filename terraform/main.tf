@@ -35,7 +35,7 @@ module "mood_tracker_repository" {
     usage_text        = file("${path.module}/files/USAGE.md")
     operating_systems = ["Linux"]
     architectures     = ["x86"]
-    # logo_image_blob   = filebase64("${path.module}/files/mood_tracker_logo.jpg")
+    logo_image_blob   = filebase64("${path.module}/files/moody.png")
   }
 
   repository_lifecycle_policy = local.repository_lifecycle_policy
