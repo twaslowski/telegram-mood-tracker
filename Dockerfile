@@ -5,7 +5,7 @@ ENV MONGODB_HOST="host.docker.internal:27017"
 ENV PYTHONPATH=./
 
 # install dependencies
-COPY package/requirements.txt .
+COPY requirements.txt .
 COPY src ./src/
 COPY config.yaml .
 
