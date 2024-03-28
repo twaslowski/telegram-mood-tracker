@@ -96,29 +96,10 @@ jobs:
           pipx install poetry
           poetry export -f requirements.txt -o requirements.txt --without-hashes
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: public.ecr.aws/c1o1h8f4/mood-tracker
-          flavor: |
-            latest=true
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
-
       - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+        run: |
+          docker buildx build \
+          --platform linux/arm64,linux/amd64\
+          --tag public.ecr.aws/c1o1h8f4/mood-tracker:latest \
+          --push .
             
