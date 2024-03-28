@@ -30,12 +30,12 @@ module "mood_tracker_repository" {
   ]
 
   public_repository_catalog_data = {
-    # description       = "telegram mood tracker"
-    # about_text        = file("${path.module}/files/ABOUT.md")
-    # usage_text        = file("${path.module}/files/USAGE.md")
-    # operating_systems = ["Linux"]
-    # architectures     = ["x86"]
-    # logo_image_blob   = filebase64("${path.module}/files/clowd.png")
+    description       = "Telegram-based mood tracking bot"
+    about_text        = file("${path.module}/files/ABOUT.md")
+    usage_text        = file("${path.module}/files/USAGE.md")
+    operating_systems = ["Linux"]
+    architectures     = ["x86"]
+    logo_image_blob   = filebase64("${path.module}/files/mood_tracker_logo.jpg")
   }
 
   repository_lifecycle_policy = local.repository_lifecycle_policy
