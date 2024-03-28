@@ -1,7 +1,7 @@
 .PHONY: test run fmt
 
 test:
-	@bash scripts/test.sh
+	@poetry run pytest test/ --disable-warnings
 
 run:
 	@bash scripts/run.sh
