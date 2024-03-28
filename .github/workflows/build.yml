@@ -99,7 +99,7 @@ jobs:
       - name: Build and push
         run: |
           docker buildx build \
-          --platform linux/arm64,linux/amd64\
-          --tag public.ecr.aws/c1o1h8f4/mood-tracker:latest \
-          --push .
+            --platform linux/arm64,linux/amd64 \
+            --tag public.ecr.aws/c1o1h8f4/mood-tracker:latest \
+            --push .
             
