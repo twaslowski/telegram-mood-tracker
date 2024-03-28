@@ -94,7 +94,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: c1o1h8f4/mood-tracker
+          images: ${{ steps.login-ecr.outputs.registry }}/c1o1h8f4/mood-tracker
           flavor: |
             latest=true
           # generate Docker tags based on the following events/attributes
