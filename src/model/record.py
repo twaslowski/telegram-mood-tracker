@@ -39,11 +39,11 @@ class AbstractRecord(BaseModel):
     """
 
     # todo create tests
-    def find_data(self, name: str) -> RecordData | None:
+    def find_data_by_name(self, name: str) -> RecordData | None:
         return next((x for x in self.data if x.metric_name == name), None)
 
     # todo create tests
-    def find_metric(self, user_prompt: str) -> Metric | None:
+    def find_metric_by_user_prompt(self, user_prompt: str) -> Metric | None:
         return next((x for x in self.metrics if x.user_prompt == user_prompt), None)
 
 
@@ -64,7 +64,7 @@ class TempRecord(AbstractRecord):
 
     # todo test
     def update_data(self, name: str, value: int | None):
-        record_data = self.find_data(name)
+        record_data = self.find_data_by_name(name)
         if record_data:
             record_data.value = value
         else:

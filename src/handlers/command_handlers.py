@@ -170,7 +170,7 @@ async def handle_record_entry(update: Update) -> None:
         return await handle_no_known_state(update)
 
     # find metric that was answered and update the record
-    metric = user_record.find_metric(prompt)
+    metric = user_record.find_metric_by_user_prompt(prompt)
     logging.info(f"User {user_id} answered {metric.name} with {query.data}")
     user_record.update_data(metric.name, query.data)
     temp_records[user_id] = user_record
