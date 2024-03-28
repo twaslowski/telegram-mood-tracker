@@ -61,7 +61,7 @@ jobs:
   # todo: a lot of this can be consolidated into one step that builds two images
   # additionally, i can use a lot of predefined steps, which might make my bash scripting entirely obsolete
   build_docker:
-    needs: create_infrastructure
+    # needs: create_infrastructure
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -77,55 +77,43 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.11.6
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install pipx
-          pipx ensurepath
-          pipx install poetry
-
-      - name: Build docker image
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-        run: |
-          ./scripts/docker-util.sh build
-          ./scripts/docker-util.sh push
-
-  build_docker_arm:
-    needs: create_infrastructure
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::246770851643:role/github-actions
-          aws-region: eu-central-1
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.11.6
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install pipx
-          pipx ensurepath
-          pipx install poetry
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build docker image
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      - name: Install dependencies
         run: |
-          ./scripts/docker-util.sh build_arm
-          ./scripts/docker-util.sh push_arm
+          sudo apt update
+          sudo apt install pipx
+          pipx ensurepath
+          pipx install poetry
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: c1o1h8f4/mood-tracker
+          flavor: |
+            - latest=true
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+            
