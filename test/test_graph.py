@@ -2,8 +2,8 @@ import logging
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import Mock, AsyncMock
 
-from src.handlers.command_handlers import create_user
 from src.handlers.graphing import get_all_months_for_offset
+from src.handlers.user_handlers import create_user
 
 
 class TestGraph(IsolatedAsyncioTestCase):

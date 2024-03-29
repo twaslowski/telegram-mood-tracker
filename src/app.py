@@ -12,12 +12,12 @@ from telegram.ext import (
 )
 
 import src.repository.user_repository as user_repository
-from src.handlers.command_handlers import (
+from src.handlers.record_handlers import (
     record_handler,
-    create_user,
     button,
     offset_handler,
 )
+from src.handlers.user_handlers import create_user
 from src.handlers.graphing import graph_handler
 from src.reminder import reminder
 

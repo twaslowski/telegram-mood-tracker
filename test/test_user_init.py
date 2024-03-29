@@ -5,7 +5,7 @@ from telegram.ext import ApplicationBuilder
 
 import src.repository.user_repository as user_repository
 from src.app import init_reminders
-from src.handlers.command_handlers import create_user
+from src.handlers.user_handlers import create_user
 
 
 @pytest.fixture

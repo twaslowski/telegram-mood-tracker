@@ -5,10 +5,11 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 from expiringdict import ExpiringDict
 
-import src.handlers.command_handlers as command_handlers
+import src.handlers.record_handlers as command_handlers
 import src.repository.record_repository as record_repository
 from src.config import load_metrics
-from src.handlers.command_handlers import create_temporary_record, button, create_user
+from src.handlers.record_handlers import create_temporary_record, button
+from src.handlers.user_handlers import create_user
 from src.model.user import User
 
 expiry_time = 1
