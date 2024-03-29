@@ -38,13 +38,11 @@ class AbstractRecord(BaseModel):
     Can provide shared methods for Record and TempRecord.
     """
 
-    # todo create tests
     def find_data_by_name(self, name: str) -> RecordData | None:
         return next((x for x in self.data if x.metric_name == name), None)
 
-    # todo create tests
-    def find_metric_by_user_prompt(self, user_prompt: str) -> Metric | None:
-        return next((x for x in self.metrics if x.user_prompt == user_prompt), None)
+    def find_metric_by_name(self, name: str) -> Metric | None:
+        return next((x for x in self.metrics if x.name == name), None)
 
 
 class Record(AbstractRecord):

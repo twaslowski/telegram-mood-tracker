@@ -5,7 +5,6 @@ from expiringdict import ExpiringDict
 from telegram import Update
 
 import src.repository.record_repository as record_repository
-from src.config import load_metrics
 from src.handlers.graphing import handle_graph_specification
 from src.handlers.metrics_handlers import prompt_user_for_metric
 from src.handlers.util import send
@@ -141,9 +140,9 @@ async def handle_record_entry(update: Update) -> None:
         return await handle_no_known_state(update)
 
     # find metric that was answered and update the record
-    metric = user_record.find_metric_by_user_prompt(prompt)
-    logging.info(f"User {user_id} answered {metric.name} with {query.data}")
-    user_record.update_data(metric.name, query.data)
+    metric, value = parse_query_data(query.data)
+    logging.info(f"User {user_id} answered {metric} with {query.data}")
+    user_record.update_data(metric, value)
     temp_records[user_id] = user_record
 
     # check if record is complete
@@ -156,6 +155,20 @@ async def handle_record_entry(update: Update) -> None:
             f"Record for user {user_id} is not complete yet: {user_record.data}"
         )
         await record_handler(update, None)
+
+
+def parse_query_data(query_data: str) -> tuple[str, int]:
+    """
+    Parses the query data into a metric name and value.
+    :param query_data: The query data.
+    :return: A tuple containing the metric name and value.
+    """
+    assert (
+        ":" in query_data
+    ), "Query data must be a key/value pair of metric name and value."
+    metric = query_data.split(":")[0]
+    value = int(query_data.split(":")[1])
+    return metric, value
 
 
 def store_record(user_id: int, user_record: TempRecord):

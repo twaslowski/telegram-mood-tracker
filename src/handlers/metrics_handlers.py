@@ -12,7 +12,12 @@ async def prompt_user_for_metric(update: Update, metric: Metric) -> None:
     """
     bot = update.effective_user.get_bot()
     keyboard = [
-        [InlineKeyboardButton(key.capitalize().replace("_", " "), callback_data=value)]
+        [
+            InlineKeyboardButton(
+                key.capitalize().replace("_", " "),
+                callback_data=f"{metric.name}:{value}",
+            )
+        ]
         for key, value in metric.values.items()
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)

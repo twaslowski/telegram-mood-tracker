@@ -24,7 +24,7 @@ def button_update():
     mock_bot = AsyncMock()
     button_update.effective_user.get_bot = Mock(return_value=mock_bot)
     query = AsyncMock()
-    query.data = 3
+    query.data = "mood:3"
     query.message.text = "How do you feel right now?"
     button_update.callback_query = query
     mock_bot.send_message = AsyncMock()
@@ -143,7 +143,7 @@ async def test_double_answer_works_as_intended(update, button_update):
 
     # given user answers the same question again
     query = AsyncMock()
-    query.data = 3
+    query.data = "mood:3"
     query.message.text = "How do you feel right now?"
     button_update.callback_query = query
 
