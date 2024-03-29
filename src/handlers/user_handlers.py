@@ -20,9 +20,9 @@ async def create_user(update: Update, _) -> None:
         [f"- {metric.name.capitalize()}" for metric in load_metrics()]
     )
     introduction_text = (
-        "Hi! You can track your mood with me. Simply type /record to get started. By default, "
-        f"I will track the following metrics: \n "
-        f"{bullet_point_list}"
+        "Hi! You can track your mood with me. "
+        "Simply type /record to get started. By default, "
+        f"I will track the following metrics:\n {bullet_point_list}"
     )
 
     # Handle registration
@@ -34,3 +34,8 @@ async def create_user(update: Update, _) -> None:
     # User already exists
     else:
         logging.info(f"Received /start, but user {user_id} already exists")
+        await send(
+            update,
+            text="You are already registered! If you want to re-assess your metrics or notifications, "
+            "type /metrics or /notifications to do so.",
+        )

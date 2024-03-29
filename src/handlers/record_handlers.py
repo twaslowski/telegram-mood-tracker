@@ -7,7 +7,7 @@ from telegram import Update
 import src.repository.record_repository as record_repository
 from src.handlers.graphing import handle_graph_specification
 from src.handlers.metrics_handlers import prompt_user_for_metric
-from src.handlers.util import send
+from src.handlers.util import send, handle_no_known_state
 from src.model.metric import Metric
 from src.model.record import TempRecord
 from src.repository import user_repository
@@ -103,17 +103,6 @@ async def button(update: Update, _) -> None:
         await handle_no_known_state(update)
 
 
-async def handle_no_known_state(update: Update) -> None:
-    """
-    Handles the case where the user is not in a known state.
-    This can happen if the user has not started recording or graphing, or if the state has expired.
-    :param update: The update object.
-    """
-    no_state_message = """It doesn't appear like you're currently recording mood or graphing.
-                       Press /record to create a new record, /graph to visualise your mood progress."""
-    await send(update, text=no_state_message)
-
-
 async def handle_record_entry(update: Update) -> None:
     """
     When a button update is received while the user is recording a record, this function is called.
@@ -130,7 +119,6 @@ async def handle_record_entry(update: Update) -> None:
     # retrieve query prompt and answer
     user_id = update.effective_user.id
     query = update.callback_query
-    prompt = query.message.text
     await query.answer()
 
     # retrieve current record
@@ -198,8 +186,10 @@ async def offset_handler(update: Update, context) -> None:
     :param context: holds the arguments passed to the command
     :return:
     """
-    incorrect_state_message = """You can only use /offset while recording a record.
-    Press /record to create a new record."""
+    incorrect_state_message = (
+        "You can only use /offset while recording a record. "
+        "Press /record to create a new record."
+    )
     success_message = "The timestamp of your record has been updated to {}."
     invalid_args_message = "Please provide an offset in days like this: /offset 1"
     user_state = APPLICATION_STATE.get(update.effective_user.id)

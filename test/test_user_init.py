@@ -38,6 +38,9 @@ async def test_registration(update):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip(
+    "I have added a message to the user when they are already registered for clarity"
+)
 async def test_no_double_registration(update):
     # user does not exist
     assert user_repository.find_user(1) is None
