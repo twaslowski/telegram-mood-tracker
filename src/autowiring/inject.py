@@ -25,18 +25,6 @@ def autowire(func):
                     fully_qualified_name = param_type.get_fully_qualified_name()
                     if fully_qualified_name in di:
                         kwargs[name] = di[fully_qualified_name]
-        return func(**kwargs)
+        return func(*args, **kwargs)
 
     return wrapper
-
-
-@autowire
-def test_func(string: str, configuration: Configuration):
-    print(string)
-    print(configuration)
-
-
-if __name__ == '__main__':
-    config = ConfigurationProvider().configuration
-    di[Configuration.get_fully_qualified_name()] = config
-    test_func("Hello")

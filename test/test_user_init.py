@@ -5,8 +5,9 @@ import pytest
 import src.repository.user_repository as user_repository
 from src.app import MoodTrackerApplication
 from kink import di
+
 from src.handlers.user_handlers import create_user
-from src.reminder import Notifier
+from src.notifier import Notifier
 
 
 @pytest.fixture
@@ -19,7 +20,7 @@ def update():
 
 @pytest.fixture(autouse=True)
 def mock_notifier():
-    di[Notifier] = Mock()
+    di[Notifier.get_fully_qualified_name()] = Mock()
 
 
 def test_querying_nonexistent_user_returns_none():
@@ -41,23 +42,6 @@ async def test_registration(update):
 
     # introductory text has been sent
     assert update.effective_user.get_bot().send_message.called
-
-
-@pytest.mark.asyncio
-@pytest.mark.skip(
-    "I have added a message to the user when they are already registered for clarity"
-)
-async def test_no_double_registration(update):
-    # user does not exist
-    assert user_repository.find_user(1) is None
-
-    # user is created
-    await create_user(update, None)
-    assert update.effective_user.get_bot().send_message.call_count == 1
-
-    # user creation is not repeated
-    await create_user(update, None)
-    assert update.effective_user.get_bot().send_message.call_count == 1
 
 
 @pytest.mark.asyncio

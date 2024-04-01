@@ -4,11 +4,12 @@ from functools import partial
 
 from telegram.ext import CallbackContext, JobQueue
 
+from src.autowiring.injectable import Injectable
 from src.model.notification import Notification
 
 
 @dataclass
-class Notifier:
+class Notifier(Injectable):
     job_queue: JobQueue
 
     @staticmethod

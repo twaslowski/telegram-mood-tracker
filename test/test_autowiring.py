@@ -14,7 +14,7 @@ class SomeClass(Injectable):
 
 @pytest.fixture(autouse=True)
 def setup():
-    SomeClass()
+    SomeClass().register()
 
 
 def test_trivial_autowiring():

@@ -11,6 +11,7 @@ from telegram.ext import (
 )
 
 import src.repository.user_repository as user_repository
+from src.autowiring.inject import autowire
 from src.handlers.record_handlers import (
     record_handler,
     button,
@@ -19,7 +20,7 @@ from src.handlers.record_handlers import (
 from src.config import configuration
 from src.handlers.user_handlers import create_user
 from src.handlers.graphing import graph_handler
-from src.reminder import Notifier
+from src.notifier import Notifier
 
 load_dotenv()
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
@@ -36,9 +37,7 @@ class MoodTrackerApplication:
 
     def __init__(self, api_token):
         self.application = ApplicationBuilder().token(api_token).build()
-        self.notifier = Notifier(self.application.job_queue)
         self.initialize_handlers()
-        self.initialize_notifications()
         self.initialize_singletons()
 
     def initialize_handlers(self):
@@ -53,21 +52,23 @@ class MoodTrackerApplication:
         self.application.add_handler(CallbackQueryHandler(button))
 
     def initialize_singletons(self):
-        di[Notifier] = self.notifier
+        Notifier(self.application.job_queue).register()
 
     def run(self):
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-    def initialize_notifications(self) -> None:
-        """
-        Adds reminders to the job queue for all users that have configured reminders.
-        """
-        for user in user_repository.find_all_users():
-            user_id = user.user_id
-            notifications = user.notifications
-            logging.info(f"Setting up notifications for for user {user_id}")
-            for notification in notifications:
-                self.notifier.set_notification(user_id, notification)
+
+@autowire
+def initialize_notifications(notifier: Notifier) -> None:
+    """
+    Adds reminders to the job queue for all users that have configured reminders.
+    """
+    for user in user_repository.find_all_users():
+        user_id = user.user_id
+        notifications = user.notifications
+        logging.info(f"Setting up notifications for for user {user_id}")
+        for notification in notifications:
+            notifier.set_notification(user_id, notification)
 
 
 def refresh_user_configs():
@@ -85,6 +86,7 @@ def refresh_user_configs():
 def main():
     refresh_user_configs()
     application = MoodTrackerApplication(TOKEN)
+    initialize_notifications()
     application.run()
 
 

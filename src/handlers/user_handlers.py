@@ -2,10 +2,11 @@ import logging
 
 from telegram import Update
 
+from src.autowiring.inject import autowire
 from src.config import configuration
-from kink import di
 from src.handlers.util import send
-from src.reminder import Notifier
+from src.model.notification import Notification
+from src.notifier import Notifier
 from src.repository import user_repository
 
 
@@ -34,7 +35,7 @@ async def create_user(update: Update, _) -> None:
         # todo all of this could use some decoupling
         user_repository.create_user(user_id)
         for notification in configuration.get_notifications():
-            di[Notifier].set_notification(user_id, notification)
+            create_notification(user_id=user_id, notification=notification)
         await send(update, text=introduction_text)
     # User already exists
     else:
@@ -42,5 +43,10 @@ async def create_user(update: Update, _) -> None:
         await send(
             update,
             text="You are already registered! If you want to re-assess your metrics or notifications, "
-            "type /metrics or /notifications to do so.",
+                 "type /metrics or /notifications to do so.",
         )
+
+
+@autowire
+def create_notification(user_id: int, notification: Notification, notifier: Notifier):
+    notifier.set_notification(user_id, notification)
