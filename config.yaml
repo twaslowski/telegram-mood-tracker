@@ -20,3 +20,5 @@ metrics:
 notifications:
   - text: "It's time to record your mood!"
     time: "18:00"
+  - text: "Don't forget to log your sleep!"
+    time: "22:00"

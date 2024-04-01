@@ -6,10 +6,8 @@ from telegram import Update
 from kink import di
 from telegram.ext import (
     ApplicationBuilder,
-    Application,
     CommandHandler,
     CallbackQueryHandler,
-    JobQueue,
 )
 
 import src.repository.user_repository as user_repository
@@ -40,6 +38,7 @@ class MoodTrackerApplication:
         self.application = ApplicationBuilder().token(api_token).build()
         self.notifier = Notifier(self.application.job_queue)
         self.initialize_handlers()
+        self.initialize_notifications()
         self.initialize_singletons()
 
     def initialize_handlers(self):

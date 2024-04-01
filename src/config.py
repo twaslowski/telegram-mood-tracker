@@ -1,11 +1,12 @@
 import yaml
 from pydantic import BaseModel
 
+from src.autowiring.injectable import Injectable
 from src.model.metric import Metric, ConfigMetric
 from src.model.notification import Notification
 
 
-class Configuration(BaseModel):
+class Configuration(BaseModel, Injectable):
     metrics: list[ConfigMetric]
     notifications: list[Notification]
 

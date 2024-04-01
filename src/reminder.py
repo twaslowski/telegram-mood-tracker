@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from functools import partial
 
@@ -23,6 +24,7 @@ class Notifier:
         :param user_id: The user's Telegram ID.
         :param notification: The notification to set.
         """
+        logging.info(f"Setting up notification at {notification.time} for user {user_id}")
         reminder_partial = partial(self.reminder, text=notification.text)
         reminder_partial.__name__ = f"reminder_{user_id}_{notification.time}"
         self.job_queue.run_daily(
