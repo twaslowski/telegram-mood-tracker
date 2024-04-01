@@ -1,11 +1,10 @@
 from unittest.mock import Mock, AsyncMock
 
 import pytest
-from kink import di
-from telegram.ext import ApplicationBuilder
 
 import src.repository.user_repository as user_repository
-from src.app import init_notifications
+from src.app import MoodTrackerApplication
+from kink import di
 from src.handlers.user_handlers import create_user
 from src.reminder import Notifier
 
@@ -16,6 +15,11 @@ def update():
     update.effective_user.id = 1
     update.effective_user.get_bot().send_message = AsyncMock()
     return update
+
+
+@pytest.fixture(autouse=True)
+def mock_notifier():
+    di[Notifier] = Mock()
 
 
 def test_querying_nonexistent_user_returns_none():
@@ -58,11 +62,7 @@ async def test_no_double_registration(update):
 
 @pytest.mark.asyncio
 async def test_notifications(update):
-    # create additional user
-    app = ApplicationBuilder().token("some-token").build()
-    di[Notifier] = Notifier(app.job_queue)
+    application = MoodTrackerApplication("some-token")  # required so that the job queue is created
     await create_user(update, None)
 
-    # init app with notification settings
-    init_notifications(app)
-    assert len(app.job_queue.jobs()) == 1
+    assert len(application.application.job_queue.jobs()) == 1

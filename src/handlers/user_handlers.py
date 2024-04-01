@@ -42,5 +42,5 @@ async def create_user(update: Update, _) -> None:
         await send(
             update,
             text="You are already registered! If you want to re-assess your metrics or notifications, "
-                 "type /metrics or /notifications to do so.",
+            "type /metrics or /notifications to do so.",
         )

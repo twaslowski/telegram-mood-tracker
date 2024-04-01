@@ -9,6 +9,7 @@ from telegram.ext import (
     Application,
     CommandHandler,
     CallbackQueryHandler,
+    JobQueue,
 )
 
 import src.repository.user_repository as user_repository
@@ -29,32 +30,45 @@ logging.basicConfig(
 )
 
 
-def init_notifications(app: Application) -> None:
+class MoodTrackerApplication:
     """
-    Adds reminders to the job queue for all users that have configured reminders.
-    :param app: The initialised Telegram app object.
+    Application superclass.
+    Contains and managed the Telegram Application as well as a Notifier.
     """
-    job_queue = app.job_queue
-    for user in user_repository.find_all_users():
-        user_id = user.user_id
-        notifications = user.notifications
-        logging.info(f"Setting up notifications for for user {user_id}")
-        for notification in notifications:
-            notifier.set_notification(user_id, notification)
 
+    def __init__(self, api_token):
+        self.application = ApplicationBuilder().token(api_token).build()
+        self.notifier = Notifier(self.application.job_queue)
+        self.initialize_handlers()
+        self.initialize_singletons()
 
-def initialize_application() -> Application:
-    """
-    App entrypoint. Defines handlers, schedules reminders.
-    :return:
-    """
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", create_user))
-    app.add_handler(CommandHandler("graph", graph_handler))
-    app.add_handler(CommandHandler("record", record_handler))
-    app.add_handler(CommandHandler("offset", offset_handler))
-    app.add_handler(CallbackQueryHandler(button))
-    return app
+    def initialize_handlers(self):
+        """
+        App entrypoint. Defines handlers, schedules reminders.
+        :return:
+        """
+        self.application.add_handler(CommandHandler("start", create_user))
+        self.application.add_handler(CommandHandler("graph", graph_handler))
+        self.application.add_handler(CommandHandler("record", record_handler))
+        self.application.add_handler(CommandHandler("offset", offset_handler))
+        self.application.add_handler(CallbackQueryHandler(button))
+
+    def initialize_singletons(self):
+        di[Notifier] = self.notifier
+
+    def run(self):
+        self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+    def initialize_notifications(self) -> None:
+        """
+        Adds reminders to the job queue for all users that have configured reminders.
+        """
+        for user in user_repository.find_all_users():
+            user_id = user.user_id
+            notifications = user.notifications
+            logging.info(f"Setting up notifications for for user {user_id}")
+            for notification in notifications:
+                self.notifier.set_notification(user_id, notification)
 
 
 def refresh_user_configs():
@@ -64,19 +78,16 @@ def refresh_user_configs():
     for user in user_repository.find_all_users():
         logging.info(f"Updating user {user.user_id} with new configurations")
         user_repository.update_user_metrics(user.user_id, configuration.get_metrics())
-        user_repository.update_user_notifications(user.user_id, configuration.get_notifications())
+        user_repository.update_user_notifications(
+            user.user_id, configuration.get_notifications()
+        )
 
 
-def initialize_notifier():
-    notifier = Notifier(application.job_queue)
-    di[Notifier] = notifier
-    return notifier
+def main():
+    refresh_user_configs()
+    application = MoodTrackerApplication(TOKEN)
+    application.run()
 
 
 if __name__ == "__main__":
-    # todo: this initialization logic does not work well with tests.
-    refresh_user_configs()
-    application = initialize_application()
-    notifier = initialize_notifier()
-    logging.info("Starting application")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    main()
