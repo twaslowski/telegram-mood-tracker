@@ -46,7 +46,9 @@ async def test_registration(update):
 
 @pytest.mark.asyncio
 async def test_notifications(update):
-    application = MoodTrackerApplication("some-token")  # required so that the job queue is created
+    application = MoodTrackerApplication(
+        "some-token"
+    )  # required so that the job queue is created
     await create_user(update, None)
 
     assert len(application.application.job_queue.jobs()) == 1

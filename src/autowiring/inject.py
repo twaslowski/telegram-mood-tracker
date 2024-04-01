@@ -1,7 +1,6 @@
 import inspect
 from kink import di
 
-from src.config import Configuration, ConfigurationProvider
 from src.autowiring.injectable import Injectable
 
 
@@ -19,7 +18,9 @@ def autowire(func):
 
     def wrapper(*args, **kwargs):
         for name, param in sig.parameters.items():
-            if param.default == param.empty and name not in kwargs:  # Check if the parameter has a default value
+            if (
+                param.default == param.empty and name not in kwargs
+            ):  # Check if the parameter has a default value
                 param_type = param.annotation
                 if inspect.isclass(param_type) and issubclass(param_type, Injectable):
                     fully_qualified_name = param_type.get_fully_qualified_name()
