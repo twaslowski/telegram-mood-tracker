@@ -1,11 +1,13 @@
 from unittest.mock import Mock, AsyncMock
 
 import pytest
+from kink import di
 from telegram.ext import ApplicationBuilder
 
 import src.repository.user_repository as user_repository
-from src.app import init_reminders
+from src.app import init_notifications
 from src.handlers.user_handlers import create_user
+from src.reminder import Notifier
 
 
 @pytest.fixture
@@ -57,9 +59,10 @@ async def test_no_double_registration(update):
 @pytest.mark.asyncio
 async def test_notifications(update):
     # create additional user
+    app = ApplicationBuilder().token("some-token").build()
+    di[Notifier] = Notifier(app.job_queue)
     await create_user(update, None)
 
     # init app with notification settings
-    app = ApplicationBuilder().token("some-token").build()
-    init_reminders(app)
+    init_notifications(app)
     assert len(app.job_queue.jobs()) == 1

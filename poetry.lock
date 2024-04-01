@@ -851,6 +851,20 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.link
 testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
 
 [[package]]
+name = "kink"
+version = "0.7.0"
+description = "Dependency injection for python."
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "kink-0.7.0-py3-none-any.whl", hash = "sha256:661746babd0c1ee4cf576b9133acba0d620007ff40a37860afc4d13abdacadcd"},
+    {file = "kink-0.7.0.tar.gz", hash = "sha256:cea9e263b74d3f19131070a7e5a7076ba98f552eaeab67655c983f7b4cc15380"},
+]
+
+[package.dependencies]
+typing_extensions = ">=4.1.1,<5.0.0"
+
+[[package]]
 name = "kiwisolver"
 version = "1.4.5"
 description = "A fast implementation of the Cassowary constraint solver"
@@ -2326,4 +2340,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "b276f4fb74da2017f0697ad9c8bc2c1e12c55abd61d4fb41b3d235facff9a14e"
+content-hash = "e7228584a3f4f32dc9bb16e145f797899a09058345f0aa88a857fc7071228ead"

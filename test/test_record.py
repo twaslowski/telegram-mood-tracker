@@ -7,7 +7,7 @@ from expiringdict import ExpiringDict
 
 import src.handlers.record_handlers as command_handlers
 import src.repository.record_repository as record_repository
-from src.config import load_metrics
+from src.config import configuration
 from src.handlers.record_handlers import create_temporary_record, button
 from src.handlers.user_handlers import create_user
 from src.model.user import User
@@ -168,8 +168,8 @@ async def test_record_with_offset(update):
     # then the temp record's timestamp should be offset by 1 day
     assert (
         command_handlers.get_temp_record(1).timestamp.day
-        == datetime.datetime.now().day - 1
+        == (datetime.datetime.now() - datetime.timedelta(days=1)).day
     )
 
 
-test_metrics = load_metrics()
+test_metrics = configuration.get_metrics()

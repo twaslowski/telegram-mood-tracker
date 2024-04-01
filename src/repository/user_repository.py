@@ -1,9 +1,11 @@
 import os
 
 import pymongo
+
+from src.model.metric import Metric
 from src.model.notification import Notification
 from src.model.user import User
-from src import config
+from src.config import configuration
 
 mongo_url = os.getenv("MONGODB_HOST", "localhost:27017")
 mongo_client = pymongo.MongoClient(mongo_url)
@@ -31,12 +33,32 @@ def create_user(user_id: int) -> None:
     user.insert_one(
         {
             "user_id": user_id,
-            "metrics": [metric.model_dump() for metric in config.load_metrics()],
+            "metrics": [metric.model_dump() for metric in configuration.get_metrics()],
             "notifications": [
                 notification.model_dump()
-                for notification in config.load_notifications()
+                for notification in configuration.get_notifications()
             ],
         }
+    )
+
+
+def update_user_metrics(user_id: int, metrics: list[Metric]) -> None:
+    user.update_one(
+        {"user_id": user_id},
+        {"$set": {"metrics": [metric.model_dump() for metric in metrics]}},
+    )
+
+
+def update_user_notifications(user_id: int, notifications: list[Notification]) -> None:
+    user.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "notifications": [
+                    notification.model_dump() for notification in notifications
+                ]
+            }
+        },
     )
 
 

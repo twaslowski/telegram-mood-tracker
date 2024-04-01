@@ -18,9 +18,7 @@ metrics:
       upper_bound: 12
 
 notifications:
-  - mood_reminder:
-    text: "It's time to record your mood!"
+  - text: "It's time to record your mood!"
     time: "18:00"
-
-miscellaneous:
-  # todo enable and configure /baseline, auto-baseline etc.
+  - text: "Don't forget to log your sleep!"
+    time: "22:00"
