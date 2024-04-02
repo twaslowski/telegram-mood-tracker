@@ -237,18 +237,32 @@ async def baseline_handler(
     user_repository, record_repository = get_user_repository(), get_record_repository()
     user = user_repository.find_user(update.effective_user.id)
     if user.has_baselines_defined():
-        logging.info(f"Creating baseline record for user {user.user_id}")
+        record = {metric.name: metric.baseline for metric in user.metrics}
+        logging.info(f"Creating baseline record for user {user.user_id}: {record}")
         record_repository.create_record(
             user.user_id,
-            {
-                # todo refactor this
-                metric.name: metric.baseline
-                for metric in user.metrics
-            },
+            record,
             datetime.datetime.now().isoformat(),
         )
+        logging.info(f"Baseline record successfully created for user {user.user_id}")
+        await send(update, text=create_baseline_success_message(record))
     else:
+        logging.error(
+            f"User {user.user_id} has not defined baselines for all metrics yet."
+        )
         await send(update, text="You have not defined baselines for all metrics yet.")
+
+
+def create_baseline_success_message(record: dict) -> str:
+    """
+    Creates a success message for the baseline record creation.
+    :param record: The record that was created.
+    :return: The success message.
+    """
+    bullet_point_list = ", ".join(
+        [f"{name.capitalize()} = {value}" for name, value in record.items()]
+    )
+    return f"Baseline record successfully created: {bullet_point_list}."
 
 
 @autowire("user_repository")
