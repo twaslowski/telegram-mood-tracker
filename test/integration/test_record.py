@@ -7,7 +7,7 @@ from expiringdict import ExpiringDict
 
 from src.config import ConfigurationProvider
 import src.handlers.record_handlers as command_handlers
-import src.repository.record_repository as record_repository
+from src.repository.record_repository import RecordRepository
 from src.handlers.record_handlers import create_temporary_record, button
 from src.handlers.user_handlers import create_user
 from src.model.metric import Metric
@@ -108,12 +108,16 @@ async def test_record_registration(button_update, update):
 
 
 @pytest.mark.asyncio
-async def test_finish_record_creation(update, button_update, user, metrics):
+async def test_finish_record_creation(
+    update, button_update, user, metrics, record_repository
+):
     """
     Tests state transition from recording Metric N to Finished.
     """
     # given a user with only one metric is registered
-    configuration = ConfigurationProvider("test/resources/config.test.yaml").get_configuration()
+    configuration = ConfigurationProvider(
+        "test/resources/config.test.yaml"
+    ).get_configuration()
     configuration.metrics = configuration.metrics[:1]
     configuration.register()
     await create_user(update, None)
@@ -176,6 +180,6 @@ async def test_record_with_offset(update):
 
     # then the temp record's timestamp should be offset by 1 day
     assert (
-            command_handlers.get_temp_record(1).timestamp.day
-            == (datetime.datetime.now() - datetime.timedelta(days=1)).day
+        command_handlers.get_temp_record(1).timestamp.day
+        == (datetime.datetime.now() - datetime.timedelta(days=1)).day
     )

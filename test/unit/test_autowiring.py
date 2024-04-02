@@ -1,7 +1,11 @@
 import kink
 import pytest
 
-from src.autowiring.inject import autowire, ParameterNotInCacheError, ParameterNotInSignatureError
+from src.autowiring.inject import (
+    autowire,
+    ParameterNotInCacheError,
+    ParameterNotInSignatureError,
+)
 from src.autowiring.injectable import Injectable
 
 

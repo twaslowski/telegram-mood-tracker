@@ -31,7 +31,7 @@ async def create_user(update: Update, _) -> None:
         await send(
             update,
             text="You are already registered! If you want to re-assess your metrics or notifications, "
-                 "type /metrics or /notifications to do so.",
+            "type /metrics or /notifications to do so.",
         )
 
 
@@ -42,7 +42,7 @@ def get_user_repository(user_repository: UserRepository):
 
 @autowire("configuration", "notifier")
 def setup_notifications(
-        user_id: int, configuration: Configuration, notifier: Notifier
+    user_id: int, configuration: Configuration, notifier: Notifier
 ) -> None:
     for notification in configuration.get_notifications():
         notifier.set_notification(user_id, notification)

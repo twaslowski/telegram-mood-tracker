@@ -13,7 +13,6 @@ from src.model.user import User
 
 
 class UserRepository(Injectable):
-
     @inject
     def __init__(self, mongo_client: MongoClient):
         mood_tracker = mongo_client["mood_tracker"]
@@ -38,7 +37,9 @@ class UserRepository(Injectable):
         self.user.insert_one(
             {
                 "user_id": user_id,
-                "metrics": [metric.model_dump() for metric in configuration.get_metrics()],
+                "metrics": [
+                    metric.model_dump() for metric in configuration.get_metrics()
+                ],
                 "notifications": [
                     notification.model_dump()
                     for notification in configuration.get_notifications()
@@ -52,7 +53,9 @@ class UserRepository(Injectable):
             {"$set": {"metrics": [metric.model_dump() for metric in metrics]}},
         )
 
-    def update_user_notifications(self, user_id: int, notifications: list[Notification]) -> None:
+    def update_user_notifications(
+        self, user_id: int, notifications: list[Notification]
+    ) -> None:
         self.user.update_one(
             {"user_id": user_id},
             {

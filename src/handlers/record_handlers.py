@@ -4,7 +4,7 @@ import logging
 from expiringdict import ExpiringDict
 from telegram import Update
 
-import src.repository.record_repository as record_repository
+from src.repository.record_repository import RecordRepository
 from src.autowiring.inject import autowire
 from src.handlers.graphing import handle_graph_specification
 from src.handlers.metrics_handlers import prompt_user_for_metric
@@ -155,16 +155,20 @@ def parse_query_data(query_data: str) -> tuple[str, int]:
     :return: A tuple containing the metric name and value.
     """
     assert (
-            ":" in query_data
+        ":" in query_data
     ), "Query data must be a key/value pair of metric name and value."
     metric = query_data.split(":")[0]
     value = int(query_data.split(":")[1])
     return metric, value
 
 
-def store_record(user_id: int, user_record: TempRecord):
+@autowire("record_repository")
+def store_record(
+    user_id: int, user_record: TempRecord, record_repository: RecordRepository
+):
     """
     Stores a temporary record in the database.
+    :param record_repository: autowired.
     :param user_id: user to whom the record belongs
     :param user_record: the temporary record being saved
     :return:
@@ -197,8 +201,8 @@ async def offset_handler(update: Update, context) -> None:
     invalid_args_message = "Please provide an offset in days like this: /offset 1"
     user_state = APPLICATION_STATE.get(update.effective_user.id)
     if (
-            user_state is not None
-            and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
+        user_state is not None
+        and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
     ):
         if len(context.args) != 1:
             await send(update, text=invalid_args_message)

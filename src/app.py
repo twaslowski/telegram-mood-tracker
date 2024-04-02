@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
 from src.config import ConfigurationProvider, Configuration
+from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 from src.autowiring.inject import autowire
 from src.handlers.record_handlers import (
@@ -53,7 +54,9 @@ class MoodTrackerApplication:
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
     @autowire("notifier", "user_repository")
-    def initialize_notifications(self, notifier: Notifier, user_repository: UserRepository) -> None:
+    def initialize_notifications(
+        self, notifier: Notifier, user_repository: UserRepository
+    ) -> None:
         """
         Adds reminders to the job queue for all users that have configured reminders.
         """
@@ -84,7 +87,9 @@ def initialize_database():
     """
     mongo_client = pymongo.MongoClient(os.environ.get("MONGO_HOST"))
     user_repository = UserRepository(mongo_client)
+    record_repository = RecordRepository(mongo_client)
     user_repository.register()
+    record_repository.register()
 
 
 def main():

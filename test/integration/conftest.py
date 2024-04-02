@@ -1,13 +1,10 @@
-from unittest.mock import patch
-
 import mongomock
-import pymongo
 import pytest
 from kink import di
 
 from src.app import MoodTrackerApplication
 from src.config import ConfigurationProvider
-from src.repository import record_repository
+from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 
 
@@ -24,16 +21,17 @@ def user_repository(mock_client):
 
 
 @pytest.fixture(autouse=True)
-def patch_records_collection():
-    with patch.object(
-            record_repository, "records", new=mongomock.MongoClient().db.collection
-    ):
-        yield
+def record_repository(mock_client):
+    record_repository = RecordRepository(mock_client)
+    record_repository.register()
+    return record_repository
 
 
 @pytest.fixture(autouse=True)
 def configuration():
-    ConfigurationProvider("test/resources/config.test.yaml").get_configuration().register()
+    ConfigurationProvider(
+        "test/resources/config.test.yaml"
+    ).get_configuration().register()
 
 
 @pytest.fixture(autouse=True)
@@ -42,4 +40,3 @@ def application():
     application = MoodTrackerApplication("some-token")
     di[MoodTrackerApplication] = application
     return application
-
