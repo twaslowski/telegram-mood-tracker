@@ -5,11 +5,12 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 from expiringdict import ExpiringDict
 
+from src.config import ConfigurationProvider
 import src.handlers.record_handlers as command_handlers
 import src.repository.record_repository as record_repository
-from src.config import _configuration
 from src.handlers.record_handlers import create_temporary_record, button
 from src.handlers.user_handlers import create_user
+from src.model.metric import Metric
 from src.model.user import User
 
 expiry_time = 1
@@ -51,8 +52,13 @@ def patch_command_handler_methods():
 
 
 @pytest.fixture
-def user() -> User:
-    return User(user_id=1, metrics=test_metrics, notifications=[])
+def metrics() -> list[Metric]:
+    return ConfigurationProvider('test/config.test.yaml').get_configuration().get_metrics()
+
+
+@pytest.fixture
+def user(metrics) -> User:
+    return User(user_id=1, metrics=metrics, notifications=[])
 
 
 @pytest.fixture(autouse=True)
@@ -103,13 +109,13 @@ async def test_record_registration(button_update, update):
 
 
 @pytest.mark.asyncio
-async def test_finish_record_creation(update, button_update, mocker, user):
+async def test_finish_record_creation(update, button_update, mocker, user, metrics):
     """
     Tests state transition from recording Metric N to Finished.
     """
     # given only one metric is defined
     mocker.patch("src.repository.user_repository.find_user", return_value=user)
-    user.metrics = [test_metrics[0]]
+    user.metrics = [metrics[0]]
 
     # when user calls /record
     await command_handlers.record_handler(update, None)
@@ -167,9 +173,6 @@ async def test_record_with_offset(update):
 
     # then the temp record's timestamp should be offset by 1 day
     assert (
-        command_handlers.get_temp_record(1).timestamp.day
-        == (datetime.datetime.now() - datetime.timedelta(days=1)).day
+            command_handlers.get_temp_record(1).timestamp.day
+            == (datetime.datetime.now() - datetime.timedelta(days=1)).day
     )
-
-
-test_metrics = _configuration.get_metrics()

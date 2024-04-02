@@ -2,10 +2,11 @@ import os
 
 import pymongo
 
+from src.autowiring.inject import autowire
+from src.config import Configuration
 from src.model.metric import Metric
 from src.model.notification import Notification
 from src.model.user import User
-from src.config import _configuration
 
 mongo_url = os.getenv("MONGODB_HOST", "localhost:27017")
 mongo_client = pymongo.MongoClient(mongo_url)
@@ -29,14 +30,15 @@ def parse_user(result: dict) -> User:
     return User(**result)
 
 
-def create_user(user_id: int) -> None:
+@autowire("configuration")
+def create_user(user_id: int, configuration: Configuration) -> None:
     user.insert_one(
         {
             "user_id": user_id,
-            "metrics": [metric.model_dump() for metric in _configuration.get_metrics()],
+            "metrics": [metric.model_dump() for metric in configuration.get_metrics()],
             "notifications": [
                 notification.model_dump()
-                for notification in _configuration.get_notifications()
+                for notification in configuration.get_notifications()
             ],
         }
     )

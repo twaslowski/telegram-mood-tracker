@@ -20,8 +20,8 @@ class Configuration(BaseModel, Injectable):
 class ConfigurationProvider:
     _configuration: Configuration
 
-    def __init__(self):
-        self.configuration = ConfigurationProvider.load("config.yaml")
+    def __init__(self, config_file: str = "config.yaml"):
+        self.configuration = ConfigurationProvider.load(config_file)
 
     @staticmethod
     def load(config_file: str) -> Configuration:
@@ -36,6 +36,3 @@ class ConfigurationProvider:
 
     def get_configuration(self) -> Configuration:
         return self.configuration
-
-
-_configuration = ConfigurationProvider().configuration

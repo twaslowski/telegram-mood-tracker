@@ -3,7 +3,7 @@ import logging
 from telegram import Update
 
 from src.autowiring.inject import autowire
-from src.config import _configuration
+from src.config import Configuration
 from src.handlers.util import send
 from src.model.notification import Notification
 from src.notifier import Notifier
@@ -18,25 +18,13 @@ async def create_user(update: Update, _) -> None:
     :param _: CallbackContext: is irrelevant
     :return:
     """
-    # Declare introduction text.
-    bullet_point_list = "\n".join(
-        [f"- {metric.name.capitalize()}" for metric in _configuration.get_metrics()]
-    )
-    introduction_text = (
-        "Hi! You can track your mood with me. "
-        "Simply type /record to get started. By default, "
-        f"I will track the following metrics:\n {bullet_point_list}"
-    )
-
     # Handle registration
     user_id = update.effective_user.id
     if not user_repository.find_user(user_id):
         logging.info(f"Creating user {user_id}")
-        # todo all of this could use some decoupling
         user_repository.create_user(user_id)
-        for notification in _configuration.get_notifications():
-            create_notification(user_id=user_id, notification=notification)
-        await send(update, text=introduction_text)
+        setup_notifications(user_id)
+        await send(update, text=introduction_text())
     # User already exists
     else:
         logging.info(f"Received /start, but user {user_id} already exists")
@@ -47,6 +35,21 @@ async def create_user(update: Update, _) -> None:
         )
 
 
-@autowire
-def create_notification(user_id: int, notification: Notification, notifier: Notifier):
-    notifier.set_notification(user_id, notification)
+@autowire("configuration", "notifier")
+def setup_notifications(
+    user_id: int, configuration: Configuration, notifier: Notifier
+) -> None:
+    for notification in configuration.get_notifications():
+        notifier.set_notification(user_id, notification)
+
+
+@autowire("configuration")
+def introduction_text(configuration: Configuration) -> str:
+    bullet_point_list = "\n".join(
+        [f"- {metric.name.capitalize()}" for metric in configuration.get_metrics()]
+    )
+    return (
+        "Hi! You can track your mood with me. "
+        "Simply type /record to get started. By default, "
+        f"I will track the following metrics:\n {bullet_point_list}"
+    )

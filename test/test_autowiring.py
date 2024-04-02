@@ -18,23 +18,15 @@ def setup():
 
 
 def test_trivial_autowiring():
-    @autowire
+    @autowire("test_class")
     def test_func(test_class: SomeClass):
         return test_class.field
 
     assert test_func() == "some-value"
 
 
-def test_autowiring_with_default_value():
-    @autowire
-    def test_func(test_class: SomeClass = SomeClass("another-value")):
-        return test_class.field
-
-    assert test_func() == "another-value"
-
-
 def test_autowiring_with_args():
-    @autowire
+    @autowire("test_class")
     def test_func(string: str, test_class: SomeClass):
         return test_class.field + string
 

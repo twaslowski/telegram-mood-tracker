@@ -6,6 +6,7 @@ import src.repository.user_repository as user_repository
 from src.app import MoodTrackerApplication
 from kink import di
 
+from src.config import ConfigurationProvider
 from src.handlers.user_handlers import create_user
 from src.notifier import Notifier
 
@@ -23,6 +24,11 @@ def mock_notifier():
     application = MoodTrackerApplication("some-token")
     di[MoodTrackerApplication] = application
     assert di[Notifier.get_fully_qualified_name()] is not None
+
+
+@pytest.fixture(autouse=True)
+def configuration():
+    ConfigurationProvider().load("test/config.test.yaml").register()
 
 
 def test_querying_nonexistent_user_returns_none():

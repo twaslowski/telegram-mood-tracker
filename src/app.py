@@ -2,11 +2,7 @@ import logging
 import os
 
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    CallbackQueryHandler
-)
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
 from src.config import ConfigurationProvider, Configuration
 import src.repository.user_repository as user_repository
@@ -55,21 +51,20 @@ class MoodTrackerApplication:
     def run(self):
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
+    @autowire("notifier")
+    def initialize_notifications(self, notifier: Notifier) -> None:
+        """
+        Adds reminders to the job queue for all users that have configured reminders.
+        """
+        for user in user_repository.find_all_users():
+            user_id = user.user_id
+            notifications = user.notifications
+            logging.info(f"Setting up notifications for for user {user_id}")
+            for notification in notifications:
+                notifier.set_notification(user_id, notification)
 
-@autowire
-def initialize_notifications(notifier: Notifier) -> None:
-    """
-    Adds reminders to the job queue for all users that have configured reminders.
-    """
-    for user in user_repository.find_all_users():
-        user_id = user.user_id
-        notifications = user.notifications
-        logging.info(f"Setting up notifications for for user {user_id}")
-        for notification in notifications:
-            notifier.set_notification(user_id, notification)
 
-
-@autowire
+@autowire("configuration")
 def refresh_user_configs(configuration: Configuration):
     """
     Overwrites the user configurations in the database with the configurations in the config file.
@@ -88,7 +83,6 @@ def main():
     # Create application
     refresh_user_configs()
     application = MoodTrackerApplication(TOKEN)
-    initialize_notifications()
     application.run()
 
 
