@@ -13,7 +13,6 @@ pillow = "^10.2.0"
 pymongo = "^4.6.2"
 python-telegram-bot = {extras = ["job-queue"], version = "^21.0.1"}
 pydantic = "^2.6.4"
-python-dotenv = "^1.0.1"
 emoji = "^2.10.1"
 expiringdict = "^1.2.2"
 pandas = "^2.2.1"

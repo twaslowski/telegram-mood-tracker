@@ -224,9 +224,12 @@ async def offset_handler(update: Update, context) -> None:
         await send(update, text=incorrect_state_message)
 
 
+@autowire("record_repository", "user_repository")
 async def baseline_handler(
     update: Update,
     _,
+    record_repository: RecordRepository,
+    user_repository: UserRepository,
 ):
     """
     Handler for the /baseline command.
@@ -234,7 +237,7 @@ async def baseline_handler(
     this command will create a record consisting of those values.
     :return:
     """
-    user_repository, record_repository = get_user_repository(), get_record_repository()
+    # user_repository, record_repository = get_user_repository(), get_record_repository()
     user = user_repository.find_user(update.effective_user.id)
     if user.has_baselines_defined():
         record = {metric.name: metric.baseline for metric in user.metrics}
@@ -263,16 +266,6 @@ def create_baseline_success_message(record: dict) -> str:
         [f"{name.capitalize()} = {value}" for name, value in record.items()]
     )
     return f"Baseline record successfully created: {bullet_point_list}."
-
-
-@autowire("user_repository")
-def get_user_repository(user_repository: UserRepository):
-    return user_repository
-
-
-@autowire("record_repository")
-def get_record_repository(record_repository: RecordRepository):
-    return record_repository
 
 
 def modify_timestamp(timestamp: datetime.datetime, offset: int) -> datetime.datetime:

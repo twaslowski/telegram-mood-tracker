@@ -1,11 +1,10 @@
 import datetime
 
 import pymongo
-from dotenv import load_dotenv
 from pymongo import MongoClient
 
 from src.autowiring.injectable import Injectable
-from src.model.record import Record, RecordData, DatabaseRecord
+from src.model.record import Record, DatabaseRecord
 
 
 class RecordRepository(Injectable):

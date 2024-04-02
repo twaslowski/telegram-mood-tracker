@@ -8,13 +8,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pymongo import MongoClient
 
-from dotenv import load_dotenv
-
 
 def visualize_monthly_data(user_id: int, month: Tuple[int, int] = None):
-    load_dotenv()
     # Connect to MongoDB (replace with your connection details)
-    client = MongoClient(f"mongodb://{os.environ.get('MONGO_CONNECTION_STRING')}/")
+    client = MongoClient(f"mongodb://{os.environ.get('MONGO_HOST')}/")
     db = client.mood_tracker
     collection = db.records
 

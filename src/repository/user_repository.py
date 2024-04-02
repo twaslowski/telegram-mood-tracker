@@ -1,5 +1,3 @@
-import pymongo
-from injector import inject
 from pymongo import MongoClient
 
 from src.autowiring.inject import autowire
@@ -11,7 +9,6 @@ from src.model.user import User
 
 
 class UserRepository(Injectable):
-    @inject
     def __init__(self, mongo_client: MongoClient):
         mood_tracker = mongo_client["mood_tracker"]
         self.user = mood_tracker["user"]

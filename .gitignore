@@ -8,3 +8,4 @@ graphs/
 package/
 
 .terraform*
+requirements.txt

@@ -9,17 +9,18 @@ from src.notifier import Notifier
 from src.repository.user_repository import UserRepository
 
 
-async def create_user(update: Update, _) -> None:
+@autowire("user_repository")
+async def create_user(update: Update, _, user_repository: UserRepository) -> None:
     """
     Handles /start command.
     Creates user based on the user_id included in the update object.
+    :param user_repository: autowired.
     :param update: Update from the Telegram bot.
     :param _: CallbackContext: is irrelevant
     :return:
     """
     # Handle registration
     user_id = update.effective_user.id
-    user_repository = get_user_repository()
     if not user_repository.find_user(user_id):
         logging.info(f"Creating user {user_id}")
         user_repository.create_user(user_id)
@@ -33,11 +34,6 @@ async def create_user(update: Update, _) -> None:
             text="You are already registered! If you want to re-assess your metrics or notifications, "
             "type /metrics or /notifications to do so.",
         )
-
-
-@autowire("user_repository")
-def get_user_repository(user_repository: UserRepository):
-    return user_repository
 
 
 @autowire("configuration", "notifier")
