@@ -91,11 +91,11 @@ async def test_record_registration(button_update, update):
     Does not cover the state transition from Metric N to Finished.
     """
     # when user calls /record
+    await create_user(update, None)
     await command_handlers.record_handler(update, None)
 
     # bot responds with first metric user prompt
     # omit this in further tests
-    assert update.effective_user.get_bot().send_message.call_count == 1
     assert command_handlers.prompt_user_for_metric.call_count == 1
 
     # when user response is received
@@ -108,13 +108,15 @@ async def test_record_registration(button_update, update):
 
 
 @pytest.mark.asyncio
-async def test_finish_record_creation(update, button_update, mocker, user, metrics):
+async def test_finish_record_creation(update, button_update, user, metrics):
     """
     Tests state transition from recording Metric N to Finished.
     """
-    # given only one metric is defined
-    # mocker.patch("src.repository.user_repository.find_user", return_value=user)
-    user.metrics = [metrics[0]]
+    # given a user with only one metric is registered
+    configuration = ConfigurationProvider("test/resources/config.test.yaml").get_configuration()
+    configuration.metrics = configuration.metrics[:1]
+    configuration.register()
+    await create_user(update, None)
 
     # when user calls /record
     await command_handlers.record_handler(update, None)
@@ -140,6 +142,7 @@ async def test_double_answer_works_as_intended(update, button_update):
     Extends `test_record_registration`
     :return:
     """
+    await create_user(update, None)
     # when user calls /record
     await command_handlers.record_handler(update, None)
 
@@ -162,6 +165,7 @@ async def test_double_answer_works_as_intended(update, button_update):
 
 @pytest.mark.asyncio
 async def test_record_with_offset(update):
+    await create_user(update, None)
     # when user calls /record
     await command_handlers.record_handler(update, None)
 

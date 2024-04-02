@@ -2,7 +2,6 @@ from unittest.mock import Mock, AsyncMock
 
 import pytest
 
-import src.repository.user_repository as user_repository
 from src.app import MoodTrackerApplication
 from kink import di
 
@@ -19,26 +18,12 @@ def update():
     return update
 
 
-@pytest.fixture(autouse=True)
-def mock_notifier():
-    application = MoodTrackerApplication("some-token")
-    di[MoodTrackerApplication] = application
-    assert di[Notifier.get_fully_qualified_name()] is not None
-
-
-@pytest.fixture(autouse=True)
-def configuration():
-    ConfigurationProvider(
-        "test/resources/config.test.yaml"
-    ).get_configuration().register()
-
-
-def test_querying_nonexistent_user_returns_none():
+def test_querying_nonexistent_user_returns_none(user_repository):
     assert user_repository.find_user(1) is None
 
 
 @pytest.mark.asyncio
-async def test_registration(update):
+async def test_registration(update, user_repository):
     # user does not exist
     assert user_repository.find_user(1) is None
 
