@@ -35,7 +35,7 @@ class RecordRepository(Injectable):
             self.parse_record(r) for r in list(self.records.find({"user_id": user_id}))
         ]
 
-    def zeroes(self, days: int):
+    def zeroes(self, from_date: datetime.date, to_date: datetime.date):
         """
         Inserts records with default values for missed days within a date range.
         start_date (datetime.date): The start date of the range.
@@ -44,12 +44,14 @@ class RecordRepository(Injectable):
 
         user_id = 1965256751
         default_record = {"sleep": "8", "mood": "0"}
-        start = datetime.datetime.now().isoformat()
-        date_range = [modify_timestamp(start, n).isoformat() for n in range(days)]
+        date_range = [
+            from_date + datetime.timedelta(days=i)
+            for i in range((to_date - from_date).days + 1)
+        ]
 
         for date in date_range:
             print(f"Inserting neutral record for timestamp {date}")
-            self.create_record(user_id, default_record, date)
+            self.create_record(user_id, default_record, f"{date}T12:00:00.000000")
 
 
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
