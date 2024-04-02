@@ -224,12 +224,9 @@ async def offset_handler(update: Update, context) -> None:
         await send(update, text=incorrect_state_message)
 
 
-@autowire("user_repository", "record_repository")
-def baseline_handler(
+async def baseline_handler(
     update: Update,
     _,
-    user_repository: UserRepository,
-    record_repository: RecordRepository,
 ):
     """
     Handler for the /baseline command.
@@ -237,11 +234,31 @@ def baseline_handler(
     this command will create a record consisting of those values.
     :return:
     """
+    user_repository, record_repository = get_user_repository(), get_record_repository()
     user = user_repository.find_user(update.effective_user.id)
     if user.has_baselines_defined():
-        pass
+        logging.info(f"Creating baseline record for user {user.user_id}")
+        record_repository.create_record(
+            user.user_id,
+            {
+                # todo refactor this
+                metric.name: metric.baseline
+                for metric in user.metrics
+            },
+            datetime.datetime.now().isoformat(),
+        )
     else:
-        send(update, text="You have not defined baselines for all metrics yet.")
+        await send(update, text="You have not defined baselines for all metrics yet.")
+
+
+@autowire("user_repository")
+def get_user_repository(user_repository: UserRepository):
+    return user_repository
+
+
+@autowire("record_repository")
+def get_record_repository(record_repository: RecordRepository):
+    return record_repository
 
 
 def modify_timestamp(timestamp: datetime.datetime, offset: int) -> datetime.datetime:

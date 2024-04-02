@@ -9,5 +9,5 @@ class User(BaseModel):
     metrics: list[Metric]
     notifications: list[Notification]
 
-    def has_baselines_defined(self):
-        return all(metric.baseline for metric in self.metrics)
+    def has_baselines_defined(self) -> bool:
+        return all(metric.baseline is not None for metric in self.metrics)

@@ -185,5 +185,43 @@ async def test_record_with_offset(update):
 
 
 @pytest.mark.asyncio
-def test_baseline_happy_path(update):
-    pass
+async def test_baseline_happy_path(update, record_repository):
+    update.effective_user.id = 2
+    await create_user(update, None)
+
+    # when user calls /baseline
+    await command_handlers.baseline_handler(update, None)
+
+    # then a record with default values is created
+    record = record_repository.get_latest_record_for_user(2)
+    assert record.user_id == 2
+    assert record.find_data_by_name("mood").value == 0
+    assert record.find_data_by_name("sleep").value == 8
+
+
+@pytest.mark.asyncio
+async def test_baseline_for_incomplete_config(update, record_repository):
+    update.effective_user.id = 3
+    # given a configuration with a metric without a baseline
+    metrics = [
+        Metric(
+            name="some-metric-without-baseline",
+            user_prompt="some-prompt",
+            values={"1": 1},
+        )
+    ]
+    configuration = ConfigurationProvider(
+        "test/resources/config.test.yaml"
+    ).get_configuration()
+    configuration.metrics = metrics
+    configuration.register()
+
+    # create user
+    await create_user(update, None)
+
+    # when user calls /baseline
+    await command_handlers.baseline_handler(update, None)
+
+    # then no record is created and a corresponding message is sent to the user
+    assert record_repository.get_latest_record_for_user(3) is None
+    assert update.effective_user.get_bot().send_message.called
