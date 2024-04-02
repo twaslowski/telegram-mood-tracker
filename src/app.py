@@ -87,7 +87,13 @@ def initialize_database():
     """
     Initializes the database by creating the tables if they do not exist.
     """
-    mongo_client = pymongo.MongoClient(os.environ.get("MONGO_HOST"))
+    # Connect to the database
+    mongo_client = pymongo.MongoClient(
+        os.environ.get("MONGODB_HOST"), ServerSelectionTimeoutMS=5000
+    )
+    mongo_client.server_info()
+
+    # Create repositories and register them
     user_repository = UserRepository(mongo_client)
     record_repository = RecordRepository(mongo_client)
     user_repository.register()
