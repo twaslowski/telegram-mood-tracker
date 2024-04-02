@@ -2,6 +2,7 @@ metrics:
   - name: mood
     user_prompt: "How do you feel right now?"
     emoji: true  # I'm not brave enough to put emojis in a YAML file
+    baseline: 0
     values:
       ":zany_face:": 3
       ":grinning_face_with_smiling_eyes:": 2
@@ -11,6 +12,7 @@ metrics:
       ":frowning_face:": -2
       ":skull:": -3
   - name: sleep
+    baseline: 8
     user_prompt: "How much sleep did you get today?"
     type: numeric
     values:
@@ -20,3 +22,7 @@ metrics:
 notifications:
   - text: "It's time to record your mood!"
     time: "18:00"
+
+baseline:
+  enabled: true
+  auto: false

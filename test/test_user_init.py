@@ -28,7 +28,9 @@ def mock_notifier():
 
 @pytest.fixture(autouse=True)
 def configuration():
-    ConfigurationProvider().load("test/config.test.yaml").register()
+    ConfigurationProvider(
+        "test/resources/config.test.yaml"
+    ).get_configuration().register()
 
 
 def test_querying_nonexistent_user_returns_none():

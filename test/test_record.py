@@ -53,7 +53,11 @@ def patch_command_handler_methods():
 
 @pytest.fixture
 def metrics() -> list[Metric]:
-    return ConfigurationProvider('test/config.test.yaml').get_configuration().get_metrics()
+    return (
+        ConfigurationProvider("test/resources/config.test.yaml")
+        .get_configuration()
+        .get_metrics()
+    )
 
 
 @pytest.fixture
@@ -173,6 +177,6 @@ async def test_record_with_offset(update):
 
     # then the temp record's timestamp should be offset by 1 day
     assert (
-            command_handlers.get_temp_record(1).timestamp.day
-            == (datetime.datetime.now() - datetime.timedelta(days=1)).day
+        command_handlers.get_temp_record(1).timestamp.day
+        == (datetime.datetime.now() - datetime.timedelta(days=1)).day
     )
