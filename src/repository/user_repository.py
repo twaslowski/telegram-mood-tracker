@@ -1,5 +1,3 @@
-import os
-
 import pymongo
 from injector import inject
 from pymongo import MongoClient

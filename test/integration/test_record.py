@@ -7,7 +7,6 @@ from expiringdict import ExpiringDict
 
 from src.config import ConfigurationProvider
 import src.handlers.record_handlers as command_handlers
-from src.repository.record_repository import RecordRepository
 from src.handlers.record_handlers import create_temporary_record, button
 from src.handlers.user_handlers import create_user
 from src.model.metric import Metric
