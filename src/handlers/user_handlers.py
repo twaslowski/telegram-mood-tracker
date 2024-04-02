@@ -5,9 +5,8 @@ from telegram import Update
 from src.autowiring.inject import autowire
 from src.config import Configuration
 from src.handlers.util import send
-from src.model.notification import Notification
 from src.notifier import Notifier
-from src.repository import user_repository
+from src.repository.user_repository import UserRepository
 
 
 async def create_user(update: Update, _) -> None:
@@ -20,6 +19,7 @@ async def create_user(update: Update, _) -> None:
     """
     # Handle registration
     user_id = update.effective_user.id
+    user_repository = get_user_repository()
     if not user_repository.find_user(user_id):
         logging.info(f"Creating user {user_id}")
         user_repository.create_user(user_id)
@@ -31,13 +31,18 @@ async def create_user(update: Update, _) -> None:
         await send(
             update,
             text="You are already registered! If you want to re-assess your metrics or notifications, "
-            "type /metrics or /notifications to do so.",
+                 "type /metrics or /notifications to do so.",
         )
+
+
+@autowire("user_repository")
+def get_user_repository(user_repository: UserRepository):
+    return user_repository
 
 
 @autowire("configuration", "notifier")
 def setup_notifications(
-    user_id: int, configuration: Configuration, notifier: Notifier
+        user_id: int, configuration: Configuration, notifier: Notifier
 ) -> None:
     for notification in configuration.get_notifications():
         notifier.set_notification(user_id, notification)

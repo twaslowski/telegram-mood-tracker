@@ -5,12 +5,13 @@ from expiringdict import ExpiringDict
 from telegram import Update
 
 import src.repository.record_repository as record_repository
+from src.autowiring.inject import autowire
 from src.handlers.graphing import handle_graph_specification
 from src.handlers.metrics_handlers import prompt_user_for_metric
 from src.handlers.util import send, handle_no_known_state
 from src.model.metric import Metric
 from src.model.record import TempRecord
-from src.repository import user_repository
+from src.repository.user_repository import UserRepository
 from src.state import State, APPLICATION_STATE
 
 """
@@ -29,10 +30,12 @@ def get_temp_record(user_id: int) -> TempRecord | None:
     return temp_records.get(user_id)
 
 
-def create_temporary_record(user_id: int):
+@autowire("user_repository")
+def create_temporary_record(user_id: int, user_repository: UserRepository):
     """
     Creates a new record for the user with the given user_id.
     Additionally, updates the state map to move through the questions easier.
+    :param user_repository: autowired.
     :param user_id:
     """
     # create temporary record from user configuration
@@ -152,7 +155,7 @@ def parse_query_data(query_data: str) -> tuple[str, int]:
     :return: A tuple containing the metric name and value.
     """
     assert (
-        ":" in query_data
+            ":" in query_data
     ), "Query data must be a key/value pair of metric name and value."
     metric = query_data.split(":")[0]
     value = int(query_data.split(":")[1])
@@ -194,8 +197,8 @@ async def offset_handler(update: Update, context) -> None:
     invalid_args_message = "Please provide an offset in days like this: /offset 1"
     user_state = APPLICATION_STATE.get(update.effective_user.id)
     if (
-        user_state is not None
-        and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
+            user_state is not None
+            and APPLICATION_STATE[update.effective_user.id] == State.RECORDING
     ):
         if len(context.args) != 1:
             await send(update, text=invalid_args_message)

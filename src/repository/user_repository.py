@@ -1,68 +1,68 @@
 import os
 
 import pymongo
+from injector import inject
+from pymongo import MongoClient
 
 from src.autowiring.inject import autowire
+from src.autowiring.injectable import Injectable
 from src.config import Configuration
 from src.model.metric import Metric
 from src.model.notification import Notification
 from src.model.user import User
 
-mongo_url = os.getenv("MONGODB_HOST", "localhost:27017")
-mongo_client = pymongo.MongoClient(mongo_url)
-mood_tracker = mongo_client["mood_tracker"]
-user = mood_tracker["user"]
 
+class UserRepository(Injectable):
 
-def find_user(user_id: int) -> User | None:
-    result = user.find_one({"user_id": user_id})
-    if result:
-        return parse_user(dict(result))
-    return None
+    @inject
+    def __init__(self, mongo_client: MongoClient):
+        mood_tracker = mongo_client["mood_tracker"]
+        self.user = mood_tracker["user"]
 
+    def find_user(self, user_id: int) -> User | None:
+        result = self.user.find_one({"user_id": user_id})
+        if result:
+            return self.parse_user(dict(result))
+        return None
 
-def parse_user(result: dict) -> User:
-    result = dict(result)
-    # still not perfect from a typing point of view, but the hack is limited to the persistence layer
-    result["notifications"] = [
-        Notification(**notification) for notification in result["notifications"]
-    ]
-    return User(**result)
+    def parse_user(self, result: dict) -> User:
+        result = dict(result)
+        # still not perfect from a typing point of view, but the hack is limited to the persistence layer
+        result["notifications"] = [
+            Notification(**notification) for notification in result["notifications"]
+        ]
+        return User(**result)
 
-
-@autowire("configuration")
-def create_user(user_id: int, configuration: Configuration) -> None:
-    user.insert_one(
-        {
-            "user_id": user_id,
-            "metrics": [metric.model_dump() for metric in configuration.get_metrics()],
-            "notifications": [
-                notification.model_dump()
-                for notification in configuration.get_notifications()
-            ],
-        }
-    )
-
-
-def update_user_metrics(user_id: int, metrics: list[Metric]) -> None:
-    user.update_one(
-        {"user_id": user_id},
-        {"$set": {"metrics": [metric.model_dump() for metric in metrics]}},
-    )
-
-
-def update_user_notifications(user_id: int, notifications: list[Notification]) -> None:
-    user.update_one(
-        {"user_id": user_id},
-        {
-            "$set": {
+    @autowire("configuration")
+    def create_user(self, user_id: int, configuration: Configuration) -> None:
+        self.user.insert_one(
+            {
+                "user_id": user_id,
+                "metrics": [metric.model_dump() for metric in configuration.get_metrics()],
                 "notifications": [
-                    notification.model_dump() for notification in notifications
-                ]
+                    notification.model_dump()
+                    for notification in configuration.get_notifications()
+                ],
             }
-        },
-    )
+        )
 
+    def update_user_metrics(self, user_id: int, metrics: list[Metric]) -> None:
+        self.user.update_one(
+            {"user_id": user_id},
+            {"$set": {"metrics": [metric.model_dump() for metric in metrics]}},
+        )
 
-def find_all_users() -> list[User]:
-    return [parse_user(dict(u)) for u in user.find()]
+    def update_user_notifications(self, user_id: int, notifications: list[Notification]) -> None:
+        self.user.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "notifications": [
+                        notification.model_dump() for notification in notifications
+                    ]
+                }
+            },
+        )
+
+    def find_all_users(self) -> list[User]:
+        return [self.parse_user(dict(u)) for u in self.user.find()]

@@ -65,11 +65,6 @@ def user(metrics) -> User:
     return User(user_id=1, metrics=metrics, notifications=[])
 
 
-@pytest.fixture(autouse=True)
-def patch_repository_methods(mocker, user):
-    mocker.patch("src.repository.user_repository.find_user", return_value=user)
-
-
 @pytest.mark.asyncio
 async def test_init_and_expire_record(update, button_update):
     """
@@ -118,7 +113,7 @@ async def test_finish_record_creation(update, button_update, mocker, user, metri
     Tests state transition from recording Metric N to Finished.
     """
     # given only one metric is defined
-    mocker.patch("src.repository.user_repository.find_user", return_value=user)
+    # mocker.patch("src.repository.user_repository.find_user", return_value=user)
     user.metrics = [metrics[0]]
 
     # when user calls /record
@@ -177,6 +172,6 @@ async def test_record_with_offset(update):
 
     # then the temp record's timestamp should be offset by 1 day
     assert (
-        command_handlers.get_temp_record(1).timestamp.day
-        == (datetime.datetime.now() - datetime.timedelta(days=1)).day
+            command_handlers.get_temp_record(1).timestamp.day
+            == (datetime.datetime.now() - datetime.timedelta(days=1)).day
     )
