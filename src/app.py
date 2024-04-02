@@ -1,11 +1,12 @@
 import logging
 import os
 
+import pymongo
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
 from src.config import ConfigurationProvider, Configuration
-import src.repository.user_repository as user_repository
+from src.repository.user_repository import UserRepository
 from src.autowiring.inject import autowire
 from src.handlers.record_handlers import (
     record_handler,
@@ -51,8 +52,8 @@ class MoodTrackerApplication:
     def run(self):
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-    @autowire("notifier")
-    def initialize_notifications(self, notifier: Notifier) -> None:
+    @autowire("notifier", "user_repository")
+    def initialize_notifications(self, notifier: Notifier, user_repository: UserRepository) -> None:
         """
         Adds reminders to the job queue for all users that have configured reminders.
         """
@@ -64,8 +65,8 @@ class MoodTrackerApplication:
                 notifier.set_notification(user_id, notification)
 
 
-@autowire("configuration")
-def refresh_user_configs(configuration: Configuration):
+@autowire("configuration", "user_repository")
+def refresh_user_configs(configuration: Configuration, user_repository: UserRepository):
     """
     Overwrites the user configurations in the database with the configurations in the config file.
     """
@@ -77,9 +78,19 @@ def refresh_user_configs(configuration: Configuration):
         )
 
 
+def initialize_database():
+    """
+    Initializes the database by creating the tables if they do not exist.
+    """
+    mongo_client = pymongo.MongoClient(os.environ.get("MONGO_HOST"))
+    user_repository = UserRepository(mongo_client)
+    user_repository.register()
+
+
 def main():
     # Load and register configuration object
     ConfigurationProvider().get_configuration().register()
+    initialize_database()
     # Create application
     refresh_user_configs()
     application = MoodTrackerApplication(TOKEN)
