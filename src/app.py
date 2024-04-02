@@ -13,6 +13,7 @@ from src.handlers.record_handlers import (
     record_handler,
     button,
     offset_handler,
+    baseline_handler,
 )
 from src.handlers.user_handlers import create_user
 from src.handlers.graphing import graph_handler
@@ -47,6 +48,7 @@ class MoodTrackerApplication:
         self.application.add_handler(CommandHandler("start", create_user))
         self.application.add_handler(CommandHandler("graph", graph_handler))
         self.application.add_handler(CommandHandler("record", record_handler))
+        self.application.add_handler(CommandHandler("baseline", baseline_handler))
         self.application.add_handler(CommandHandler("offset", offset_handler))
         self.application.add_handler(CallbackQueryHandler(button))
 

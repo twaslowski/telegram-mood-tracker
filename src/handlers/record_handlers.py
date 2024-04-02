@@ -224,5 +224,25 @@ async def offset_handler(update: Update, context) -> None:
         await send(update, text=incorrect_state_message)
 
 
+@autowire("user_repository", "record_repository")
+def baseline_handler(
+    update: Update,
+    _,
+    user_repository: UserRepository,
+    record_repository: RecordRepository,
+):
+    """
+    Handler for the /baseline command.
+    If the user has defined baselines for every metric,
+    this command will create a record consisting of those values.
+    :return:
+    """
+    user = user_repository.find_user(update.effective_user.id)
+    if user.has_baselines_defined():
+        pass
+    else:
+        send(update, text="You have not defined baselines for all metrics yet.")
+
+
 def modify_timestamp(timestamp: datetime.datetime, offset: int) -> datetime.datetime:
     return timestamp - datetime.timedelta(days=offset)

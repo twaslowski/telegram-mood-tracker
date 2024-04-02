@@ -182,3 +182,8 @@ async def test_record_with_offset(update):
         command_handlers.get_temp_record(1).timestamp.day
         == (datetime.datetime.now() - datetime.timedelta(days=1)).day
     )
+
+
+@pytest.mark.asyncio
+def test_baseline_happy_path(update):
+    pass
