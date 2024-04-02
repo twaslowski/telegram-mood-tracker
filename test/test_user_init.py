@@ -20,7 +20,9 @@ def update():
 
 @pytest.fixture(autouse=True)
 def mock_notifier():
-    di[Notifier.get_fully_qualified_name()] = Mock()
+    application = MoodTrackerApplication("some-token")
+    di[MoodTrackerApplication] = application
+    assert di[Notifier.get_fully_qualified_name()] is not None
 
 
 def test_querying_nonexistent_user_returns_none():
@@ -46,9 +48,6 @@ async def test_registration(update):
 
 @pytest.mark.asyncio
 async def test_notifications(update):
-    application = MoodTrackerApplication(
-        "some-token"
-    )  # required so that the job queue is created
     await create_user(update, None)
 
-    assert len(application.application.job_queue.jobs()) == 1
+    assert len(di[MoodTrackerApplication].application.job_queue.jobs()) == 1

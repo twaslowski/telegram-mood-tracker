@@ -18,7 +18,7 @@ class Configuration(BaseModel, Injectable):
 
 
 class ConfigurationProvider:
-    configuration: Configuration
+    _configuration: Configuration
 
     def __init__(self):
         self.configuration = ConfigurationProvider.load("config.yaml")
@@ -34,5 +34,8 @@ class ConfigurationProvider:
             data = yaml.safe_load(stream)
             return Configuration(**data)
 
+    def get_configuration(self) -> Configuration:
+        return self.configuration
 
-configuration = ConfigurationProvider().configuration
+
+_configuration = ConfigurationProvider().configuration

@@ -1,15 +1,14 @@
 import logging
 import os
 
-from dotenv import load_dotenv
 from telegram import Update
-from kink import di
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
-    CallbackQueryHandler,
+    CallbackQueryHandler
 )
 
+from src.config import ConfigurationProvider, Configuration
 import src.repository.user_repository as user_repository
 from src.autowiring.inject import autowire
 from src.handlers.record_handlers import (
@@ -17,12 +16,10 @@ from src.handlers.record_handlers import (
     button,
     offset_handler,
 )
-from src.config import configuration
 from src.handlers.user_handlers import create_user
 from src.handlers.graphing import graph_handler
 from src.notifier import Notifier
 
-load_dotenv()
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -38,7 +35,11 @@ class MoodTrackerApplication:
     def __init__(self, api_token):
         self.application = ApplicationBuilder().token(api_token).build()
         self.initialize_handlers()
-        self.initialize_singletons()
+        self.initialize_notifier()
+
+    def initialize_notifier(self):
+        notifier = Notifier(self.application.job_queue)
+        notifier.register()
 
     def initialize_handlers(self):
         """
@@ -50,9 +51,6 @@ class MoodTrackerApplication:
         self.application.add_handler(CommandHandler("record", record_handler))
         self.application.add_handler(CommandHandler("offset", offset_handler))
         self.application.add_handler(CallbackQueryHandler(button))
-
-    def initialize_singletons(self):
-        Notifier(self.application.job_queue).register()
 
     def run(self):
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
@@ -71,7 +69,8 @@ def initialize_notifications(notifier: Notifier) -> None:
             notifier.set_notification(user_id, notification)
 
 
-def refresh_user_configs():
+@autowire
+def refresh_user_configs(configuration: Configuration):
     """
     Overwrites the user configurations in the database with the configurations in the config file.
     """
@@ -84,6 +83,9 @@ def refresh_user_configs():
 
 
 def main():
+    # Load and register configuration object
+    ConfigurationProvider().get_configuration().register()
+    # Create application
     refresh_user_configs()
     application = MoodTrackerApplication(TOKEN)
     initialize_notifications()

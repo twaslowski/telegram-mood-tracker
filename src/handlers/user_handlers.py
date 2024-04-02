@@ -3,7 +3,7 @@ import logging
 from telegram import Update
 
 from src.autowiring.inject import autowire
-from src.config import configuration
+from src.config import _configuration
 from src.handlers.util import send
 from src.model.notification import Notification
 from src.notifier import Notifier
@@ -20,7 +20,7 @@ async def create_user(update: Update, _) -> None:
     """
     # Declare introduction text.
     bullet_point_list = "\n".join(
-        [f"- {metric.name.capitalize()}" for metric in configuration.get_metrics()]
+        [f"- {metric.name.capitalize()}" for metric in _configuration.get_metrics()]
     )
     introduction_text = (
         "Hi! You can track your mood with me. "
@@ -34,7 +34,7 @@ async def create_user(update: Update, _) -> None:
         logging.info(f"Creating user {user_id}")
         # todo all of this could use some decoupling
         user_repository.create_user(user_id)
-        for notification in configuration.get_notifications():
+        for notification in _configuration.get_notifications():
             create_notification(user_id=user_id, notification=notification)
         await send(update, text=introduction_text)
     # User already exists

@@ -7,7 +7,7 @@ from expiringdict import ExpiringDict
 
 import src.handlers.record_handlers as command_handlers
 import src.repository.record_repository as record_repository
-from src.config import configuration
+from src.config import _configuration
 from src.handlers.record_handlers import create_temporary_record, button
 from src.handlers.user_handlers import create_user
 from src.model.user import User
@@ -172,4 +172,4 @@ async def test_record_with_offset(update):
     )
 
 
-test_metrics = configuration.get_metrics()
+test_metrics = _configuration.get_metrics()

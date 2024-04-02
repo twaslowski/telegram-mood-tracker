@@ -10,6 +10,4 @@ class Injectable:
 
     def register(self):
         logging.info(f"Registering {self.get_fully_qualified_name()} as singleton.")
-        logging.info(f"Registering {self.__class__.__name__} as singleton.")
         di[self.get_fully_qualified_name()] = self
-        di[self.__class__.__name__] = self
