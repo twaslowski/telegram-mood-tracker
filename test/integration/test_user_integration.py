@@ -2,12 +2,7 @@ from unittest.mock import Mock, AsyncMock
 
 import pytest
 
-from src.app import MoodTrackerApplication
-from kink import di
-
-from src.config import ConfigurationProvider
 from src.handlers.user_handlers import create_user
-from src.notifier import Notifier
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ import pymongo
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
-from src.config import ConfigurationProvider, Configuration
+from src.config.config import ConfigurationProvider, Configuration
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 from src.autowiring.inject import autowire
@@ -86,6 +86,16 @@ def refresh_user_configs(configuration: Configuration, user_repository: UserRepo
         )
 
 
+@autowire("configuration", "user_repository")
+def setup_auto_baselines(configuration: Configuration, user_repository: UserRepository):
+    """
+    Sets up the auto-baseline for all users in the database.
+    """
+    for user in user_repository.find_all_users():
+        logging.info(f"Configuring auto-baseline for user {user.user_id}")
+        # user_repository.update_user_auto_baseline(user.user_id, configuration.get_auto_baseline())
+
+
 def initialize_database():
     """
     Initializes the database by creating the tables if they do not exist.
@@ -109,6 +119,7 @@ def main():
     initialize_database()
     # Create application
     refresh_user_configs()
+    setup_auto_baselines()
     application = MoodTrackerApplication(TOKEN)
     application.run()
 

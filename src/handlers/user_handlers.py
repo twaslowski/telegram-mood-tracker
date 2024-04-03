@@ -3,7 +3,7 @@ import logging
 from telegram import Update
 
 from src.autowiring.inject import autowire
-from src.config import Configuration
+from src.config.config import Configuration
 from src.handlers.util import send
 from src.notifier import Notifier
 from src.repository.user_repository import UserRepository

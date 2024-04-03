@@ -5,7 +5,7 @@ import pytest
 from kink import di
 
 from src.app import MoodTrackerApplication
-from src.config import ConfigurationProvider
+from src.config.config import ConfigurationProvider
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 

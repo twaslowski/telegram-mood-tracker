@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 from src.autowiring.inject import autowire
 from src.autowiring.injectable import Injectable
-from src.config import Configuration
+from src.config.config import Configuration
 from src.model.metric import Metric
 from src.model.notification import Notification
 from src.model.user import User

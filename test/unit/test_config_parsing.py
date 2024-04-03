@@ -1,6 +1,6 @@
 import pytest
 
-from src.config import ConfigurationProvider, Configuration
+from src.config.config import ConfigurationProvider, Configuration
 
 
 @pytest.fixture
@@ -10,7 +10,7 @@ def complete_config() -> dict:
 
 def test_baselines_happy_path(complete_config):
     configuration = Configuration(**complete_config)
-    assert configuration.baseline.enabled
+    assert configuration.auto_baseline.enabled
     for metric in configuration.metrics:
         assert metric.baseline is not None
 

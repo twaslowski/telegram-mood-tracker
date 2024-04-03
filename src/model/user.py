@@ -8,6 +8,7 @@ class User(BaseModel):
     user_id: int
     metrics: list[Metric]
     notifications: list[Notification]
+    auto_baseline: bool = False
 
     def has_baselines_defined(self) -> bool:
         return all(metric.baseline is not None for metric in self.metrics)

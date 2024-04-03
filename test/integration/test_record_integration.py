@@ -5,7 +5,7 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 from expiringdict import ExpiringDict
 
-from src.config import ConfigurationProvider
+from src.config.config import ConfigurationProvider
 import src.handlers.record_handlers as command_handlers
 from src.handlers.record_handlers import create_temporary_record, button
 from src.handlers.user_handlers import create_user
