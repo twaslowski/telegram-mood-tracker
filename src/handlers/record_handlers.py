@@ -251,7 +251,7 @@ async def baseline_handler(
 
 @autowire("record_repository")
 async def create_baseline_record(user: User, record_repository: RecordRepository):
-    record = {metric.name: metric.baseline for metric in user.metrics}
+    record = {metric.name: int(metric.baseline) for metric in user.metrics}
     logging.info(f"Creating baseline record for user {user.user_id}: {record}")
     record_repository.create_record(
         user.user_id,

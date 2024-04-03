@@ -3,6 +3,7 @@ import logging
 from telegram import Update
 
 from src.autowiring.inject import autowire
+from src.config.auto_baseline import AutoBaselineConfig
 from src.config.config import Configuration
 from src.handlers.util import send
 from src.notifier import Notifier
@@ -42,18 +43,31 @@ async def toggle_auto_baseline(
 ) -> None:
     user_id = update.effective_user.id
     user = user_repository.find_user(user_id)
-    if user.has_baselines_defined():
-        notifier.create_auto_baseline(user)
-        await send(update, text="Auto-baseline enabled.")
+    if not user.has_auto_baseline_enabled():
+        if user.has_baselines_defined():
+            notifier.create_auto_baseline(user)
+            user.auto_baseline_config = AutoBaselineConfig.default()
+            user_repository.update_user(user)
+            await send(
+                update,
+                text=f"Auto-baseline enabled; baseline records will "
+                f"be created daily at {user.get_auto_baseline_time().isoformat()} UTC.",
+            )
+        else:
+            logging.warning(
+                f"User {user_id} attempted enabling auto-baseline, "
+                f"but does not have all baselines configured."
+            )
+            await send(
+                update,
+                text=f"You need to configure all baselines first. "
+                f"Metrics without baselines: {','.join(user.get_metrics_without_baselines())}",
+            )
     else:
-        logging.warning(
-            f"User {user_id} attempted enabling auto-baseline, but does not have all baselines configured."
-        )
-        await send(
-            update,
-            text=f"You need to configure all baselines first. "
-            f"Metrics without baselines: {','.join(user.get_metrics_without_baselines())}",
-        )
+        user.auto_baseline_config.enabled = False
+        user_repository.update_user(user)
+        notifier.remove_auto_baseline(user)
+        await send(update, text="Auto-baseline disabled.")
 
 
 @autowire("configuration", "notifier")

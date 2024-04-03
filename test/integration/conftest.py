@@ -8,6 +8,7 @@ from kink import di
 from src.app import MoodTrackerApplication
 from src.config.auto_baseline import AutoBaselineConfig
 from src.config.config import ConfigurationProvider
+from src.notifier import Notifier
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 
@@ -64,3 +65,9 @@ def update():
     update.effective_user.id = 1
     update.effective_user.get_bot().send_message = AsyncMock()
     return update
+
+
+@pytest.fixture(autouse=True)
+def notifier():
+    # registered via the application init; this is simply convenience for tests
+    return di[Notifier.get_fully_qualified_name()]

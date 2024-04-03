@@ -25,4 +25,4 @@ notifications:
 
 auto_baseline:
   enabled: true
-  time: "22:00"
+  time: "15:04"

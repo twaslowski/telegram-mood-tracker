@@ -16,6 +16,12 @@ class AutoBaselineConfig(BaseModel):
         if self.enabled and self.time is None:
             raise ValueError("Auto baseline is enabled but no time is defined")
 
+    @staticmethod
+    def default():
+        return AutoBaselineConfig(
+            enabled=True, time=datetime.time(20, 0)
+        )  # UTC, European evening
+
     def model_dump(self, **kwargs):
         return {
             "time": self.time.isoformat(),

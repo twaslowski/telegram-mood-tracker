@@ -29,11 +29,12 @@ class Notifier(Injectable):
             user.user_id, text="A baseline record has been created for you."
         )
 
-    def create_notification(self, user_id: int, notification: Notification) -> None:
+    def create_notification(self, user_id: int, notification: Notification) -> str:
         """
         Sets a notification for a user.
         :param user_id: The user's Telegram ID.
         :param notification: The notification to set.
+        :return: The name of the job.
         """
         logging.info(
             f"Setting up notification at {notification.time} for user {user_id}"
@@ -42,12 +43,13 @@ class Notifier(Injectable):
             self.reminder, user_id=user_id, text=notification.text
         )
         reminder_partial.__name__ = f"reminder_{user_id}_{notification.time}"
-        self.job_queue.run_daily(
+        job = self.job_queue.run_daily(
             reminder_partial,
             days=(0, 1, 2, 3, 4, 5, 6),
             chat_id=user_id,
             time=notification.time,
         )
+        return job.name
 
     def create_auto_baseline(self, user: User):
         """
@@ -63,3 +65,33 @@ class Notifier(Injectable):
             chat_id=user.user_id,
             time=user.get_auto_baseline_time(),
         )
+
+    def remove_auto_baseline(self, user: User):
+        """
+        Remove the auto-baseline job for the user.
+        :param user: The user to remove the auto-baseline for.
+        """
+        logging.info(f"Removing auto-baseline for user {user.user_id}")
+        baseline_job_name = f"baseline_{user.user_id}"
+        self.remove_job(baseline_job_name)
+
+    def find_job(self, name: str):
+        """
+        Find a job by name.
+        :param name: The name of the job to find
+        :return: The job if found, None otherwise.
+        """
+        for job in self.job_queue.jobs():
+            if job.name == name:
+                return job
+        return None
+
+    def remove_job(self, job_name: str):
+        """
+        Remove a job by name.
+        :param job_name: The name of the job to remove.
+        """
+        for job in self.job_queue.jobs():
+            if job.name == job_name:
+                job.schedule_removal()
+                break

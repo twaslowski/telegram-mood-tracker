@@ -80,3 +80,11 @@ async def test_toggle_auto_baseline_happy_path(update, user_repository, applicat
 
     # Then the auto-baseline job should be scheduled
     assert len(application.application.job_queue.jobs()) == 2  # including configuration
+    assert user_repository.find_user(1).has_auto_baseline_enabled() is True
+
+    # When auto-baseline is toggled again
+    await toggle_auto_baseline(update, None)
+
+    # Then the auto-baseline job should be removed
+    assert len(application.application.job_queue.jobs()) == 1
+    assert user_repository.find_user(1).has_auto_baseline_enabled() is False

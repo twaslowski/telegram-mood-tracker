@@ -1,3 +1,4 @@
+import datetime
 from typing import Any
 
 from pydantic import BaseModel
@@ -28,5 +29,5 @@ class User(BaseModel):
     def has_auto_baseline_enabled(self) -> bool:
         return self.auto_baseline_config.enabled
 
-    def get_auto_baseline_time(self) -> str:
+    def get_auto_baseline_time(self) -> datetime.time:
         return self.auto_baseline_config.time

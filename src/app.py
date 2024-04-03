@@ -58,9 +58,6 @@ class MoodTrackerApplication:
     def run(self):
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-    def shutdown(self):
-        self.application.shutdown()
-
     @autowire("notifier", "user_repository")
     def initialize_notifications(
         self, notifier: Notifier, user_repository: UserRepository
@@ -83,10 +80,10 @@ def refresh_user_configs(configuration: Configuration, user_repository: UserRepo
     """
     for user in user_repository.find_all_users():
         logging.info(f"Updating user {user.user_id} with new configurations")
-        user_repository.update_user_metrics(user.user_id, configuration.get_metrics())
-        user_repository.update_user_notifications(
-            user.user_id, configuration.get_notifications()
-        )
+        user.metrics = configuration.get_metrics()
+        user.notifications = configuration.get_notifications()
+        user.auto_baseline_config = configuration.get_auto_baseline_config()
+        user_repository.update_user(user)
 
 
 @autowire("user_repository", "notifier")
@@ -95,7 +92,6 @@ def setup_auto_baselines(notifier: Notifier, user_repository: UserRepository):
     Sets up the auto-baseline for all users in the database.
     """
     for user in user_repository.find_all_users():
-        logging.info(f"Configuring auto-baseline for user {user.user_id}")
         if user.has_auto_baseline_enabled() and user.has_baselines_defined():
             notifier.create_auto_baseline(user)
 
@@ -123,8 +119,10 @@ def main():
     initialize_database()
     # Create application
     refresh_user_configs()
-    setup_auto_baselines()
     application = MoodTrackerApplication(TOKEN)
+
+    # requires the Notifier to be initialized
+    setup_auto_baselines()
     application.run()
 
 
