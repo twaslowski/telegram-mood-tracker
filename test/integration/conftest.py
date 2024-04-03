@@ -1,4 +1,5 @@
 import os
+from unittest.mock import Mock, AsyncMock
 
 import mongomock
 import pytest
@@ -55,3 +56,11 @@ def application():
     application = MoodTrackerApplication(os.getenv("TELEGRAM_TOKEN"))
     di[MoodTrackerApplication] = application
     return application
+
+
+@pytest.fixture(autouse=True)
+def update():
+    update = Mock()
+    update.effective_user.id = 1
+    update.effective_user.get_bot().send_message = AsyncMock()
+    return update

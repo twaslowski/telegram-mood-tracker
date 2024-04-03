@@ -31,14 +31,6 @@ def button_update():
     return button_update
 
 
-@pytest.fixture
-def update():
-    update = Mock()
-    update.effective_user.id = 1
-    update.effective_user.get_bot().send_message = AsyncMock()
-    return update
-
-
 @pytest.fixture(autouse=True)
 def patch_command_handler_methods():
     command_handlers.temp_records = ExpiringDict(

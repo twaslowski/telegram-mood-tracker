@@ -9,6 +9,7 @@ from kink import di
 from nest_asyncio import apply
 from telegram.ext import ContextTypes, Application
 
+from src.config.auto_baseline import AutoBaselineConfig
 from src.handlers.user_handlers import create_user
 from src.model.notification import Notification
 from src.notifier import Notifier
@@ -27,7 +28,7 @@ async def test_notification(application, configuration):
     # Utility: Add an error handler to the application
     add_error_handler(application.application)
 
-    with unittest.mock.patch("src.notifier.Notifier.reminder") as reminder:
+    with unittest.mock.patch("src.notifier.Notifier.reminder"):
         # When the application runs
         loop = asyncio.get_event_loop()
         apply()
@@ -38,25 +39,23 @@ async def test_notification(application, configuration):
 @pytest.mark.skip(
     reason="I have not found a test to make the application terminate, so this runs indefinitely."
 )
-async def test_notification(
-    application, configuration, user_repository, auto_baseline_config
-):
-    # Given an existing user
-    user = create_user(123, None)
+async def test_auto_baseline(update, application, configuration, user_repository):
+    now = generate_time()
 
-    user.auto_baseline_config = auto_baseline_config
+    # Given an existing user with auto-baseline enabled
+    await create_user(update, None)
+    user = user_repository.find_user(1)
+    user.auto_baseline_config = AutoBaselineConfig(enabled=True, time=now)
     user_repository.update_user(user)
 
     # Given a notification with a fixed time
-    now = (datetime.now().utcnow() + timedelta(seconds=2)).time()
-    notification = Notification(time=now, text="Test notification.")
     notifier = get_notifier()
-    notifier.create_auto_baseline(123456, notification)
+    notifier.create_auto_baseline(user)
 
     # Utility: Add an error handler to the application
     add_error_handler(application.application)
 
-    with unittest.mock.patch("src.notifier.Notifier.reminder") as reminder:
+    with unittest.mock.patch("src.notifier.Notifier.auto_baseline"):
         # When the application runs
         loop = asyncio.get_event_loop()
         apply()

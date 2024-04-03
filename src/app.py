@@ -89,15 +89,15 @@ def refresh_user_configs(configuration: Configuration, user_repository: UserRepo
         )
 
 
-@autowire("configuration", "user_repository")
-def setup_auto_baselines(configuration: Configuration, user_repository: UserRepository):
+@autowire("user_repository", "notifier")
+def setup_auto_baselines(notifier: Notifier, user_repository: UserRepository):
     """
     Sets up the auto-baseline for all users in the database.
     """
     for user in user_repository.find_all_users():
         logging.info(f"Configuring auto-baseline for user {user.user_id}")
-        if user.has_baselines_defined():
-            pass
+        if user.has_auto_baseline_enabled() and user.has_baselines_defined():
+            notifier.create_auto_baseline(user)
 
 
 def initialize_database():
