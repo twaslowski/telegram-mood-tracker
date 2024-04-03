@@ -21,6 +21,9 @@ class Configuration(BaseModel, Injectable):
     def get_notifications(self) -> list[Notification]:
         return self.notifications
 
+    def get_auto_baseline_config(self):
+        return self.auto_baseline
+
     def model_post_init(self, __context: Any) -> None:
         if self.auto_baseline.enabled:
             # check that baselines are defined for all metrics

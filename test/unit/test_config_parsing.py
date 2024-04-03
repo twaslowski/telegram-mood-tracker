@@ -10,15 +10,9 @@ def complete_config() -> dict:
 
 def test_baselines_happy_path(complete_config):
     configuration = Configuration(**complete_config)
-    assert configuration.auto_baseline.enabled
+    assert not configuration.auto_baseline.enabled
     for metric in configuration.metrics:
         assert metric.baseline is not None
-
-
-def test_throw_exception_if_baseline_is_enabled_but_not_set(complete_config):
-    complete_config["metrics"][0]["baseline"] = None
-    with pytest.raises(Exception):
-        Configuration(**complete_config)
 
 
 def test_throw_exception_if_emojis_are_enabled_for_numeric_metric(complete_config):

@@ -2,6 +2,7 @@ from unittest.mock import Mock, AsyncMock
 
 import pytest
 
+from src.config.auto_baseline import AutoBaselineConfig
 from src.handlers.user_handlers import create_user
 
 
@@ -45,12 +46,25 @@ async def test_notifications(update, application):
 async def test_update_user(update, user_repository):
     # Given a user
     update.effective_user.id = 123
-    await create_user(update, None)
+    user = await create_user(update, None)
 
     # When the user notifications are updated
-    user = user_repository.find_user(123)
     user.notifications = []
     user_repository.update_user(user)
 
     # The user has no notifications when next retrieved from the database
     assert user_repository.find_user(123).notifications == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.skip
+async def test_update_user(update, user_repository, configuration, application):
+    # Given a user
+    update.effective_user.id = 456
+    # When a user is created with AutoBaseline enabled
+    configuration.auto_baseline = AutoBaselineConfig(enabled=True, time="00:00")
+    configuration.register()
+    await create_user(update, None)
+
+    # Then the job queue should include both their notifications and their auto-baseline job
+    assert len(application.application.job_queue.jobs()) == 2

@@ -44,6 +44,11 @@ def setup_notifications(
         notifier.create_notification(user_id, notification)
 
 
+# @autowire
+# def setup_auto_baseline(notifier: Notifier) -> None:
+#     auto_baseline_config.create_auto_baseline(user_id)
+
+
 @autowire("configuration")
 def introduction_text(configuration: Configuration) -> str:
     bullet_point_list = "\n".join(

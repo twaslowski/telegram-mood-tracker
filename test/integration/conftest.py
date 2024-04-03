@@ -31,9 +31,11 @@ def record_repository(mock_client):
 
 @pytest.fixture(autouse=True)
 def configuration():
-    ConfigurationProvider(
+    configuration = ConfigurationProvider(
         "test/resources/config.test.yaml"
-    ).get_configuration().register()
+    ).get_configuration()
+    configuration.register()
+    return configuration
 
 
 @pytest.fixture(autouse=True)

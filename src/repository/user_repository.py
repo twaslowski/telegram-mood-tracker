@@ -21,7 +21,6 @@ class UserRepository(Injectable):
 
     def parse_user(self, result: dict) -> User:
         result = dict(result)
-        print(result)
         # still not perfect from a typing point of view, but the hack is limited to the persistence layer
         result["notifications"] = [
             Notification(**notification) for notification in result["notifications"]
@@ -30,18 +29,20 @@ class UserRepository(Injectable):
 
     @autowire("configuration")
     def create_user(self, user_id: int, configuration: Configuration) -> None:
-        self.user.insert_one(
-            {
-                "user_id": user_id,
-                "metrics": [
-                    metric.model_dump() for metric in configuration.get_metrics()
-                ],
-                "notifications": [
-                    notification.model_dump()
-                    for notification in configuration.get_notifications()
-                ],
-            }
-        )
+        metrics = [metric.model_dump() for metric in configuration.get_metrics()]
+        notifications = [
+            notification.model_dump()
+            for notification in configuration.get_notifications()
+        ]
+        auto_baseline_config = configuration.get_auto_baseline_config().model_dump()
+        user_dict = {
+            "user_id": user_id,
+            "metrics": metrics,
+            "notifications": notifications,
+            "auto_baseline_config": auto_baseline_config,
+        }
+        self.user.insert_one(user_dict)
+        return User(**user_dict)
 
     def update_user(self, user: User) -> None:
         self.user.update_one(
