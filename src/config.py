@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import yaml
 from pydantic import BaseModel, field_validator
 
@@ -12,6 +14,7 @@ class Configuration(BaseModel, Injectable):
     metrics: list["ConfigMetric"]
     notifications: list[Notification]
     baseline: "BaselineConfig"
+    auto_baseline: bool = False
 
     def get_metrics(self) -> list[Metric]:
         return [Metric(**metric.model_dump()) for metric in self.metrics]
@@ -97,4 +100,4 @@ class BaselineConfig(BaseModel):
     """
 
     enabled: bool
-    auto: bool
+    time: datetime.time
