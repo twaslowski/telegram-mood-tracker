@@ -12,6 +12,12 @@ from src.notifier import Notifier
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 
+"""
+Pytest Fixture setup.
+Creates fixtures and registers Injectables for tests.
+The name is required by pytest convention.
+"""
+
 
 @pytest.fixture(autouse=True)
 def mock_client():
@@ -54,7 +60,8 @@ def auto_baseline_config():
 @pytest.fixture(autouse=True)
 def application():
     # initializes application, registers notifier implicitly
-    application = MoodTrackerApplication(os.getenv("TELEGRAM_TOKEN"))
+    # real token only needed for notification tests, as of now
+    application = MoodTrackerApplication(os.getenv("TELEGRAM_TOKEN", "some-token"))
     di[MoodTrackerApplication] = application
     return application
 
