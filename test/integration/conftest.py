@@ -5,6 +5,7 @@ import pytest
 from kink import di
 
 from src.app import MoodTrackerApplication
+from src.config.auto_baseline import AutoBaselineConfig
 from src.config.config import ConfigurationProvider
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
@@ -36,6 +37,16 @@ def configuration():
     ).get_configuration()
     configuration.register()
     return configuration
+
+
+@pytest.fixture(autouse=True)
+def auto_baseline_config():
+    return AutoBaselineConfig(
+        **{
+            "enabled": True,
+            "time": "12:00",
+        }
+    )
 
 
 @pytest.fixture(autouse=True)

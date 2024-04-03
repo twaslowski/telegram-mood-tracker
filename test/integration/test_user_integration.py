@@ -3,7 +3,7 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 
 from src.config.auto_baseline import AutoBaselineConfig
-from src.handlers.user_handlers import create_user
+from src.handlers.user_handlers import create_user, toggle_auto_baseline
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ async def test_update_user(update, user_repository):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip
+@pytest.mark.skip(reason="As of now, auto-baseline is not enabled upon user creation")
 async def test_update_user(update, user_repository, configuration, application):
     # Given a user
     update.effective_user.id = 456
@@ -68,3 +68,15 @@ async def test_update_user(update, user_repository, configuration, application):
 
     # Then the job queue should include both their notifications and their auto-baseline job
     assert len(application.application.job_queue.jobs()) == 2
+
+
+@pytest.mark.asyncio
+async def test_toggle_auto_baseline_happy_path(update, user_repository, application):
+    # Given a user with all baselines defined
+    await create_user(update, None)
+
+    # When auto-baseline is toggled
+    await toggle_auto_baseline(update, None)
+
+    # Then the auto-baseline job should be scheduled
+    assert len(application.application.job_queue.jobs()) == 2  # including configuration

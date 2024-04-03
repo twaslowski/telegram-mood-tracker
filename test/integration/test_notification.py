@@ -38,14 +38,13 @@ async def test_notification(application, configuration):
 @pytest.mark.skip(
     reason="I have not found a test to make the application terminate, so this runs indefinitely."
 )
-async def test_notification(application, configuration, user_repository):
+async def test_notification(
+    application, configuration, user_repository, auto_baseline_config
+):
     # Given an existing user
-    await create_user(123, None)
+    user = create_user(123, None)
 
-    # When auto-baseline is enabled
-    user = user_repository.find_user(123)
-    user.auto_baseline_config.enabled = True
-    user.auto_baseline_config.time = generate_time()
+    user.auto_baseline_config = auto_baseline_config
     user_repository.update_user(user)
 
     # Given a notification with a fixed time

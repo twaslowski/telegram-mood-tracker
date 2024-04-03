@@ -36,17 +36,32 @@ async def create_user(update: Update, _, user_repository: UserRepository) -> Non
         )
 
 
+@autowire("notifier", "user_repository")
+async def toggle_auto_baseline(
+    update: Update, _, notifier: Notifier, user_repository: UserRepository
+) -> None:
+    user_id = update.effective_user.id
+    user = user_repository.find_user(user_id)
+    if user.has_baselines_defined():
+        notifier.create_auto_baseline(user)
+        await send(update, text="Auto-baseline enabled.")
+    else:
+        logging.warning(
+            f"User {user_id} attempted enabling auto-baseline, but does not have all baselines configured."
+        )
+        await send(
+            update,
+            text=f"You need to configure all baselines first. "
+            f"Metrics without baselines: {','.join(user.get_metrics_without_baselines())}",
+        )
+
+
 @autowire("configuration", "notifier")
 def setup_notifications(
     user_id: int, configuration: Configuration, notifier: Notifier
 ) -> None:
     for notification in configuration.get_notifications():
         notifier.create_notification(user_id, notification)
-
-
-# @autowire
-# def setup_auto_baseline(notifier: Notifier) -> None:
-#     auto_baseline_config.create_auto_baseline(user_id)
 
 
 @autowire("configuration")
