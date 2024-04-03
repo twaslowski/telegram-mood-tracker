@@ -39,3 +39,18 @@ async def test_notifications(update, application):
     await create_user(update, None)
 
     assert len(application.application.job_queue.jobs()) == 1
+
+
+@pytest.mark.asyncio
+async def test_update_user(update, user_repository):
+    # Given a user
+    update.effective_user.id = 123
+    await create_user(update, None)
+
+    # When the user notifications are updated
+    user = user_repository.find_user(123)
+    user.notifications = []
+    user_repository.update_user(user)
+
+    # The user has no notifications when next retrieved from the database
+    assert user_repository.find_user(123).notifications == []

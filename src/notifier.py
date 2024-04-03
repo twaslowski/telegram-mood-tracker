@@ -6,6 +6,8 @@ from telegram.ext import CallbackContext, JobQueue
 
 from src.autowiring.injectable import Injectable
 from src.model.notification import Notification
+from src.model.user import User
+from src.handlers.record_handlers import create_baseline_record
 
 
 @dataclass
@@ -19,7 +21,15 @@ class Notifier(Injectable):
             text = "Hi! It's time to record your mood :)"
         await context.bot.send_message(user_id, text=text)
 
-    def set_notification(self, user_id: int, notification: Notification) -> None:
+    @staticmethod
+    async def auto_baseline(context: CallbackContext, user: User):
+        """Create baseline record for user at scheduled time."""
+        await create_baseline_record(user)
+        await context.bot.send_message(
+            user.user_id, text="A baseline record has been created for you."
+        )
+
+    def create_notification(self, user_id: int, notification: Notification) -> None:
         """
         Sets a notification for a user.
         :param user_id: The user's Telegram ID.
@@ -37,4 +47,19 @@ class Notifier(Injectable):
             days=(0, 1, 2, 3, 4, 5, 6),
             chat_id=user_id,
             time=notification.time,
+        )
+
+    def create_auto_baseline(self, user: User):
+        """
+        Create baseline record for user at scheduled time.
+        :param user: The user to create a baseline for.
+        """
+        logging.info(f"Creating auto-baseline for user {user.user_id}")
+        baseline_partial = partial(self.auto_baseline, user=user)
+        baseline_partial.__name__ = f"baseline_{user.user_id}"
+        self.job_queue.run_daily(
+            baseline_partial,
+            days=(0, 1, 2, 3, 4, 5, 6),
+            chat_id=user.user_id,
+            time=user.get_auto_baseline_time(),
         )

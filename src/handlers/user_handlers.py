@@ -41,7 +41,7 @@ def setup_notifications(
     user_id: int, configuration: Configuration, notifier: Notifier
 ) -> None:
     for notification in configuration.get_notifications():
-        notifier.set_notification(user_id, notification)
+        notifier.create_notification(user_id, notification)
 
 
 @autowire("configuration")

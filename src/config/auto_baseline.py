@@ -8,5 +8,5 @@ class AutoBaselineConfig(BaseModel):
     Configuration for the baseline metric.
     """
 
-    enabled: bool
-    time: datetime.time
+    enabled: bool = False
+    time: datetime.time | None = None

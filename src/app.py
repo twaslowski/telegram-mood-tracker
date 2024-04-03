@@ -70,7 +70,7 @@ class MoodTrackerApplication:
             notifications = user.notifications
             logging.info(f"Setting up notifications for for user {user_id}")
             for notification in notifications:
-                notifier.set_notification(user_id, notification)
+                notifier.create_notification(user_id, notification)
 
 
 @autowire("configuration", "user_repository")
@@ -93,7 +93,8 @@ def setup_auto_baselines(configuration: Configuration, user_repository: UserRepo
     """
     for user in user_repository.find_all_users():
         logging.info(f"Configuring auto-baseline for user {user.user_id}")
-        # user_repository.update_user_auto_baseline(user.user_id, configuration.get_auto_baseline())
+        if user.has_baselines_defined():
+            pass
 
 
 def initialize_database():
