@@ -55,6 +55,9 @@ class MoodTrackerApplication:
     def run(self):
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
+    def shutdown(self):
+        self.application.shutdown()
+
     @autowire("notifier", "user_repository")
     def initialize_notifications(
         self, notifier: Notifier, user_repository: UserRepository

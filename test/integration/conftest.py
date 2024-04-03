@@ -1,3 +1,5 @@
+import os
+
 import mongomock
 import pytest
 from kink import di
@@ -37,6 +39,6 @@ def configuration():
 @pytest.fixture(autouse=True)
 def application():
     # initializes application, registers notifier implicitly
-    application = MoodTrackerApplication("some-token")
+    application = MoodTrackerApplication(os.getenv("TELEGRAM_TOKEN"))
     di[MoodTrackerApplication] = application
     return application

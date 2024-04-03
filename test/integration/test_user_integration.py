@@ -40,7 +40,7 @@ async def test_registration(update, user_repository):
 
 
 @pytest.mark.asyncio
-async def test_notifications(update):
+async def test_notifications(update, application):
     await create_user(update, None)
 
-    assert len(di[MoodTrackerApplication].application.job_queue.jobs()) == 1
+    assert len(application.application.job_queue.jobs()) == 1
