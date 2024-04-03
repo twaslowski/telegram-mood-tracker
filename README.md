@@ -116,6 +116,18 @@ For this case, I've added a metric type called `numeric`. You can declare `numer
 This will auto-generate the corresponding dictionary for you, without you having to painstakingly type out every
 possible value.
 
+## Reminders
+
+You can specify reminders as a list of text/time strings. Because no user information is available except for the
+user_id, there is no localization, so all times are interpreted as UTC. If you want your reminder to be at 8:00 AM
+CET, you'll have to specify it as 7:00 AM UTC.
+
+```yaml
+notifications:
+  - text: "Don't forget to track your mood today!"
+    time: "7:00"
+```
+
 # Developing
 
 If you'd like to contribute to this repository, feel free to raise a PR.
