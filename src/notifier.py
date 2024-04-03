@@ -94,4 +94,5 @@ class Notifier(Injectable):
         for job in self.job_queue.jobs():
             if job.name == job_name:
                 job.schedule_removal()
+                logging.info(f"Removed job {job_name} from job queue")
                 break
