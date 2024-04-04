@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 from src.autowiring.inject import autowire
 from src.autowiring.injectable import Injectable
-from src.config import Configuration
+from src.config.config import Configuration
 from src.model.metric import Metric
 from src.model.notification import Notification
 from src.model.user import User
@@ -19,7 +19,8 @@ class UserRepository(Injectable):
             return self.parse_user(dict(result))
         return None
 
-    def parse_user(self, result: dict) -> User:
+    @staticmethod
+    def parse_user(result: dict) -> User:
         result = dict(result)
         # still not perfect from a typing point of view, but the hack is limited to the persistence layer
         result["notifications"] = [
@@ -28,18 +29,34 @@ class UserRepository(Injectable):
         return User(**result)
 
     @autowire("configuration")
-    def create_user(self, user_id: int, configuration: Configuration) -> None:
-        self.user.insert_one(
+    def create_user(self, user_id: int, configuration: Configuration) -> User:
+        metrics = [metric.model_dump() for metric in configuration.get_metrics()]
+        notifications = [
+            notification.model_dump()
+            for notification in configuration.get_notifications()
+        ]
+        auto_baseline_config = configuration.get_auto_baseline_config().model_dump()
+        user_dict = {
+            "user_id": user_id,
+            "metrics": metrics,
+            "notifications": notifications,
+            "auto_baseline_config": auto_baseline_config,
+        }
+        self.user.insert_one(user_dict)
+        return User(**user_dict)
+
+    def update_user(self, user: User) -> None:
+        self.user.update_one(
+            {"user_id": user.user_id},
             {
-                "user_id": user_id,
-                "metrics": [
-                    metric.model_dump() for metric in configuration.get_metrics()
-                ],
-                "notifications": [
-                    notification.model_dump()
-                    for notification in configuration.get_notifications()
-                ],
-            }
+                "$set": {
+                    "metrics": [metric.model_dump() for metric in user.metrics],
+                    "notifications": [
+                        notification.model_dump() for notification in user.notifications
+                    ],
+                    "auto_baseline_config": user.auto_baseline_config.model_dump(),
+                }
+            },
         )
 
     def update_user_metrics(self, user_id: int, metrics: list[Metric]) -> None:

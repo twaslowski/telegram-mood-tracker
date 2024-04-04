@@ -23,6 +23,6 @@ notifications:
   - text: "It's time to record your mood!"
     time: "18:00"
 
-baseline:
-  enabled: true
-  auto: false
+auto_baseline:
+  enabled: false
+  time: "23:00"

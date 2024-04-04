@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import pymongo
 from pymongo import MongoClient
@@ -50,7 +51,7 @@ class RecordRepository(Injectable):
         ]
 
         for date in date_range:
-            print(f"Inserting neutral record for timestamp {date}")
+            logging.info(f"Inserting neutral record for timestamp {date}")
             self.create_record(user_id, default_record, f"{date}T12:00:00.000000")
 
 

@@ -5,7 +5,7 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 from expiringdict import ExpiringDict
 
-from src.config import ConfigurationProvider
+from src.config.config import ConfigurationProvider
 import src.handlers.record_handlers as command_handlers
 from src.handlers.record_handlers import create_temporary_record, button
 from src.handlers.user_handlers import create_user
@@ -29,14 +29,6 @@ def button_update():
     button_update.callback_query = query
     mock_bot.send_message = AsyncMock()
     return button_update
-
-
-@pytest.fixture
-def update():
-    update = Mock()
-    update.effective_user.id = 1
-    update.effective_user.get_bot().send_message = AsyncMock()
-    return update
 
 
 @pytest.fixture(autouse=True)
@@ -108,15 +100,12 @@ async def test_record_registration(button_update, update):
 
 @pytest.mark.asyncio
 async def test_finish_record_creation(
-    update, button_update, user, metrics, record_repository
+    update, button_update, user, metrics, record_repository, configuration
 ):
     """
     Tests state transition from recording Metric N to Finished.
     """
     # given a user with only one metric is registered
-    configuration = ConfigurationProvider(
-        "test/resources/config.test.yaml"
-    ).get_configuration()
     configuration.metrics = configuration.metrics[:1]
     configuration.register()
     await create_user(update, None)
@@ -200,7 +189,7 @@ async def test_baseline_happy_path(update, record_repository):
 
 
 @pytest.mark.asyncio
-async def test_baseline_for_incomplete_config(update, record_repository):
+async def test_baseline_for_incomplete_config(update, record_repository, configuration):
     update.effective_user.id = 3
     # given a configuration with a metric without a baseline
     metrics = [
@@ -210,9 +199,6 @@ async def test_baseline_for_incomplete_config(update, record_repository):
             values={"1": 1},
         )
     ]
-    configuration = ConfigurationProvider(
-        "test/resources/config.test.yaml"
-    ).get_configuration()
     configuration.metrics = metrics
     configuration.register()
 

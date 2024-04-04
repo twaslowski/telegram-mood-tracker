@@ -23,6 +23,6 @@ notifications:
   - text: "It's time to record your mood!"
     time: "18:00"
 
-baseline:
-  enabled: true
-  auto: false
+auto_baseline:
+  enabled: false
+  time: "20:00"  # Default time if it is enabled via toggle. UTC. Required as long as setting time in the chat is not implemented.

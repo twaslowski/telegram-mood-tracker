@@ -1,13 +1,22 @@
 import os
+from unittest.mock import Mock, AsyncMock
 
 import mongomock
 import pytest
 from kink import di
 
 from src.app import MoodTrackerApplication
-from src.config import ConfigurationProvider
+from src.config.auto_baseline import AutoBaselineConfig
+from src.config.config import ConfigurationProvider
+from src.notifier import Notifier
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
+
+"""
+Pytest Fixture setup.
+Creates fixtures and registers Injectables for tests.
+The name is required by pytest convention.
+"""
 
 
 @pytest.fixture(autouse=True)
@@ -31,14 +40,41 @@ def record_repository(mock_client):
 
 @pytest.fixture(autouse=True)
 def configuration():
-    ConfigurationProvider(
+    configuration = ConfigurationProvider(
         "test/resources/config.test.yaml"
-    ).get_configuration().register()
+    ).get_configuration()
+    configuration.register()
+    return configuration
+
+
+@pytest.fixture(autouse=True)
+def auto_baseline_config():
+    return AutoBaselineConfig(
+        **{
+            "enabled": True,
+            "time": "12:00",
+        }
+    )
 
 
 @pytest.fixture(autouse=True)
 def application():
     # initializes application, registers notifier implicitly
-    application = MoodTrackerApplication(os.getenv("TELEGRAM_TOKEN"))
+    # real token only needed for notification tests, as of now
+    application = MoodTrackerApplication(os.getenv("TELEGRAM_TOKEN", "some-token"))
     di[MoodTrackerApplication] = application
     return application
+
+
+@pytest.fixture(autouse=True)
+def update():
+    update = Mock()
+    update.effective_user.id = 1
+    update.effective_user.get_bot().send_message = AsyncMock()
+    return update
+
+
+@pytest.fixture(autouse=True)
+def notifier():
+    # registered via the application init; this is simply convenience for tests
+    return di[Notifier.get_fully_qualified_name()]

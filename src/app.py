@@ -5,7 +5,8 @@ import pymongo
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
-from src.config import ConfigurationProvider, Configuration
+from src.config.config import ConfigurationProvider, Configuration
+from src.handlers.error_handler import error_handler
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 from src.autowiring.inject import autowire
@@ -15,7 +16,7 @@ from src.handlers.record_handlers import (
     offset_handler,
     baseline_handler,
 )
-from src.handlers.user_handlers import create_user
+from src.handlers.user_handlers import create_user, toggle_auto_baseline
 from src.handlers.graphing import graph_handler
 from src.notifier import Notifier
 
@@ -49,14 +50,15 @@ class MoodTrackerApplication:
         self.application.add_handler(CommandHandler("graph", graph_handler))
         self.application.add_handler(CommandHandler("record", record_handler))
         self.application.add_handler(CommandHandler("baseline", baseline_handler))
+        self.application.add_handler(
+            CommandHandler("auto_baseline", toggle_auto_baseline)
+        )
         self.application.add_handler(CommandHandler("offset", offset_handler))
+        self.application.add_error_handler(error_handler)
         self.application.add_handler(CallbackQueryHandler(button))
 
     def run(self):
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
-
-    def shutdown(self):
-        self.application.shutdown()
 
     @autowire("notifier", "user_repository")
     def initialize_notifications(
@@ -70,7 +72,7 @@ class MoodTrackerApplication:
             notifications = user.notifications
             logging.info(f"Setting up notifications for for user {user_id}")
             for notification in notifications:
-                notifier.set_notification(user_id, notification)
+                notifier.create_notification(user_id, notification)
 
 
 @autowire("configuration", "user_repository")
@@ -80,10 +82,20 @@ def refresh_user_configs(configuration: Configuration, user_repository: UserRepo
     """
     for user in user_repository.find_all_users():
         logging.info(f"Updating user {user.user_id} with new configurations")
-        user_repository.update_user_metrics(user.user_id, configuration.get_metrics())
-        user_repository.update_user_notifications(
-            user.user_id, configuration.get_notifications()
-        )
+        user.metrics = configuration.get_metrics()
+        user.notifications = configuration.get_notifications()
+        user.auto_baseline_config = configuration.get_auto_baseline_config()
+        user_repository.update_user(user)
+
+
+@autowire("user_repository", "notifier")
+def setup_auto_baselines(notifier: Notifier, user_repository: UserRepository):
+    """
+    Sets up the auto-baseline for all users in the database.
+    """
+    for user in user_repository.find_all_users():
+        if user.has_auto_baseline_enabled() and user.has_baselines_defined():
+            notifier.create_auto_baseline(user)
 
 
 def initialize_database():
@@ -110,6 +122,9 @@ def main():
     # Create application
     refresh_user_configs()
     application = MoodTrackerApplication(TOKEN)
+
+    # requires the Notifier to be initialized
+    setup_auto_baselines()
     application.run()
 
 

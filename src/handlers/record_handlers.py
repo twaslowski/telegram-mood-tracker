@@ -4,6 +4,7 @@ import logging
 from expiringdict import ExpiringDict
 from telegram import Update
 
+from src.model.user import User
 from src.repository.record_repository import RecordRepository
 from src.autowiring.inject import autowire
 from src.handlers.graphing import handle_graph_specification
@@ -224,11 +225,10 @@ async def offset_handler(update: Update, context) -> None:
         await send(update, text=incorrect_state_message)
 
 
-@autowire("record_repository", "user_repository")
+@autowire("user_repository")
 async def baseline_handler(
     update: Update,
     _,
-    record_repository: RecordRepository,
     user_repository: UserRepository,
 ):
     """
@@ -240,20 +240,26 @@ async def baseline_handler(
     # user_repository, record_repository = get_user_repository(), get_record_repository()
     user = user_repository.find_user(update.effective_user.id)
     if user.has_baselines_defined():
-        record = {metric.name: metric.baseline for metric in user.metrics}
-        logging.info(f"Creating baseline record for user {user.user_id}: {record}")
-        record_repository.create_record(
-            user.user_id,
-            record,
-            datetime.datetime.now().isoformat(),
-        )
-        logging.info(f"Baseline record successfully created for user {user.user_id}")
+        record = await create_baseline_record(user)
         await send(update, text=create_baseline_success_message(record))
     else:
         logging.error(
             f"User {user.user_id} has not defined baselines for all metrics yet."
         )
         await send(update, text="You have not defined baselines for all metrics yet.")
+
+
+@autowire("record_repository")
+async def create_baseline_record(user: User, record_repository: RecordRepository):
+    record = {metric.name: int(metric.baseline) for metric in user.metrics}
+    logging.info(f"Creating baseline record for user {user.user_id}: {record}")
+    record_repository.create_record(
+        user.user_id,
+        record,
+        datetime.datetime.now().isoformat(),
+    )
+    logging.info(f"Baseline record successfully created for user {user.user_id}")
+    return record
 
 
 def create_baseline_success_message(record: dict) -> str:
