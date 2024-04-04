@@ -1,6 +1,5 @@
 from typing import Any
 
-import emoji
 from pydantic import BaseModel
 
 

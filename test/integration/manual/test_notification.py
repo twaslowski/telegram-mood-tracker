@@ -4,7 +4,6 @@ import unittest.mock
 from datetime import datetime, timedelta
 
 import pytest
-import telegram.error
 from kink import di
 from nest_asyncio import apply
 from telegram.ext import ContextTypes, Application

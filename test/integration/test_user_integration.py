@@ -3,7 +3,9 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 
 from src.config.auto_baseline import AutoBaselineConfig
+from src.exception.auto_baseline_exception import MetricBaselinesNotDefinedException
 from src.handlers.user_handlers import create_user, toggle_auto_baseline
+from src.service.user_service import AutoBaselineTimeNotDefinedException
 
 
 @pytest.fixture
@@ -111,14 +113,8 @@ async def test_toggle_auto_baseline_without_auto_baseline_time_configured(
     user_repository.update_user(user)
 
     # When auto-baseline is toggled
-    await toggle_auto_baseline(update, None)
-
-    # Then the user should be informed that they need to configure an auto-baseline time
-    assert update.effective_user.get_bot().send_message.called
-    assert (
-        "Please check your configuration"
-        in update.effective_user.get_bot().send_message.call_args.kwargs["text"]
-    )
+    with pytest.raises(AutoBaselineTimeNotDefinedException):
+        await toggle_auto_baseline(update, None)
 
     # the user config should remain the same and no jobs have been added to the queue
     assert user_repository.find_user(1).has_auto_baseline_enabled() is False
@@ -135,14 +131,8 @@ async def test_toggle_auto_baseline_without_all_baselines_defined(
     user_repository.update_user(user)
 
     # When auto-baseline is toggled
-    await toggle_auto_baseline(update, None)
-
-    # Then the user should be informed that they need to define all baselines
-    assert update.effective_user.get_bot().send_message.called
-    assert (
-        "Please check your configuration"
-        in update.effective_user.get_bot().send_message.call_args.kwargs["text"]
-    )
+    with pytest.raises(MetricBaselinesNotDefinedException):
+        await toggle_auto_baseline(update, None)
 
     # the user config should remain the same and no jobs have been added to the queue
     assert user_repository.find_user(1).has_auto_baseline_enabled() is False

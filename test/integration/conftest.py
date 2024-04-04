@@ -11,6 +11,7 @@ from src.config.config import ConfigurationProvider
 from src.notifier import Notifier
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
+from src.service.user_service import UserService
 
 """
 Pytest Fixture setup.
@@ -64,6 +65,12 @@ def application():
     application = MoodTrackerApplication(os.getenv("TELEGRAM_TOKEN", "some-token"))
     di[MoodTrackerApplication] = application
     return application
+
+
+@pytest.fixture(autouse=True)
+def user_service():
+    user_service = UserService()
+    user_service.register()
 
 
 @pytest.fixture(autouse=True)

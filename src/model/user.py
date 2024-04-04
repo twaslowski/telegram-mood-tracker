@@ -24,8 +24,15 @@ class User(BaseModel):
     def enable_auto_baseline(self) -> None:
         self.auto_baseline_config.enabled = True
 
+    def disable_auto_baseline(self) -> None:
+        self.auto_baseline_config.enabled = False
+
     def get_metrics_without_baselines(self) -> list[str]:
-        return [metric.name for metric in self.metrics if metric.baseline is None]
+        return [
+            metric.name.capitalize()
+            for metric in self.metrics
+            if metric.baseline is None
+        ]
 
     def has_baselines_defined(self) -> bool:
         return self.metrics != [] and all(

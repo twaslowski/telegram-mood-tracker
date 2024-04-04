@@ -11,3 +11,4 @@ class Injectable:
     def register(self):
         logging.info(f"Registering {self.get_fully_qualified_name()} as singleton.")
         di[self.get_fully_qualified_name()] = self
+        return self
