@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
 from src.config.config import ConfigurationProvider, Configuration
+from src.handlers.error_handler import error_handler
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 from src.autowiring.inject import autowire
@@ -53,6 +54,7 @@ class MoodTrackerApplication:
             CommandHandler("auto_baseline", toggle_auto_baseline)
         )
         self.application.add_handler(CommandHandler("offset", offset_handler))
+        self.application.add_error_handler(error_handler)
         self.application.add_handler(CallbackQueryHandler(button))
 
     def run(self):

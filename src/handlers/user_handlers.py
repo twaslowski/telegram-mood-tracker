@@ -26,7 +26,8 @@ async def create_user(update: Update, _, user_repository: UserRepository) -> Use
     if not user_repository.find_user(user_id):
         logging.info(f"Creating user {user_id}")
         user = user_repository.create_user(user_id)
-        setup_notifications(user_id)
+        setup_notifications(user)
+        setup_auto_baseline(user)
         await send(update, text=introduction_text())
         return user
     # User already exists
@@ -76,12 +77,16 @@ async def toggle_auto_baseline(
         await send(update, text="Auto-baseline disabled.")
 
 
-@autowire("configuration", "notifier")
-def setup_notifications(
-    user_id: int, configuration: Configuration, notifier: Notifier
-) -> None:
-    for notification in configuration.get_notifications():
-        notifier.create_notification(user_id, notification)
+@autowire("notifier")
+def setup_notifications(user: User, notifier: Notifier) -> None:
+    for notification in user.get_notifications():
+        notifier.create_notification(user.user_id, notification)
+
+
+@autowire("notifier")
+def setup_auto_baseline(user: User, notifier: Notifier) -> None:
+    if user.has_auto_baseline_enabled():
+        notifier.create_auto_baseline(user)
 
 
 @autowire("configuration")

@@ -1,7 +1,7 @@
 .PHONY: test run fmt
 
 test:
-	@export PYTHONPATH=./ && poetry run pytest test/ --disable-warnings -s
+	@export PYTHONPATH=./ && poetry run pytest test/ --exclude test/integration/manual --disable-warnings -s
 
 fmt:
 	@bash -c 'pre-commit run black --all-files'

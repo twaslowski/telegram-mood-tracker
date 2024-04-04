@@ -147,3 +147,33 @@ async def test_toggle_auto_baseline_without_all_baselines_defined(
     # the user config should remain the same and no jobs have been added to the queue
     assert user_repository.find_user(1).has_auto_baseline_enabled() is False
     assert len(notifier.job_queue.jobs()) == 1
+
+
+@pytest.mark.asyncio
+async def test_toggle_auto_baseline_on_user_creation_if_enabled(
+    update, configuration, notifier
+):
+    # Given a configuration with auto-baseline enabled
+    configuration.auto_baseline.enabled = True
+    configuration.register()
+
+    # When a user is created
+    user = await create_user(update, None)
+    assert user.has_auto_baseline_enabled() is True
+
+    # Then the auto-baseline job should be scheduled
+    assert len(notifier.job_queue.jobs()) == 2  # including notifications
+
+
+@pytest.mark.asyncio
+async def test_should_not_create_auto_baseline_on_user_creation_if_enabled_without_time(
+    update, configuration, notifier
+):
+    # Given a configuration with auto-baseline enabled but no time configured
+    configuration.auto_baseline.enabled = True
+    configuration.auto_baseline.time = None
+    configuration.register()
+
+    # When a user is created
+    with pytest.raises(ValueError):
+        await create_user(update, None)

@@ -18,6 +18,9 @@ class User(BaseModel):
         if self.has_auto_baseline_enabled() and not self.has_baselines_defined():
             raise ValueError("Auto baseline is enabled but no baselines are defined")
 
+    def get_notifications(self) -> list[Notification]:
+        return self.notifications
+
     def enable_auto_baseline(self) -> None:
         self.auto_baseline_config.enabled = True
 
