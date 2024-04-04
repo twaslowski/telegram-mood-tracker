@@ -19,7 +19,8 @@ class UserRepository(Injectable):
             return self.parse_user(dict(result))
         return None
 
-    def parse_user(self, result: dict) -> User:
+    @staticmethod
+    def parse_user(result: dict) -> User:
         result = dict(result)
         # still not perfect from a typing point of view, but the hack is limited to the persistence layer
         result["notifications"] = [
@@ -28,7 +29,7 @@ class UserRepository(Injectable):
         return User(**result)
 
     @autowire("configuration")
-    def create_user(self, user_id: int, configuration: Configuration) -> None:
+    def create_user(self, user_id: int, configuration: Configuration) -> User:
         metrics = [metric.model_dump() for metric in configuration.get_metrics()]
         notifications = [
             notification.model_dump()

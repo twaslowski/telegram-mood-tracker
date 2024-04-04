@@ -18,6 +18,9 @@ class User(BaseModel):
         if self.has_auto_baseline_enabled() and not self.has_baselines_defined():
             raise ValueError("Auto baseline is enabled but no baselines are defined")
 
+    def enable_auto_baseline(self) -> None:
+        self.auto_baseline_config.enabled = True
+
     def get_metrics_without_baselines(self) -> list[str]:
         return [metric.name for metric in self.metrics if metric.baseline is None]
 
