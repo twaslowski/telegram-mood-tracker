@@ -12,7 +12,7 @@ metrics:
       ":frowning_face:": -2
       ":skull:": -3
   - name: sleep
-    # baseline: 8
+    baseline: 8
     user_prompt: "How much sleep did you get today?"
     type: numeric
     values:

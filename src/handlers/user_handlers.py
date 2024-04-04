@@ -2,7 +2,7 @@ import logging
 
 from telegram import Update
 
-from src.autowiring.inject import autowire
+from pyautowire import autowire
 from src.handlers.util import send
 from src.model.user import User
 from src.service.user_service import UserService

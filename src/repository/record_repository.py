@@ -4,7 +4,7 @@ import logging
 import pymongo
 from pymongo import MongoClient
 
-from src.autowiring.injectable import Injectable
+from pyautowire import Injectable
 from src.model.record import Record, DatabaseRecord
 
 

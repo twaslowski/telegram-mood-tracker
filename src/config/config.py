@@ -2,7 +2,7 @@ import yaml
 from pydantic import BaseModel
 
 from typing import Any
-from src.autowiring.injectable import Injectable
+from pyautowire import Injectable
 from src.config.auto_baseline import AutoBaselineConfig
 from src.config.config_metric import ConfigMetric
 

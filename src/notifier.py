@@ -4,7 +4,7 @@ from functools import partial
 
 from telegram.ext import CallbackContext, JobQueue
 
-from src.autowiring.injectable import Injectable
+from pyautowire import Injectable
 from src.model.notification import Notification
 from src.model.user import User
 from src.handlers.record_handlers import create_baseline_record

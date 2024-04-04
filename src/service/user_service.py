@@ -1,7 +1,6 @@
 import logging
 
-from src.autowiring.inject import autowire
-from src.autowiring.injectable import Injectable
+from pyautowire import autowire, Injectable
 from src.exception.auto_baseline_exception import (
     MetricBaselinesNotDefinedException,
     AutoBaselineTimeNotDefinedException,
@@ -12,6 +11,11 @@ from src.repository.user_repository import UserRepository
 
 
 class UserService(Injectable):
+    """
+    Service for managing user-related operations.
+    Most of this functionality was moved here from the user_handlers.py file for better separation of concerns.
+    """
+
     user_repository: UserRepository
     notifier: Notifier
 
@@ -70,11 +74,7 @@ class UserService(Injectable):
         Adds reminders to the job queue for all users that have configured reminders.
         """
         for user in self.user_repository.find_all_users():
-            user_id = user.user_id
-            notifications = user.notifications
-            logging.info(f"Setting up notifications for for user {user_id}")
-            for notification in notifications:
-                self.notifier.create_notification(user_id, notification)
+            self.setup_notifications(user)
 
     def find_user(self, user_id: int) -> User | None:
         return self.user_repository.find_user(user_id)
@@ -87,6 +87,7 @@ class UserService(Injectable):
         return user
 
     def setup_notifications(self, user: User) -> None:
+        logging.info(f"Setting up notifications for user {user.user_id}")
         for notification in user.get_notifications():
             self.notifier.create_notification(user.user_id, notification)
 

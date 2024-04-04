@@ -1530,6 +1530,20 @@ files = [
 ]
 
 [[package]]
+name = "pyautowire"
+version = "0.2.0"
+description = "Good enough autowiring for Python"
+optional = false
+python-versions = "<4.0,>=3.7"
+files = [
+    {file = "pyautowire-0.2.0-py3-none-any.whl", hash = "sha256:b3ea44bc6cc679f4484e8ab099a04d34098393fea8dc545c749fc36b54c69043"},
+    {file = "pyautowire-0.2.0.tar.gz", hash = "sha256:6d69fcea4725bff9e10742ae1c30d8da4694788b90628ff53e7f2c8c616a71f6"},
+]
+
+[package.dependencies]
+kink = ">=0.7.0,<0.8.0"
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 description = "C parser in Python"
@@ -2339,4 +2353,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "a15d81ce080c808ddce544c5f2f206c2a9e6ee5cc794a5d68e0ecc777acfa117"
+content-hash = "34d217dc99d7c61e7a2fa605ecf17f8a8fe3e866c112b9f0ab5a9463bcd03b08"

@@ -6,7 +6,7 @@ from telegram import Update
 
 from src.model.user import User
 from src.repository.record_repository import RecordRepository
-from src.autowiring.inject import autowire
+from pyautowire import autowire
 from src.handlers.graphing import handle_graph_specification
 from src.handlers.metrics_handlers import prompt_user_for_metric
 from src.handlers.util import send, handle_no_known_state
