@@ -1,13 +1,16 @@
 import logging
 from dataclasses import dataclass
+import datetime
 from functools import partial
 
 from telegram.ext import CallbackContext, JobQueue
 
-from pyautowire import Injectable
+from pyautowire import Injectable, autowire
 from src.model.notification import Notification
+from src.model.record import Record
 from src.model.user import User
 from src.handlers.record_handlers import create_baseline_record
+from src.repository.record_repository import RecordRepository
 
 
 @dataclass
@@ -22,12 +25,28 @@ class Notifier(Injectable):
         await context.bot.send_message(user_id, text=text)
 
     @staticmethod
-    async def auto_baseline(context: CallbackContext, user: User):
+    @autowire("record_repository")
+    async def auto_baseline(
+        context: CallbackContext, user: User, record_repository: RecordRepository
+    ):
         """Create baseline record for user at scheduled time."""
-        await create_baseline_record(user)
-        await context.bot.send_message(
-            user.user_id, text="A baseline record has been created for you."
-        )
+        latest_user_record = record_repository.get_latest_record_for_user(user.user_id)
+        if (
+            latest_user_record is None
+            or not latest_user_record.timestamp.day == datetime.datetime.now().day
+        ):
+            await create_baseline_record(user)
+            await context.bot.send_message(
+                user.user_id, text="A baseline record has been created for you."
+            )
+        else:
+            logging.info(
+                f"Record already exists for user {user.user_id} today. Not creating a new one."
+            )
+
+    @staticmethod
+    def is_from_today(record: Record) -> bool:
+        return record.timestamp.date() == datetime.datetime.now().date()
 
     def create_notification(self, user_id: int, notification: Notification) -> str:
         """

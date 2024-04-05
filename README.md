@@ -1,4 +1,4 @@
-![Build](https://github.com/TobiasWaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
+![Build](https://github.com/twaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
 
 # About
 

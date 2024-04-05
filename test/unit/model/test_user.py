@@ -49,3 +49,13 @@ def test_auto_baseline_with_empty_metrics_throws_exception():
             notifications=[],
             auto_baseline_config=AutoBaselineConfig(enabled=True, time="00:00"),
         )
+
+
+def test_find_metric_by_name(metric_with_baseline):
+    user = User(user_id=1, metrics=[metric_with_baseline], notifications=[])
+    assert user.get_metric_by_name("test") == metric_with_baseline
+
+
+def test_find_metric_by_name_returns_none(metric_with_baseline):
+    user = User(user_id=1, metrics=[metric_with_baseline], notifications=[])
+    assert user.get_metric_by_name("not_test") is None

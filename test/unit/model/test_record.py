@@ -27,11 +27,11 @@ def temp_record() -> TempRecord:
 
 
 def test_find_existing_record_data_in_record(record: Record):
-    assert record.find_data_by_name("metric1").value == 1
+    assert record.find_record_data_by_name("metric1").value == 1
 
 
 def test_find_non_existing_data_in_record(record: Record):
-    assert record.find_data_by_name("metric2") is None
+    assert record.find_record_data_by_name("metric2") is None
 
 
 def test_find_existing_metric_in_temp_record(temp_record: TempRecord):

@@ -44,3 +44,9 @@ class User(BaseModel):
 
     def get_auto_baseline_time(self) -> datetime.time:
         return self.auto_baseline_config.time
+
+    def get_metric_by_name(self, name: str) -> Metric | None:
+        for metric in self.metrics:
+            if metric.name == name:
+                return metric
+        return None

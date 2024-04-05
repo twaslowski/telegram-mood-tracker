@@ -38,7 +38,7 @@ class AbstractRecord(BaseModel):
     Can provide shared methods for Record and TempRecord.
     """
 
-    def find_data_by_name(self, name: str) -> RecordData | None:
+    def find_record_data_by_name(self, name: str) -> RecordData | None:
         return next((x for x in self.data if x.metric_name == name), None)
 
     def find_metric_by_name(self, name: str) -> Metric | None:
@@ -62,7 +62,7 @@ class TempRecord(AbstractRecord):
 
     # todo test
     def update_data(self, name: str, value: int | None):
-        record_data = self.find_data_by_name(name)
+        record_data = self.find_record_data_by_name(name)
         if record_data:
             record_data.value = value
         else:
