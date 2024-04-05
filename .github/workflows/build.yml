@@ -25,7 +25,7 @@ jobs:
 
       - name: Load cached poetry
         id: cached-poetry
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v3
         with:
           path: ~/.local
           key: dotlocal-${{ runner.os }}-${{ hashFiles('.github/workflows/build.yml') }}
@@ -37,7 +37,7 @@ jobs:
           version: 1.8.2
           virtualenvs-create: true
           virtualenvs-in-project: false
-          virtualenvs-path: ~/my-custom-path
+          virtualenvs-path: .venv
           installer-parallel: true
 
       - name: Load cached venv
@@ -125,7 +125,7 @@ jobs:
           version: 1.8.2
           virtualenvs-create: true
           virtualenvs-in-project: false
-          virtualenvs-path: ~/my-custom-path
+          virtualenvs-path: .venv
           installer-parallel: true
 
       - name: Load cached venv
