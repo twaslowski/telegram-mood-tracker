@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "telegram-mood-tracker"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
 authors = ["Tobias Waslowski <tobiaswaslowski@gmail.com>"]
 readme = "README.md"
