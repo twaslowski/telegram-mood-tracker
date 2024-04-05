@@ -52,7 +52,7 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          pytest tests/ -s --disable-warnings --ignore test/integration/manual/
+          pytest test/ -s --disable-warnings --ignore test/integration/manual/
 
   create_infrastructure:
     needs: test
