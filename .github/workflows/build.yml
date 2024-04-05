@@ -25,10 +25,10 @@ jobs:
 
       - name: Load cached poetry
         id: cached-poetry
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.local
-          key: dotlocal-${{ runner.os }}-${{ hashFiles('.github/workflows/build.yml') }}
+          key: dotlocal-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install and configure Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
@@ -40,7 +40,7 @@ jobs:
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
@@ -111,10 +111,10 @@ jobs:
 
       - name: Load cached poetry
         id: cached-poetry
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.local
-          key: dotlocal-${{ runner.os }}-${{ hashFiles('.github/workflows/build.yml') }}
+          key: dotlocal-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install and configure Poetry
         if: steps.cached-poetry.outputs.cache-hit != 'true'
