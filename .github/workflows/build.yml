@@ -52,7 +52,7 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          pytest test/ -s --disable-warnings --ignore test/integration/manual/
+          export PYTHONPATH=./ && poetry run pytest test/ --ignore test/integration/manual/ --disable-warnings -s
 
   create_infrastructure:
     needs: test
