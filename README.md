@@ -1,10 +1,21 @@
 ![Build](https://github.com/twaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
 
+[1. About](#about)
+[2. Features](#features)
+[3. Running](#running)
+  [3.1. Quickstart](#quickstart)
+  [3.2. MongoDB Configuration](#mongodb-configuration)
+  [3.3. Specifying Metrics](#specifying-metrics)
+    [3.3.1. Using Emojis](#using-emojis)
+    [3.3.2. Strictly Numerical Metrics](#strictly-numerical-metrics)
+  [3.4. Reminders](#reminders)
+[4. Developing](#developing)
+
 # About
 
 This is a Telegram-based Mood Tracker bot. It allows users to record their mood states and other health-related
-metrics. Mood Trackers are generally "useful for people with mental health conditions — such as depression and anxiety —
-to help identify and regulate moods" [[1]](https://www.verywellmind.com/what-is-a-mood-tracker-5119337).
+metrics. Mood Trackers are generally "[useful for people with mental health conditions — such as depression and anxiety —
+to help identify and regulate moods](https://www.verywellmind.com/what-is-a-mood-tracker-5119337)".
 
 It can be difficult to get into the habit of tracking your mood. This project aims at making the process of tracking
 your mood on a daily basis as frictionless as possible, by integrating into a popular messaging app that you may
@@ -12,21 +23,25 @@ be using on a daily basis anyway.
 
 # Features
 
-This bot comes with several features right now. The version I host is tailored to me and may be fairly basic for other
-people's usecases. As of now, you can customize the bot by hosting your own version and modifying the YAML
-configuration. However, I am currently building features to enable users to customize their metrics within Telegram.
+This bot allows you to ...
 
-- You can specify the metrics you would like to track (only on self-hosted instances right now) via YAML spec
-- You can set up notifications (only on self-hosted instances right now) via YAML spec
+- specify metrics to track
+- specify notifications to be sent to you at any time
+- set up baselines for metrics to make tracking easier
+- automatically create baseline records on a daily basis to make tracking _even easier_<sup>1</sup>
+- Visualize metrics over time <sup>2</sup>
 
-## Features in development
+I host a bot for both demo-purposes and personal use, but you can also host your own bot.
+I'm not going to put too much effort into making my bot 100% configurable unless it suddenly gains hundreds of users,
+but I'll probably set it up, so you can add your own configuration by sending it a YAML file or something.
 
-There are more features I want to provide to users to make this bot better.
+But generally, you're going to be better off hosting your own bot. Find out how in the [Running](#running) section.
 
-- The ability to customize metrics and notifications without having to host your own bot
-- A /baseline command that you can define as a shorthand for e.g. neutral mood and eight hours of sleep to make
-  tracking even more easy
-- Customized, more powerful visualization features
+<sup>1 Meaning that if you have not tracked your mood by end of day, a record with your baseline values will be created.
+This makes tracking easier if you are relatively stable for long amounts of time.</sup>
+
+<sup>2 This feature currently only works for mood and sleep. I haven't put too much time into visualization yet.
+If you have any `matplotlib` or `seaborn` experience and want to contribute, feel free to raise a PR.</sup>
 
 # Running
 
