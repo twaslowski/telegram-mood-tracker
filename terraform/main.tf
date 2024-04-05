@@ -37,25 +37,4 @@ module "mood_tracker_repository" {
     architectures     = ["x86"]
     logo_image_blob   = filebase64("${path.module}/files/moody.png")
   }
-
-  repository_lifecycle_policy = local.repository_lifecycle_policy
-}
-
-locals {
-  repository_lifecycle_policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1,
-        description  = "Keep 3 images",
-        selection = {
-          tagStatus   = "any",
-          countType   = "imageCountMoreThan",
-          countNumber = 2
-        },
-        action = {
-          type = "expire"
-        }
-      }
-    ]
-  })
 }
