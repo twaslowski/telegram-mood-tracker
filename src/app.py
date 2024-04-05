@@ -101,11 +101,9 @@ def initialize_application() -> MoodTrackerApplication:
     :return:
     """
     # Load and register configuration object
-    configuration = ConfigurationProvider().get_configuration().register()
-    user_repository, record_repository = initialize_database()
+    ConfigurationProvider().get_configuration().register()
+    initialize_database()
 
-    # Given the database connection, refresh user config and create application
-    refresh_user_configs(configuration, user_repository)
     application = MoodTrackerApplication(TOKEN)
 
     # The Notifier, which is required by the UserService, is now initialized
