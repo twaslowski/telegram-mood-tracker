@@ -1,17 +1,29 @@
 ![Build](https://github.com/twaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
 
 [1. About](#about)
+
 [2. Features](#features)
+
 [3. Running](#running)
+
 [3.1. Quickstart](#quickstart)
+
 [3.2. MongoDB Configuration](#mongodb-configuration)
+
 [4. Configuration](#configuration)
+
 [4.1. Specifying Metrics](#specifying-metrics)
+
 [4.1.1. Using Emojis](#using-emojis)
+
 [4.1.2. Strictly Numerical Metrics](#strictly-numerical-metrics)
+
 [4.1.3. Baselines](#baselines)
+
 [4.2. Notifications](#notifications)
+
 [4.3. Auto-Baseline](#auto-baseline)
+
 [5. Developing](#developing)
 
 # About
