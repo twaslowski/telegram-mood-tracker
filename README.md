@@ -41,20 +41,20 @@ The bot currently supports the following commands:
 - `/start`: This is the conversation start with the bot. It will initialise your user data in the database
 - from the configuration loaded from the `config.yaml` at application start.
 
-`/record`: This command will prompt you to record your mood. It iterates through your metrics and asks you to
+- `/record`: This command will prompt you to record your mood. It iterates through your metrics and asks you to
 provide values for each of them. Note that while creating a record, they are held in an `ExpiringDict` until they
 are completed; they expire after 300 seconds by default. Upon completion, a `record` is stored in the database.
 
-`/baseline`: If you have provided baselines for all your metrics in the configuration
+- `/baseline`: If you have provided baselines for all your metrics in the configuration
 (for more details, check the [configuration section](#specifying-metrics)), you can use this command to create a
 record with your baseline metrics. This is useful if you are relatively stable and don't want to click through
 the entire record process every day.
 
-`auto_baseline`: This command enables automatically creating baseline records for you if you have not recorded your
+- `auto_baseline`: This command enables automatically creating baseline records for you if you have not recorded your
 mood by a specific time. You can configure this feature in the [configuration section](#specifying-metrics)
 and toggle it via this command.
 
-`/graph`: Plot selected metrics over time.
+- `/graph`: Plot selected metrics over time.
 
 # Running
 
