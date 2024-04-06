@@ -1,30 +1,5 @@
 ![Build](https://github.com/twaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
 
-[1. About](#about)
-
-[2. Features](#features)
-
-[3. Running](#running)
-
-[3.1. Quickstart](#quickstart)
-
-[3.2. MongoDB Configuration](#mongodb-configuration)
-
-[4. Configuration](#configuration)
-
-[4.1. Specifying Metrics](#specifying-metrics)
-
-[4.1.1. Using Emojis](#using-emojis)
-
-[4.1.2. Strictly Numerical Metrics](#strictly-numerical-metrics)
-
-[4.1.3. Baselines](#baselines)
-
-[4.2. Notifications](#notifications)
-
-[4.3. Auto-Baseline](#auto-baseline)
-
-[5. Developing](#developing)
 
 # About
 
@@ -89,7 +64,7 @@ I host the Docker image for this application on a public ECR repository. You hav
 Telegram via the [Botfather](https://t.me/botfather) and supply it to the container as an environment variable.
 Additionally, you'll have to have a MongoDB instance running for persistence.
 Assuming you have a MongoDB instance running on your local machine that is bound to `127.0.0.1:27017`,
-you can run the following command:
+(e.g. by running `docker run -p 27017:27017 mongo`) you can run the following command:
 
     docker run --env TELEGRAM_TOKEN=$TELEGRAM_TOKEN \
       public.ecr.aws/c1o1h8f4/mood-tracker:latest
