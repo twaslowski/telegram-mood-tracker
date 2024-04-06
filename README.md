@@ -3,18 +3,22 @@
 [1. About](#about)
 [2. Features](#features)
 [3. Running](#running)
-  [3.1. Quickstart](#quickstart)
-  [3.2. MongoDB Configuration](#mongodb-configuration)
-  [3.3. Specifying Metrics](#specifying-metrics)
-    [3.3.1. Using Emojis](#using-emojis)
-    [3.3.2. Strictly Numerical Metrics](#strictly-numerical-metrics)
-  [3.4. Reminders](#reminders)
-[4. Developing](#developing)
+[3.1. Quickstart](#quickstart)
+[3.2. MongoDB Configuration](#mongodb-configuration)
+[4. Configuration](#configuration)
+[4.1. Specifying Metrics](#specifying-metrics)
+[4.1.1. Using Emojis](#using-emojis)
+[4.1.2. Strictly Numerical Metrics](#strictly-numerical-metrics)
+[4.1.3. Baselines](#baselines)
+[4.2. Notifications](#notifications)
+[4.3. Auto-Baseline](#auto-baseline)
+[5. Developing](#developing)
 
 # About
 
 This is a Telegram-based Mood Tracker bot. It allows users to record their mood states and other health-related
-metrics. Mood Trackers are generally "[useful for people with mental health conditions — such as depression and anxiety —
+metrics. Mood Trackers are
+generally "[useful for people with mental health conditions — such as depression and anxiety —
 to help identify and regulate moods](https://www.verywellmind.com/what-is-a-mood-tracker-5119337)".
 
 It can be difficult to get into the habit of tracking your mood. This project aims at making the process of tracking
@@ -43,6 +47,28 @@ This makes tracking easier if you are relatively stable for long amounts of time
 <sup>2 This feature currently only works for mood and sleep. I haven't put too much time into visualization yet.
 If you have any `matplotlib` or `seaborn` experience and want to contribute, feel free to raise a PR.</sup>
 
+## Bot Commands
+
+The bot currently supports the following commands:
+
+- `/start`: This is the conversation start with the bot. It will initialise your user data in the database
+- from the configuration loaded from the `config.yaml` at application start.
+
+`/record`: This command will prompt you to record your mood. It iterates through your metrics and asks you to
+provide values for each of them. Note that while creating a record, they are held in an `ExpiringDict` until they
+are completed; they expire after 300 seconds by default. Upon completion, a `record` is stored in the database.
+
+`/baseline`: If you have provided baselines for all your metrics in the configuration
+(for more details, check the [configuration section](#specifying-metrics)), you can use this command to create a
+record with your baseline metrics. This is useful if you are relatively stable and don't want to click through
+the entire record process every day.
+
+`auto_baseline`: This command enables automatically creating baseline records for you if you have not recorded your
+mood by a specific time. You can configure this feature in the [configuration section](#specifying-metrics)
+and toggle it via this command.
+
+`/graph`: Plot selected metrics over time.
+
 # Running
 
 ## Quickstart
@@ -56,8 +82,8 @@ you can run the following command:
     docker run --env TELEGRAM_TOKEN=$TELEGRAM_TOKEN \
       public.ecr.aws/c1o1h8f4/mood-tracker:latest
 
-I currently provide images for x86_64 and arm64v8 for my own machines and my Raspberry Pi. If you require images
-for additional architectures, feel free to raise a ticket or build your own images.
+Supported architectures are x86_64 (amd64) and arm64. If you require images
+for additional architectures, feel free to raise a ticket or build your own images (see [Development](#development)).
 
 ## MongoDB Configuration
 
@@ -66,16 +92,18 @@ variable. If you're running Docker for Linux, I recommend using `--network="host
 The run command in that case could look like this:
 
     docker run --env TELEGRAM_TOKEN=$TELEGRAM_TOKEN \
-        --env MONGO_HOST=192.168.12.123:27017 \
+        --env MONGO_HOST=192.168.1.1:27017 \
         --network="host" \
           public.ecr.aws/c1o1h8f4/mood-tracker:latest
 
 For more guidance on Docker networking, please refer to the [official documentation](https://docs.docker.com/network/).
 
-## Specifying Metrics
+# Configuration
 
-In the `config.yaml` you can configure your own metrics and notifications. For example, you can track your own mood
-as follows:
+When hosting your own bot, you can use the `config.yaml` file to specify your own metrics and notifications.
+The following section will guide you through the configuration process.
+
+## Specifying Metrics
 
 ```yaml
 metrics:
@@ -87,7 +115,7 @@ metrics:
       CALM: 0
 ```
 
-Metrics have to map to numbers under the hood for purposes of visualization and statistical evaluation (potentially).
+Metrics have to map to numbers under the hood for purposes of visualization.
 These will show up as [Inline Buttons](https://core.telegram.org/bots/2-0-intro#switch-to-inline-buttons) when recording
 your mood, with the labels showing up as "Highly Anxious", "Somewhat Anxious" and "Calm".
 
@@ -131,17 +159,49 @@ For this case, I've added a metric type called `numeric`. You can declare `numer
 This will auto-generate the corresponding dictionary for you, without you having to painstakingly type out every
 possible value.
 
-## Reminders
+### Baselines
 
-You can specify reminders as a list of text/time strings. Because no user information is available except for the
+For convenience purposes, if you are relatively stable and don't want to click through the entire record process,
+the recording process can be turned from at least three clicks to just one by specifying baselines for your metrics
+and calling `/baseline` in the bot.
+
+```yaml
+metrics:
+  - name: anxiety
+    user_prompt: "What are your anxiety levels like right now?"
+    baseline: 0
+    values:
+      HIGHLY_ANXIOUS: 2
+      SOMEWHAT_ANXIOUS: 1
+      CALM: 0
+```
+
+## Notifications
+
+You can specify notifications as a list of text/time strings. Because no user information is available except for the
 user_id, there is no localization, so all times are interpreted as UTC. If you want your reminder to be at 8:00 AM
-CET, you'll have to specify it as 7:00 AM UTC.
+CET, you'll have to specify it as 7:00 AM UTC (or whatever the time difference is, think of daylight savings).
 
 ```yaml
 notifications:
   - text: "Don't forget to track your mood today!"
     time: "7:00"
 ```
+
+## Auto-Baseline
+
+If you want to automatically create a baseline record for you if you have not recorded your mood by a specific time,
+you can specify the `auto_baseline` key in the configuration file. This will, at that point, create a record with your
+baseline values for all metrics.
+
+```yaml
+auto_baseline:
+  enabled: true
+  time: "23:59"
+```
+
+You can toggle `auto_baseline` via the `/auto_baseline` command in the bot. However, you **need** to specify the `time`
+in the `config.yaml` first in order to do that.
 
 # Developing
 
@@ -151,9 +211,9 @@ You can clone the repo and set up your own poetry environment:
 
 ```shell
 git clone git@github.com:twaslowski/telegram-mood-tracker.git && cd telegram-mood-tracker
+pyenv install 3.11.6  # or another patch version
 poetry env use 3.11.6  # or another patch version
 poetry install --with dev
-make test
 ```
 
 I encourage the use of pre-commit hooks. You can enable them by running
@@ -161,4 +221,10 @@ I encourage the use of pre-commit hooks. You can enable them by running
 ```shell
 pre-commit install
 pre-commit run --all-files --verbose
+```
+
+If you would like to build a custom Docker image, you can do so by running
+
+```shell
+docker build -t mood-tracker:latest .
 ```
