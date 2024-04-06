@@ -2,54 +2,40 @@ import calendar
 import logging
 from datetime import datetime
 from typing import Tuple
-import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from pymongo import MongoClient
+from pyautowire import autowire
+
+from src.model.record import Record
+from src.repository.record_repository import RecordRepository
 
 
-def visualize_monthly_data(user_id: int, month: Tuple[int, int] = None):
-    # Connect to MongoDB (replace with your connection details)
-    client = MongoClient(f"mongodb://{os.environ.get('MONGO_HOST')}/")
-    db = client.mood_tracker
-    collection = db.records
-
+@autowire("record_repository")
+def retrieve_records(
+    user_id: int, record_repository: RecordRepository, month: Tuple[int, int] = None
+):
     (year, month) = month
 
     # Calculate the first and last day of the given month
     first_day = datetime(year, month, 1)
     last_day = datetime(year, month, calendar.monthrange(year, month)[1])
 
-    logging.info(
-        f"Retrieving data for between {first_day} and {last_day} for user {user_id}"
+    records = list(
+        record_repository.find_records_for_time_range(user_id, first_day, last_day)
     )
-    # Filter records for the specified month
-    query = {
-        "timestamp": {
-            "$gte": first_day.strftime("%Y-%m-%dT%H:%M:%S"),
-            "$lte": last_day.strftime("%Y-%m-%dT%H:%M:%S"),
-        },
-        "user_id": user_id,
-    }
 
-    data = list(collection.find(query))
+    logging.info(f"Found {len(records)} records for {month}/{year}")
 
-    data = [
-        {
-            "timestamp": data["timestamp"],
-            "mood": data["record"]["mood"],
-            "sleep": data["record"]["sleep"],
-        }
-        for data in data
-    ]
-    logging.info(f"Found {len(data)} records for {month}/{year}")
-
-    if not data:
+    if not records:
         return
 
     # Process data
-    df = pd.DataFrame(data)
+    visualize(records, first_day, last_day)
+
+
+def visualize(records: list[Record], first_day: datetime, last_day: datetime):
+    df = pd.DataFrame(records)
     df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.date
     df[["mood", "sleep"]] = df[["mood", "sleep"]].astype(float)
 
@@ -112,4 +98,4 @@ def visualize_monthly_data(user_id: int, month: Tuple[int, int] = None):
 
 
 if __name__ == "__main__":
-    visualize_monthly_data()
+    retrieve_records()

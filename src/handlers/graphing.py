@@ -3,7 +3,7 @@ import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.state import State, APPLICATION_STATE
-from src.visualise import visualize_monthly_data
+from src.visualise import retrieve_records
 
 
 def get_all_months_for_offset(
@@ -50,7 +50,7 @@ async def handle_graph_specification(update):
 
     # create graphs for all months
     for month in months:
-        path = visualize_monthly_data(update.effective_user.id, month)
+        path = retrieve_records(update.effective_user.id, month)
         if path:
             await update.effective_user.get_bot().send_photo(
                 update.effective_user.id, open(path, "rb")

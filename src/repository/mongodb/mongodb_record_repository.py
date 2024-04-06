@@ -48,3 +48,24 @@ class MongoDBRecordRepository(RecordRepository):
         for date in date_range:
             logging.info(f"Inserting neutral record for timestamp {date}")
             self.create_record(user_id, default_record, f"{date}T12:00:00.000000")
+
+    def find_records_for_time_range(
+            self, user_id: int, beginning: datetime.datetime, end: datetime.datetime
+    ) -> list[Record]:
+        logging.info(
+            f"Retrieving data for between {beginning} and {end} for user {user_id}"
+        )
+        return [
+            self.parse_record(r)
+            for r in list(
+                self.records.find(
+                    {
+                        "user_id": user_id,
+                        "timestamp": {
+                            "$gte": beginning.isoformat(),
+                            "$lte": end.isoformat(),
+                        },
+                    }
+                )
+            )
+        ]

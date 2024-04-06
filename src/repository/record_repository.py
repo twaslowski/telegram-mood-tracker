@@ -1,10 +1,19 @@
 import logging
+<<<<<<< HEAD
 from abc import ABC
 import datetime
 from abc import abstractmethod
 
 from pyautowire import Injectable
 from src.model.record import Record
+=======
+
+import pymongo
+from pyautowire import Injectable
+from pymongo import MongoClient
+
+from src.model.record import Record, DatabaseRecord
+>>>>>>> a348d3a (wip: refactor graphing)
 
 
 class RecordRepository(Injectable, ABC):
