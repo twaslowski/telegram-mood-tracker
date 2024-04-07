@@ -1,30 +1,15 @@
-from pymongo import MongoClient
-
+import boto3
 from pyautowire import autowire, Injectable
+
 from src.config.config import Configuration
-from src.model.notification import Notification
 from src.model.user import User
 
 
-class UserRepository(Injectable):
-    def __init__(self, mongo_client: MongoClient):
-        mood_tracker = mongo_client["mood_tracker"]
-        self.user = mood_tracker["user"]
-
-    def find_user(self, user_id: int) -> User | None:
-        result = self.user.find_one({"user_id": user_id})
-        if result:
-            return self.parse_user(dict(result))
-        return None
-
-    @staticmethod
-    def parse_user(result: dict) -> User:
-        result = dict(result)
-        # still not perfect from a typing point of view, but the hack is limited to the persistence layer
-        result["notifications"] = [
-            Notification(**notification) for notification in result["notifications"]
-        ]
-        return User(**result)
+class DynamoDBUserRepository(Injectable):
+    def __init__(self):
+        dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+        self.table = dynamodb.Table("user")
+        self.table.load()
 
     @autowire("configuration")
     def create_user(self, user_id: int, configuration: Configuration) -> User:
@@ -40,11 +25,22 @@ class UserRepository(Injectable):
             "notifications": notifications,
             "auto_baseline_config": auto_baseline_config,
         }
-        self.user.insert_one(user_dict)
+        self.table.put_item(Item=user_dict)
         return User(**user_dict)
 
+    def find_user(self, user_id: int) -> User | None:
+        result = self.table.get_item(Key={"user_id": user_id})
+        if result:
+            return self.parse_user(result["Item"])
+        return None
+
+    @staticmethod
+    def parse_user(result: dict) -> User:
+        return User(**result)
+
     def update_user(self, user: User) -> None:
-        self.user.update_one(
+        # Technically, there's no such concept in DynamoDB. We can only put_item or delete_item.
+        self.table.update_one(
             {"user_id": user.user_id},
             {
                 "$set": {
@@ -58,4 +54,5 @@ class UserRepository(Injectable):
         )
 
     def find_all_users(self) -> list[User]:
-        return [self.parse_user(dict(u)) for u in self.user.find()]
+        response = self.table.scan()
+        return [self.parse_user(item) for item in response["Items"]]
