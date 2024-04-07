@@ -8,18 +8,6 @@ module "dynamodb_table" {
     {
       name = "user_id"
       type = "N"
-    },
-    {
-      name = "metrics",
-      type = "M"
-    },
-    {
-      name = "notifications",
-      type = "M"
-    },
-    {
-      name = "auto_baseline_config",
-      type = "M"
     }
   ]
 }
