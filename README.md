@@ -24,7 +24,8 @@ This bot allows you to ...
 
 I host a bot for both demo-purposes and personal use, but you can also host your own bot.
 I'm not going to put too much effort into making my bot 100% configurable unless it suddenly gains hundreds of users,
-but I'll probably set it up, so you can add your own configuration by sending it a YAML file or something.
+but I'll probably add an option to configure it by sending it a YAML file or something. If you want to try it out,
+find it here: [Mood Tracker Bot](https://t.me/bipolar_mood_tracker_bot).
 
 But generally, you're going to be better off hosting your own bot. Find out how in the [Running](#running) section.
 
