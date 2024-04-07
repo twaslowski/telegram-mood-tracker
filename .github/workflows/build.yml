@@ -84,6 +84,7 @@ jobs:
   build_docker_multi_arch:
     needs: create_infrastructure
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     steps:
       - name: checkout
         uses: actions/checkout@v4
