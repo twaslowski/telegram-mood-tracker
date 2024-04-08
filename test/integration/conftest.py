@@ -33,7 +33,7 @@ def dynamodb():
     dynamodb = boto3.resource("dynamodb")
     stubber = Stubber(dynamodb.meta.client)
     # add responses here
-    stubber.add_response("list_tables", {"TableNames": []})
+    stubber.add_response("describe_table", {})
     ...
 
     stubber.activate()

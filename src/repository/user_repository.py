@@ -2,7 +2,6 @@ from pymongo import MongoClient
 
 from pyautowire import autowire, Injectable
 from src.config.config import Configuration
-from src.model.notification import Notification
 from src.model.user import User
 
 
@@ -19,11 +18,6 @@ class UserRepository(Injectable):
 
     @staticmethod
     def parse_user(result: dict) -> User:
-        result = dict(result)
-        # still not perfect from a typing point of view, but the hack is limited to the persistence layer
-        result["notifications"] = [
-            Notification(**notification) for notification in result["notifications"]
-        ]
         return User(**result)
 
     @autowire("configuration")

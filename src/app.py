@@ -1,6 +1,7 @@
 import logging
 import os
 
+import boto3
 import pymongo
 from telegram import Update
 from telegram.ext import (
@@ -78,20 +79,37 @@ def refresh_user_configs(configuration: Configuration, user_repository: UserRepo
         user_repository.update_user(user)
 
 
-def initialize_database() -> tuple[UserRepository, RecordRepository]:
+def initialize_database(
+    configuration: Configuration,
+) -> tuple[UserRepository, RecordRepository]:
     """
     Initializes the database by creating the tables if they do not exist.
     """
-    # Connect to the database
-    mongo_client = pymongo.MongoClient(
-        os.environ.get("MONGODB_HOST"), ServerSelectionTimeoutMS=5000
-    )
-    mongo_client.server_info()
+    mongo_client = initialize_mongo_client()
 
     # Create repositories and register them
     user_repository = UserRepository(mongo_client)
     record_repository = RecordRepository(mongo_client)
     return user_repository.register(), record_repository.register()
+
+
+def initialize_dynamodb_client():
+    """
+    Initializes the DynamoDB client.
+    """
+    dynamodb = boto3.resource("dynamodb", region_name=os.environ["AWS_REGION"])
+
+
+def initialize_mongo_client() -> pymongo.MongoClient:
+    """
+    Initializes the MongoDB client.
+    """
+    client = pymongo.MongoClient(
+        os.environ.get("MONGODB_HOST"), ServerSelectionTimeoutMS=5000
+    )
+    client.server_info()
+    logging.info("Successfully established connection to MongoDB persistence backend.")
+    return client
 
 
 def initialize_application() -> MoodTrackerApplication:
@@ -102,8 +120,8 @@ def initialize_application() -> MoodTrackerApplication:
     :return:
     """
     # Load and register configuration object
-    ConfigurationProvider().get_configuration().register()
-    initialize_database()
+    configuration = ConfigurationProvider().get_configuration().register()
+    initialize_database(configuration)
 
     application = MoodTrackerApplication(TOKEN)
 

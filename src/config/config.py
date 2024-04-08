@@ -5,6 +5,7 @@ from typing import Any
 from pyautowire import Injectable
 from src.config.auto_baseline import AutoBaselineConfig
 from src.config.config_metric import ConfigMetric
+from src.config.db_config import DatabaseConfig
 
 from src.model.metric import Metric
 from src.model.notification import Notification
@@ -12,8 +13,9 @@ from src.model.notification import Notification
 
 class Configuration(BaseModel, Injectable):
     metrics: list[ConfigMetric]
-    notifications: list[Notification]
-    auto_baseline: AutoBaselineConfig
+    notifications: list[Notification] = []
+    auto_baseline: AutoBaselineConfig = AutoBaselineConfig()
+    database: DatabaseConfig = DatabaseConfig()
 
     def get_metrics(self) -> list[Metric]:
         return [Metric(**metric.model_dump()) for metric in self.metrics]
