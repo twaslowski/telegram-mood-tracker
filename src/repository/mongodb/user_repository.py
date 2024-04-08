@@ -24,20 +24,9 @@ class MongoDBUserRepository(UserRepository):
 
     @autowire("configuration")
     def create_user(self, user_id: int, configuration: Configuration) -> User:
-        metrics = [metric.model_dump() for metric in configuration.get_metrics()]
-        notifications = [
-            notification.model_dump()
-            for notification in configuration.get_notifications()
-        ]
-        auto_baseline_config = configuration.get_auto_baseline_config().model_dump()
-        user_dict = {
-            "user_id": user_id,
-            "metrics": metrics,
-            "notifications": notifications,
-            "auto_baseline_config": auto_baseline_config,
-        }
-        self.user.insert_one(user_dict)
-        return User(**user_dict)
+        user = User.from_defaults(user_id, configuration)
+        self.user.insert_one(user.dict())
+        return user
 
     def update_user(self, user: User) -> None:
         self.user.update_one(

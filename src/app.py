@@ -79,6 +79,7 @@ def initialize_database(
         dynamodb = initialize_dynamodb_client()
 
         user_repository = DynamoDBUserRepository(dynamodb)
+        record_repository = RecordRepository(dynamodb)
     if configuration.database.database_type == "mongodb":
         mongo_client = initialize_mongo_client()
 

@@ -42,13 +42,13 @@ def dynamodb():
 @pytest.fixture(autouse=True)
 def dynamodb_user_repository(dynamodb):
     dynamodb_user_repository = DynamoDBUserRepository(dynamodb)
-    return dynamodb_user_repository.register(alias="user_repository")
+    # return dynamodb_user_repository.register(alias="user_repository")
 
 
 @pytest.fixture(autouse=True)
 def mongodb_user_repository(mock_client):
     user_repository = MongoDBUserRepository(mock_client)
-    # user_repository.register(alias="user_repository")
+    user_repository.register(alias="user_repository")
     return user_repository
 
 

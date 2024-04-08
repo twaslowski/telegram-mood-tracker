@@ -1,7 +1,10 @@
+import datetime
+
 import pytest
 
 from src.config.auto_baseline import AutoBaselineConfig
 from src.model.metric import Metric
+from src.model.notification import Notification
 
 from src.model.user import User
 
@@ -59,3 +62,12 @@ def test_find_metric_by_name(metric_with_baseline):
 def test_find_metric_by_name_returns_none(metric_with_baseline):
     user = User(user_id=1, metrics=[metric_with_baseline], notifications=[])
     assert user.get_metric_by_name("not_test") is None
+
+
+def test_serialization(metric_with_baseline):
+    user = User(
+        user_id=1,
+        metrics=[metric_with_baseline],
+        notifications=[Notification(text="test", time=datetime.datetime.now().time())],
+    )
+    assert user == User(**user.dict())

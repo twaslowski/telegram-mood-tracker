@@ -1,9 +1,11 @@
 import datetime
+import json
 from typing import Any
 
 from pydantic import BaseModel
 
 from src.config.auto_baseline import AutoBaselineConfig
+from src.config.config import Configuration
 from src.model.metric import Metric
 from src.model.notification import Notification
 
@@ -50,3 +52,21 @@ class User(BaseModel):
             if metric.name == name:
                 return metric
         return None
+
+    def dict(self, **kwargs) -> dict:
+        # Pydantic's model_dump does not work recursively on subclasses. This performs a complete serialization of the
+        # object with a subsequen json.loads() deserialization. Likely compute-inefficient, but throughput is not the
+        # main challenge here.
+        return json.loads(self.model_dump_json())
+
+    @classmethod
+    def from_defaults(cls, user_id: int, configuration: Configuration) -> "User":
+        return cls(
+            user_id=user_id,
+            metrics=[metric.model_dump() for metric in configuration.get_metrics()],
+            notifications=[
+                notification.model_dump()
+                for notification in configuration.get_notifications()
+            ],
+            auto_baseline_config=configuration.get_auto_baseline_config().model_dump(),
+        )
