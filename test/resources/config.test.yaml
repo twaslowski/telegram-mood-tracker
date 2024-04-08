@@ -26,3 +26,6 @@ notifications:
 auto_baseline:
   enabled: false
   time: "23:00"
+
+database:
+    type: mongodb

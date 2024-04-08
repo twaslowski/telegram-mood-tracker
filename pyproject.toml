@@ -21,7 +21,7 @@ pytest-asyncio = "^0.23.6"
 # testing, linting, utilities
 pyyaml = "^6.0.1"
 kink = "^0.7.0"
-pyautowire = "^0.2.0"
+pyautowire = "^0.3.0"
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
 pytest = "^7.4.4"

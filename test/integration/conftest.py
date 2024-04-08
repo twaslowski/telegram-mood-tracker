@@ -11,9 +11,9 @@ from src.app import MoodTrackerApplication
 from src.config.auto_baseline import AutoBaselineConfig
 from src.config.config import ConfigurationProvider
 from src.notifier import Notifier
-from src.repository.dynamodb_user_repository import DynamoDBUserRepository
+from src.repository.dynamodb.dynamodb_user_repository import DynamoDBUserRepository
+from src.repository.mongodb.user_repository import MongoDBUserRepository
 from src.repository.record_repository import RecordRepository
-from src.repository.user_repository import UserRepository
 from src.service.user_service import UserService
 
 """
@@ -34,7 +34,6 @@ def dynamodb():
     stubber = Stubber(dynamodb.meta.client)
     # add responses here
     stubber.add_response("describe_table", {})
-    ...
 
     stubber.activate()
     return dynamodb
@@ -42,14 +41,14 @@ def dynamodb():
 
 @pytest.fixture(autouse=True)
 def dynamodb_user_repository(dynamodb):
-    user_repository = DynamoDBUserRepository(dynamodb)
-    user_repository.register()
+    dynamodb_user_repository = DynamoDBUserRepository(dynamodb)
+    return dynamodb_user_repository.register(alias="user_repository")
 
 
 @pytest.fixture(autouse=True)
-def user_repository(mock_client):
-    user_repository = UserRepository(mock_client)
-    user_repository.register()
+def mongodb_user_repository(mock_client):
+    user_repository = MongoDBUserRepository(mock_client)
+    # user_repository.register(alias="user_repository")
     return user_repository
 
 

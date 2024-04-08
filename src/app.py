@@ -12,6 +12,8 @@ from telegram.ext import (
 
 from src.config.config import ConfigurationProvider, Configuration
 from src.handlers.error_handler import error_handler
+from src.repository.dynamodb.dynamodb_user_repository import DynamoDBUserRepository
+from src.repository.mongodb.user_repository import MongoDBUserRepository
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 from src.handlers.record_handlers import (
@@ -67,37 +69,34 @@ class MoodTrackerApplication:
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
-def refresh_user_configs(configuration: Configuration, user_repository: UserRepository):
-    """
-    Overwrites the user configurations in the database with the configurations in the config file.
-    """
-    for user in user_repository.find_all_users():
-        logging.info(f"Updating user {user.user_id} with new configurations")
-        user.metrics = configuration.get_metrics()
-        user.notifications = configuration.get_notifications()
-        user.auto_baseline_config = configuration.get_auto_baseline_config()
-        user_repository.update_user(user)
-
-
 def initialize_database(
     configuration: Configuration,
 ) -> tuple[UserRepository, RecordRepository]:
     """
     Initializes the database by creating the tables if they do not exist.
     """
-    mongo_client = initialize_mongo_client()
+    if configuration.database.database_type == "dynamodb":
+        dynamodb = initialize_dynamodb_client()
 
-    # Create repositories and register them
-    user_repository = UserRepository(mongo_client)
-    record_repository = RecordRepository(mongo_client)
+        user_repository = DynamoDBUserRepository(dynamodb)
+    if configuration.database.database_type == "mongodb":
+        mongo_client = initialize_mongo_client()
+
+        # Create repositories and register them
+        user_repository = MongoDBUserRepository(mongo_client)
+        record_repository = RecordRepository(mongo_client)
+
     return user_repository.register(), record_repository.register()
 
 
-def initialize_dynamodb_client():
+def initialize_dynamodb_client() -> boto3.resource:
     """
     Initializes the DynamoDB client.
     """
     dynamodb = boto3.resource("dynamodb", region_name=os.environ["AWS_REGION"])
+    dynamodb.list_tables()
+    logging.info("Successfully established connection to DynamoDB persistence backend.")
+    return dynamodb
 
 
 def initialize_mongo_client() -> pymongo.MongoClient:
