@@ -6,8 +6,7 @@ from src.model.user import User
 
 
 class DynamoDBUserRepository(Injectable):
-    def __init__(self):
-        dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+    def __init__(self, dynamodb: boto3.resource):
         self.table = dynamodb.Table("user")
         self.table.load()
 

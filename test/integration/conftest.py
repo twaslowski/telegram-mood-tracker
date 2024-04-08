@@ -1,14 +1,17 @@
 import os
 from unittest.mock import Mock, AsyncMock
 
+import boto3
 import mongomock
 import pytest
+from botocore.stub import Stubber
 from kink import di
 
 from src.app import MoodTrackerApplication
 from src.config.auto_baseline import AutoBaselineConfig
 from src.config.config import ConfigurationProvider
 from src.notifier import Notifier
+from src.repository.dynamodb_user_repository import DynamoDBUserRepository
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 from src.service.user_service import UserService
@@ -23,6 +26,24 @@ The name is required by pytest convention.
 @pytest.fixture(autouse=True)
 def mock_client():
     return mongomock.MongoClient()
+
+
+@pytest.fixture(autouse=True)
+def dynamodb():
+    dynamodb = boto3.resource("dynamodb")
+    stubber = Stubber(dynamodb.meta.client)
+    # add responses here
+    stubber.add_response("list_tables", {"TableNames": []})
+    ...
+
+    stubber.activate()
+    return dynamodb
+
+
+@pytest.fixture(autouse=True)
+def dynamodb_user_repository(dynamodb):
+    user_repository = DynamoDBUserRepository(dynamodb)
+    user_repository.register()
 
 
 @pytest.fixture(autouse=True)
