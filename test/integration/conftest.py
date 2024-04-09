@@ -1,4 +1,5 @@
 import os
+from collections import namedtuple
 from unittest.mock import Mock, AsyncMock
 
 import boto3
@@ -90,14 +91,28 @@ def dynamodb_record_repository(dynamodb):
     record_repository.table.delete()
 
 
-@pytest.fixture(params=["dynamodb_user_repository"])
-def user_repository(request):
-    return request.getfixturevalue(request.param)
+# Declare Repositories named tuple for easier access in tests
+Repositories = namedtuple("Repositories", ["user_repository", "record_repository"])
 
 
-@pytest.fixture(params=["dynamodb_record_repository"])
-def record_repository(request):
-    return request.getfixturevalue(request.param)
+@pytest.fixture(params=["mongodb", "dynamodb"])
+def repositories(
+    request,
+    mongodb_user_repository,
+    mongodb_record_repository,
+    dynamodb_user_repository,
+    dynamodb_record_repository,
+):
+    persistence_backend = request.param
+    if persistence_backend == "mongodb":
+        user_repository = mongodb_user_repository
+        record_repository = mongodb_record_repository
+    else:
+        user_repository = dynamodb_user_repository
+        record_repository = dynamodb_record_repository
+    return Repositories(
+        user_repository=user_repository, record_repository=record_repository
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -129,7 +144,8 @@ def application():
 
 
 @pytest.fixture(autouse=True)
-def user_service(user_repository):
+def user_service(repositories):
+    user_repository = repositories.user_repository
     user_service = UserService(user_repository=user_repository)
     user_service.register()
 

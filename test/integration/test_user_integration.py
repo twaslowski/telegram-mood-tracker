@@ -16,12 +16,14 @@ def update():
     return update
 
 
-def test_querying_nonexistent_user_returns_none(user_repository):
+def test_querying_nonexistent_user_returns_none(repositories):
+    user_repository = repositories.user_repository
     assert user_repository.find_user(1) is None
 
 
 @pytest.mark.asyncio
-async def test_return_value_of_user_creation(update, user_repository):
+async def test_return_value_of_user_creation(update, repositories):
+    user_repository = repositories.user_repository
     user = await create_user(update, None)
     assert user.user_id == 1
     assert user.metrics is not None
@@ -31,7 +33,8 @@ async def test_return_value_of_user_creation(update, user_repository):
 
 
 @pytest.mark.asyncio
-async def test_registration(update, user_repository):
+async def test_registration(update, repositories):
+    user_repository = repositories.user_repository
     # user does not exist
     assert user_repository.find_user(1) is None
 
@@ -69,8 +72,7 @@ async def test_update_user(update, user_repository):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="As of now, auto-baseline is not enabled upon user creation")
-async def test_update_user(update, user_repository, configuration, application):
+async def test_update_user(update, configuration, application):
     # Given a user
     update.effective_user.id = 456
     # When a user is created with AutoBaseline enabled
@@ -83,7 +85,8 @@ async def test_update_user(update, user_repository, configuration, application):
 
 
 @pytest.mark.asyncio
-async def test_toggle_auto_baseline_happy_path(update, user_repository, application):
+async def test_toggle_auto_baseline_happy_path(update, repositories, application):
+    user_repository = repositories.user_repository
     # Given a user with all baselines defined and auto-baseline disabled (and time configured)
     await create_user(update, None)
     assert user_repository.find_user(1).has_auto_baseline_enabled() is False
@@ -105,8 +108,9 @@ async def test_toggle_auto_baseline_happy_path(update, user_repository, applicat
 
 @pytest.mark.asyncio
 async def test_toggle_auto_baseline_without_auto_baseline_time_configured(
-    update, user_repository, notifier
+    update, repositories, notifier
 ):
+    user_repository = repositories.user_repository
     # Given a user with all baselines defined but no auto-baseline time configured
     user = await create_user(update, None)
     user.auto_baseline_config.time = None
@@ -123,8 +127,9 @@ async def test_toggle_auto_baseline_without_auto_baseline_time_configured(
 
 @pytest.mark.asyncio
 async def test_toggle_auto_baseline_without_all_baselines_defined(
-    update, user_repository, notifier
+    update, repositories, notifier
 ):
+    user_repository = repositories.user_repository
     # Given a user with not all baselines defined
     user = await create_user(update, None)
     user.metrics = []

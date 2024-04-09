@@ -105,11 +105,12 @@ async def test_record_registration(button_update, update):
 
 @pytest.mark.asyncio
 async def test_finish_record_creation(
-    update, button_update, user, metrics, record_repository, configuration
+    update, button_update, user, metrics, repositories, configuration
 ):
     """
     Tests state transition from recording Metric N to Finished.
     """
+    record_repository = repositories.record_repository
     # given a user with only one metric is registered
     configuration.metrics = configuration.metrics[:1]
     configuration.register()
@@ -184,7 +185,8 @@ async def test_record_with_offset(update):
 
 
 @pytest.mark.asyncio
-async def test_baseline_happy_path(update, record_repository):
+async def test_baseline_happy_path(update, repositories):
+    record_repository = repositories.record_repository
     update.effective_user.id = 2
     await create_user(update, None)
 
@@ -199,7 +201,8 @@ async def test_baseline_happy_path(update, record_repository):
 
 
 @pytest.mark.asyncio
-async def test_baseline_for_incomplete_config(update, record_repository, configuration):
+async def test_baseline_for_incomplete_config(update, repositories, configuration):
+    record_repository = repositories.record_repository
     update.effective_user.id = 3
     # given a configuration with a metric without a baseline
     metrics = [
