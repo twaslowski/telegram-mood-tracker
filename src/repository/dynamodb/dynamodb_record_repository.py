@@ -1,5 +1,4 @@
 import datetime
-import logging
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -42,24 +41,6 @@ class DynamoDBRecordRepository(Injectable):
                 ]
             )
         ]
-
-    def zeroes(self, from_date: datetime.date, to_date: datetime.date):
-        """
-        Inserts records with default values for missed days within a date range.
-        start_date (datetime.date): The start date of the range.
-        end_date (datetime.date): The end date of the range.
-        """
-
-        user_id = 1965256751
-        default_record = {"sleep": "8", "mood": "0"}
-        date_range = [
-            from_date + datetime.timedelta(days=i)
-            for i in range((to_date - from_date).days + 1)
-        ]
-
-        for date in date_range:
-            logging.info(f"Inserting neutral record for timestamp {date}")
-            self.create_record(user_id, default_record, f"{date}T12:00:00.000000")
 
 
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:

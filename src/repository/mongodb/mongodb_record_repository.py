@@ -4,7 +4,7 @@ import logging
 import pymongo
 from pymongo import MongoClient
 
-from src.model.record import Record, DatabaseRecord
+from src.model.record import Record
 from src.repository.record_repository import RecordRepository
 
 
@@ -20,12 +20,6 @@ class MongoDBRecordRepository(RecordRepository):
         )
         if result:
             return self.parse_record(dict(result))
-
-    @staticmethod
-    def parse_record(result: dict) -> Record:
-        result = DatabaseRecord(**result)
-        # transform the record data to a list of RecordData objects
-        return result.to_record()
 
     def create_record(self, user_id: int, record_data: dict, timestamp: str):
         self.records.insert_one(
