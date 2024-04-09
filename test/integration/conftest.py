@@ -13,8 +13,8 @@ from src.config.config import ConfigurationProvider
 from src.notifier import Notifier
 from src.repository.dynamodb.dynamodb_record_repository import DynamoDBRecordRepository
 from src.repository.dynamodb.dynamodb_user_repository import DynamoDBUserRepository
-from src.repository.mongodb.record_repository import MongoDBRecordRepository
-from src.repository.mongodb.user_repository import MongoDBUserRepository
+from src.repository.mongodb.mongodb_record_repository import MongoDBRecordRepository
+from src.repository.mongodb.mongodb_user_repository import MongoDBUserRepository
 from src.service.user_service import UserService
 
 """
@@ -31,17 +31,13 @@ def mongo_client():
 
 @pytest.fixture
 def mongodb_user_repository(mongo_client):
-    mongodb_user_repository = MongoDBUserRepository(mongo_client).register(
-        alias="user_repository"
-    )
+    mongodb_user_repository = MongoDBUserRepository(mongo_client)
     return mongodb_user_repository
 
 
 @pytest.fixture
 def mongodb_record_repository(mongo_client):
-    record_repository = MongoDBRecordRepository(mongo_client).register(
-        alias="record_repository"
-    )
+    record_repository = MongoDBRecordRepository(mongo_client)
     return record_repository
 
 
@@ -63,9 +59,7 @@ def dynamodb_user_repository(dynamodb):
         ],
         BillingMode="PAY_PER_REQUEST",
     )
-    dynamodb_user_repository = DynamoDBUserRepository(dynamodb).register(
-        alias="user_repository"
-    )
+    dynamodb_user_repository = DynamoDBUserRepository(dynamodb)
     yield dynamodb_user_repository
     dynamodb_user_repository.table.delete()
 
@@ -84,9 +78,7 @@ def dynamodb_record_repository(dynamodb):
         ],
         BillingMode="PAY_PER_REQUEST",
     )
-    record_repository = DynamoDBRecordRepository(dynamodb).register(
-        alias="record_repository"
-    )
+    record_repository = DynamoDBRecordRepository(dynamodb)
     yield record_repository
     record_repository.table.delete()
 
@@ -105,11 +97,15 @@ def repositories(
 ):
     persistence_backend = request.param
     if persistence_backend == "mongodb":
-        user_repository = mongodb_user_repository
-        record_repository = mongodb_record_repository
+        user_repository = mongodb_user_repository.register(alias="user_repository")
+        record_repository = mongodb_record_repository.register(
+            alias="record_repository"
+        )
     else:
-        user_repository = dynamodb_user_repository
-        record_repository = dynamodb_record_repository
+        user_repository = dynamodb_user_repository.register(alias="user_repository")
+        record_repository = dynamodb_record_repository.register(
+            alias="record_repository"
+        )
     return Repositories(
         user_repository=user_repository, record_repository=record_repository
     )

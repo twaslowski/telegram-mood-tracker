@@ -13,7 +13,7 @@ from telegram.ext import (
 from src.config.config import ConfigurationProvider, Configuration
 from src.handlers.error_handler import error_handler
 from src.repository.dynamodb.dynamodb_user_repository import DynamoDBUserRepository
-from src.repository.mongodb.user_repository import MongoDBUserRepository
+from src.repository.mongodb.mongodb_user_repository import MongoDBUserRepository
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
 from src.handlers.record_handlers import (

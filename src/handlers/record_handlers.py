@@ -39,8 +39,9 @@ def create_temporary_record(user_id: int, user_repository: UserRepository):
     :param user_repository: autowired.
     :param user_id:
     """
-    # create temporary record from user configuration
+    # Create temporary record from user configuration
     # todo handle find_user() == None?
+    logging.info("Using user repository to find user: %s", user_repository)
     metrics = user_repository.find_user(user_id).metrics
     record = TempRecord(metrics=metrics)
 
@@ -237,7 +238,6 @@ async def baseline_handler(
     this command will create a record consisting of those values.
     :return:
     """
-    # user_repository, record_repository = get_user_repository(), get_record_repository()
     user = user_repository.find_user(update.effective_user.id)
     if user.has_baselines_defined():
         record = await create_baseline_record(user)

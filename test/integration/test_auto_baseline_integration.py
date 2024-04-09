@@ -8,8 +8,9 @@ from src.handlers.user_handlers import create_user
 
 @pytest.mark.asyncio
 async def test_auto_baseline_happy_path_if_no_other_records_exist(
-    update, notifier, record_repository
+    update, notifier, repositories
 ):
+    record_repository = repositories.record_repository
     # Given a user
     user = await create_user(update, None)
     context = Mock()
@@ -35,8 +36,9 @@ async def test_auto_baseline_happy_path_if_no_other_records_exist(
 
 @pytest.mark.asyncio
 async def test_auto_baseline_happy_path_if_record_exists_from_yesterday(
-    update, notifier, record_repository
+    update, notifier, repositories
 ):
+    record_repository = repositories.record_repository
     # Given a user
     user = await create_user(update, None)
     context = Mock()
@@ -57,8 +59,9 @@ async def test_auto_baseline_happy_path_if_record_exists_from_yesterday(
 
 @pytest.mark.asyncio
 async def test_auto_baseline_wont_create_record_if_record_already_exists_for_the_day(
-    update, notifier, record_repository
+    update, notifier, repositories
 ):
+    record_repository = repositories.record_repository
     # Given a user
     user = await create_user(update, None)
     context = Mock()

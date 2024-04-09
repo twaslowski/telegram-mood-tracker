@@ -1,3 +1,5 @@
+import logging
+
 from pymongo import MongoClient
 
 from pyautowire import autowire
@@ -14,6 +16,7 @@ class MongoDBUserRepository(UserRepository):
 
     def find_user(self, user_id: int) -> User | None:
         result = self.user.find_one({"user_id": user_id})
+        logging.info(f"Found user: {result}")
         if result:
             return self.parse_user(dict(result))
         return None
