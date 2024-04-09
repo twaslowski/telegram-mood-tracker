@@ -1,5 +1,5 @@
 module "dynamodb_table" {
-  source   = "terraform-aws-modules/dynamodb-table/aws"
+  source = "terraform-aws-modules/dynamodb-table/aws"
 
   name     = "user"
   hash_key = "user_id"
@@ -10,13 +10,15 @@ module "dynamodb_table" {
       type = "N"
     }
   ]
+
+  billing_mode = "PAY_PER_REQUEST"
 }
 
 module "dynamodb_table" {
-  source   = "terraform-aws-modules/dynamodb-table/aws"
+  source = "terraform-aws-modules/dynamodb-table/aws"
 
-  name     = "record"
-  hash_key = "user_id"
+  name      = "record"
+  hash_key  = "user_id"
   range_key = "timestamp"
 
   attributes = [
@@ -30,4 +32,5 @@ module "dynamodb_table" {
     }
   ]
 
+  billing_mode = "PAY_PER_REQUEST"
 }

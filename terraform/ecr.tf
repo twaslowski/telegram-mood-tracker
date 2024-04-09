@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
+      source = "hashicorp/aws"
     }
   }
 
@@ -21,7 +21,7 @@ data "aws_caller_identity" "current" {}
 module "mood_tracker_repository" {
   source = "terraform-aws-modules/ecr/aws"
 
-  repository_type = "public"
+  repository_type                 = "public"
   repository_name                 = "mood-tracker"
   repository_image_tag_mutability = "MUTABLE"
 
