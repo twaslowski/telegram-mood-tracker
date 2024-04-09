@@ -10,9 +10,10 @@ from src.app import MoodTrackerApplication
 from src.config.auto_baseline import AutoBaselineConfig
 from src.config.config import ConfigurationProvider
 from src.notifier import Notifier
+from src.repository.dynamodb.dynamodb_record_repository import DynamoDBRecordRepository
 from src.repository.dynamodb.dynamodb_user_repository import DynamoDBUserRepository
+from src.repository.mongodb.record_repository import MongoDBRecordRepository
 from src.repository.mongodb.user_repository import MongoDBUserRepository
-from src.repository.record_repository import RecordRepository
 from src.service.user_service import UserService
 
 """
@@ -22,31 +23,34 @@ The name is required by pytest convention.
 """
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mongo_client():
     return mongomock.MongoClient()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mongodb_user_repository(mongo_client):
-    mongodb_user_repository = MongoDBUserRepository(mongo_client)
-    return mongodb_user_repository.register(alias="user_repository")
+    mongodb_user_repository = MongoDBUserRepository(mongo_client).register(
+        alias="user_repository"
+    )
+    return mongodb_user_repository
 
 
-@pytest.fixture(autouse=True)
-def record_repository(mongo_client):
-    record_repository = RecordRepository(mongo_client)
-    record_repository.register()
+@pytest.fixture
+def mongodb_record_repository(mongo_client):
+    record_repository = MongoDBRecordRepository(mongo_client).register(
+        alias="record_repository"
+    )
     return record_repository
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def dynamodb():
     dynamodb = boto3.resource("dynamodb", endpoint_url="http://localhost:4566")
     return dynamodb
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def dynamodb_user_repository(dynamodb):
     dynamodb.create_table(
         TableName="user",
@@ -58,14 +62,41 @@ def dynamodb_user_repository(dynamodb):
         ],
         BillingMode="PAY_PER_REQUEST",
     )
-    dynamodb_user_repository = DynamoDBUserRepository(dynamodb)
-    repository = dynamodb_user_repository.register(alias="user_repository")
-    yield repository
-    repository.table.delete()
+    dynamodb_user_repository = DynamoDBUserRepository(dynamodb).register(
+        alias="user_repository"
+    )
+    yield dynamodb_user_repository
+    dynamodb_user_repository.table.delete()
+
+
+@pytest.fixture
+def dynamodb_record_repository(dynamodb):
+    dynamodb.create_table(
+        TableName="record",
+        KeySchema=[
+            {"AttributeName": "user_id", "KeyType": "HASH"},
+            {"AttributeName": "timestamp", "KeyType": "RANGE"},
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "user_id", "AttributeType": "N"},
+            {"AttributeName": "timestamp", "AttributeType": "S"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
+    record_repository = DynamoDBRecordRepository(dynamodb).register(
+        alias="record_repository"
+    )
+    yield record_repository
+    record_repository.table.delete()
 
 
 @pytest.fixture(params=["dynamodb_user_repository"])
 def user_repository(request):
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture(params=["dynamodb_record_repository"])
+def record_repository(request):
     return request.getfixturevalue(request.param)
 
 
