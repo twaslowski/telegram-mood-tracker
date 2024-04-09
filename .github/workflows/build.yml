@@ -53,9 +53,7 @@ jobs:
         run: poetry install --no-interaction --no-root --with dev
 
       - name: Run tests
-        run: |
-          source .venv/bin/activate
-          export PYTHONPATH=./ && poetry run pytest test/ --ignore test/integration/manual/ --disable-warnings -s
+        run: bash -c scripts/test.sh
 
   create_infrastructure:
     needs: test

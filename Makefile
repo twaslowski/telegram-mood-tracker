@@ -1,7 +1,7 @@
 .PHONY: test run fmt
 
 test:
-	@export PYTHONPATH=./ && poetry run pytest test/ --ignore test/integration/manual/ --disable-warnings -s
+	@bash -c 'scripts/test.sh'
 
 fmt:
 	@bash -c 'pre-commit run -av'

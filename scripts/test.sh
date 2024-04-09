@@ -4,21 +4,15 @@ docker run -d --rm --name localstack -p 4566:4566 -p 4571:4571 localstack/locals
 echo "waiting for localstack to be ready"
 sleep 3
 
-echo "creating user dynamodb table ..."
-aws dynamodb create-table --table-name user \
-  --attribute-definitions AttributeName=user_id,AttributeType=N \
-  --key-schema AttributeName=user_id,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST \
-  --endpoint-url http://localhost:4566 > /dev/null
+echo "running tests"
+if [ -d .venv ]; then
+  echo "found existing virtual environment. activating ..."
+  source .venv/bin/activate
+else
+  echo "no virtual environment found. assuming dependencies are available."
+fi
 
-echo "creating record dynamodb table ..."
-aws dynamodb create-table --table-name record \
-  --attribute-definitions AttributeName=timestamp,AttributeType=S \
-  --attribute-definitions AttributeName=user_id,AttributeType=N \
-  --key-schema AttributeName=timestamp,KeyType=RANGE \
-  --key-schema AttributeName=user_id,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST \
-  --endpoint-url http://localhost:4566 > /dev/null
+export PYTHONPATH=./ && poetry run pytest test/ --ignore test/integration/manual/ --disable-warnings -s
 
 echo "cleaning up"
-# docker stop localstack
+docker stop localstack
