@@ -4,7 +4,6 @@ from unittest.mock import Mock, AsyncMock
 import boto3
 import mongomock
 import pytest
-from botocore.stub import Stubber
 from kink import di
 
 from src.app import MoodTrackerApplication
@@ -24,39 +23,50 @@ The name is required by pytest convention.
 
 
 @pytest.fixture(autouse=True)
-def mock_client():
+def mongo_client():
     return mongomock.MongoClient()
 
 
 @pytest.fixture(autouse=True)
-def dynamodb():
-    dynamodb = boto3.resource("dynamodb")
-    stubber = Stubber(dynamodb.meta.client)
-    # add responses here
-    stubber.add_response("describe_table", {})
+def mongodb_user_repository(mongo_client):
+    mongodb_user_repository = MongoDBUserRepository(mongo_client)
+    return mongodb_user_repository.register(alias="user_repository")
 
-    stubber.activate()
+
+@pytest.fixture(autouse=True)
+def record_repository(mongo_client):
+    record_repository = RecordRepository(mongo_client)
+    record_repository.register()
+    return record_repository
+
+
+@pytest.fixture(autouse=True)
+def dynamodb():
+    dynamodb = boto3.resource("dynamodb", endpoint_url="http://localhost:4566")
     return dynamodb
 
 
 @pytest.fixture(autouse=True)
 def dynamodb_user_repository(dynamodb):
+    dynamodb.create_table(
+        TableName="user",
+        KeySchema=[
+            {"AttributeName": "user_id", "KeyType": "HASH"},
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "user_id", "AttributeType": "N"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+    )
     dynamodb_user_repository = DynamoDBUserRepository(dynamodb)
-    # return dynamodb_user_repository.register(alias="user_repository")
+    repository = dynamodb_user_repository.register(alias="user_repository")
+    yield repository
+    repository.table.delete()
 
 
-@pytest.fixture(autouse=True)
-def mongodb_user_repository(mock_client):
-    user_repository = MongoDBUserRepository(mock_client)
-    user_repository.register(alias="user_repository")
-    return user_repository
-
-
-@pytest.fixture(autouse=True)
-def record_repository(mock_client):
-    record_repository = RecordRepository(mock_client)
-    record_repository.register()
-    return record_repository
+@pytest.fixture(params=["dynamodb_user_repository"])
+def user_repository(request):
+    return request.getfixturevalue(request.param)
 
 
 @pytest.fixture(autouse=True)
@@ -88,8 +98,8 @@ def application():
 
 
 @pytest.fixture(autouse=True)
-def user_service():
-    user_service = UserService()
+def user_service(user_repository):
+    user_service = UserService(user_repository=user_repository)
     user_service.register()
 
 

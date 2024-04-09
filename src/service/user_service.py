@@ -19,10 +19,12 @@ class UserService(Injectable):
     user_repository: UserRepository
     notifier: Notifier
 
-    # todo this works, but can use some improvements
     @autowire("user_repository", "notifier")
     def __init__(self, user_repository: UserRepository, notifier: Notifier):
         self.user_repository = user_repository
+        logging.info(
+            f"UserService initialized with {user_repository.__class__.__name__}"
+        )
         self.notifier = notifier
 
     def toggle_auto_baseline(self, user: User) -> bool:

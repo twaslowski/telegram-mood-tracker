@@ -14,18 +14,19 @@ class DynamoDBUserRepository(UserRepository):
     @autowire("configuration")
     def create_user(self, user_id: int, configuration: Configuration) -> User:
         user = User.from_defaults(user_id, configuration)
-        self.table.put_item(user.dict())
+        self.table.put_item(Item=user.dict())
         return user
 
     def find_user(self, user_id: int) -> User | None:
         result = self.table.get_item(Key={"user_id": user_id})
-        if result:
-            return self.parse_user(result["Item"])
+        user = result.get("Item")
+        if user is not None:
+            return self.parse_user(user)
         return None
 
     def update_user(self, user: User) -> None:
         # Technically, there's no such concept in DynamoDB. We can only put_item or delete_item.
-        self.table.put_item(user.dict())
+        self.table.put_item(Item=user.dict())
 
     def find_all_users(self) -> list[User]:
         response = self.table.scan()

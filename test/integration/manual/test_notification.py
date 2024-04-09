@@ -38,16 +38,14 @@ async def test_notification(application, configuration):
 @pytest.mark.skip(
     reason="I have not found a test to make the application terminate, so this runs indefinitely."
 )
-async def test_auto_baseline(
-    update, application, configuration, mongodb_user_repository
-):
+async def test_auto_baseline(update, application, configuration, user_repository):
     now = generate_time()
 
     # Given an existing user with auto-baseline enabled
     await create_user(update, None)
-    user = mongodb_user_repository.find_user(1)
+    user = user_repository.find_user(1)
     user.auto_baseline_config = AutoBaselineConfig(enabled=True, time=now)
-    mongodb_user_repository.update_user(user)
+    user_repository.update_user(user)
 
     # Given a notification with a fixed time
     notifier = get_notifier()

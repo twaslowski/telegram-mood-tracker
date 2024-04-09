@@ -61,17 +61,17 @@ zookeeper = ["kazoo"]
 
 [[package]]
 name = "boto3"
-version = "1.34.79"
+version = "1.34.80"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.79-py3-none-any.whl", hash = "sha256:265b0b4865e8c07e27abb32a31d2bd9129bb009b1d89ca0783776ec084886123"},
-    {file = "boto3-1.34.79.tar.gz", hash = "sha256:139dd2d94eaa0e3213ff37ba7cf4cb2e3823269178fe8f3e33c965f680a9ddde"},
+    {file = "boto3-1.34.80-py3-none-any.whl", hash = "sha256:bb8f433c04dcdffbd4a802df56c1c30f2be23b1161fd8fb45e4b76c1487ec122"},
+    {file = "boto3-1.34.80.tar.gz", hash = "sha256:5627f6ecadb46fc7c9f8c368baf948f1b00a3fd2f8eb1275c254469853ad8fdb"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.79,<1.35.0"
+botocore = ">=1.34.80,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -80,13 +80,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.79"
+version = "1.34.80"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.79-py3-none-any.whl", hash = "sha256:a42a014d3dbaa9ef123810592af69f9e55b456c5be3ac9efc037325685519e83"},
-    {file = "botocore-1.34.79.tar.gz", hash = "sha256:6b59b0f7de219d383a2a633f6718c2600642ebcb707749dc6c67a6a436474b7a"},
+    {file = "botocore-1.34.80-py3-none-any.whl", hash = "sha256:354a00f03faba52acc6f1a84fa4f035d48541633be98ccc24b59dc544f679f8b"},
+    {file = "botocore-1.34.80.tar.gz", hash = "sha256:8402262e819f3d46df504bbd781e770858c0130b90f660699f75ef3a63abca5a"},
 ]
 
 [package.dependencies]
@@ -1580,13 +1580,13 @@ files = [
 
 [[package]]
 name = "pyautowire"
-version = "0.3.0"
+version = "0.3.1"
 description = "Good enough autowiring for Python"
 optional = false
 python-versions = "<4.0,>=3.7"
 files = [
-    {file = "pyautowire-0.3.0-py3-none-any.whl", hash = "sha256:017d108ca7d4c7e96de58f1617671c60f8c04b549600930fbeb69d3b2df16052"},
-    {file = "pyautowire-0.3.0.tar.gz", hash = "sha256:755eecb54c2566ca6311521c5709224d125b9aa4653395b10ceccaf1c8f70a01"},
+    {file = "pyautowire-0.3.1-py3-none-any.whl", hash = "sha256:a19452733e082e5788a83e67730ec30de2b26d8a42063ca1df101b63c8990f67"},
+    {file = "pyautowire-0.3.1.tar.gz", hash = "sha256:6d0a6e4a2887e74a363aec16f95c040b4d780092be9fcdf8d6cc31d0f1ac6375"},
 ]
 
 [package.dependencies]
@@ -2419,4 +2419,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "654ceffaebf9a11f81af0348c26717cc826d2dee6b7a7e59025af387e73ba7e8"
+content-hash = "9781e2bc78c8a3ead7b3be9bf309b2881f0f458bbff2161a92956c97aa383488"

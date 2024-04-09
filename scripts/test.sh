@@ -21,4 +21,4 @@ aws dynamodb create-table --table-name record \
   --endpoint-url http://localhost:4566 > /dev/null
 
 echo "cleaning up"
-docker stop localstack
+# docker stop localstack
