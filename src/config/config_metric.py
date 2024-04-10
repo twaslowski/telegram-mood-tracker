@@ -1,5 +1,6 @@
 from typing import Any
 
+import emoji
 from pydantic import BaseModel, field_validator
 
 
@@ -35,5 +36,5 @@ class ConfigMetric(BaseModel):
                 )
             }
 
-        # if self.emoji:
-        #     self.values = {emoji.emojize(k): v for k, v in self.values.items()}
+        if self.emoji:
+            self.values = {emoji.emojize(k): v for k, v in self.values.items()}
