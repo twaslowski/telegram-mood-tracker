@@ -53,7 +53,7 @@ class User(BaseModel):
                 return metric
         return None
 
-    def dict(self, **kwargs) -> dict:
+    def serialize(self) -> dict:
         # Pydantic's model_dump does not work recursively on subclasses. This performs a complete serialization of the
         # object with a subsequen json.loads() deserialization. Likely compute-inefficient, but throughput is not the
         # main challenge here.

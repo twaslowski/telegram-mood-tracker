@@ -70,4 +70,4 @@ def test_serialization(metric_with_baseline):
         metrics=[metric_with_baseline],
         notifications=[Notification(text="test", time=datetime.datetime.now().time())],
     )
-    assert user == User(**user.dict())
+    assert user == User(**user.serialize())

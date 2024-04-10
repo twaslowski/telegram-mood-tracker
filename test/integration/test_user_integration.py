@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from unittest.mock import Mock, AsyncMock
 
 import pytest
@@ -172,3 +173,19 @@ async def test_should_not_create_auto_baseline_on_user_creation_if_enabled_witho
     # When a user is created
     with pytest.raises(ValueError):
         await create_user(update, None)
+
+
+@pytest.mark.asyncio
+async def test_metric_order_is_retained(update, repositories):
+    # This is a regression test for the DynamoDB migration.
+    # Given a user with a set of ordered metrics
+    user = await create_user(update, None)
+    metrics = user.metrics
+
+    # When the user is retrieved from the database
+    db_user = repositories.user_repository.find_user(1)
+    db_metrics = db_user.metrics
+
+    # Then the order of the metrics should be retained
+    for metric, db_metric in zip(metrics, db_metrics):
+        assert OrderedDict(metric.values) == OrderedDict(db_metric.values)

@@ -28,7 +28,7 @@ class MongoDBUserRepository(UserRepository):
     @autowire("configuration")
     def create_user(self, user_id: int, configuration: Configuration) -> User:
         user = User.from_defaults(user_id, configuration)
-        self.user.insert_one(user.dict())
+        self.user.insert_one(user.serialize())
         return user
 
     def update_user(self, user: User) -> None:
