@@ -121,6 +121,8 @@ docker run -d --rm \
 Why `/root/.aws/credentials`? Because `boto3` checks in the home directory of the user running the script for the
 credentials, and that's what this happens to be. I tried a bunch of configurations and found this to just work.
 
+You'll also have to set up the tables. For reference, check the `terraform/dynamodb.tf`.
+
 ## Mounting Configuration files onto a Docker container
 
 You may not want to build a custom image in which your configuration is stored.
@@ -211,10 +213,6 @@ metrics:
       SOMEWHAT_ANXIOUS: 1
       CALM: 0
 ```
-
-### Database Configuration
-
-...
 
 ## Notifications
 
