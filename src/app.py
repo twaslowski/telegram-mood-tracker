@@ -12,7 +12,9 @@ from telegram.ext import (
 
 from src.config.config import ConfigurationProvider, Configuration
 from src.handlers.error_handler import error_handler
+from src.repository.dynamodb.dynamodb_record_repository import DynamoDBRecordRepository
 from src.repository.dynamodb.dynamodb_user_repository import DynamoDBUserRepository
+from src.repository.mongodb.mongodb_record_repository import MongoDBRecordRepository
 from src.repository.mongodb.mongodb_user_repository import MongoDBUserRepository
 from src.repository.record_repository import RecordRepository
 from src.repository.user_repository import UserRepository
@@ -75,27 +77,29 @@ def initialize_database(
     """
     Initializes the database by creating the tables if they do not exist.
     """
-    if configuration.database.database_type == "dynamodb":
-        dynamodb = initialize_dynamodb_client()
+    logging.info("Database configuration: %s", configuration)
+    if configuration.database.type == "dynamodb":
+        dynamodb = initialize_dynamodb_client(configuration.database.aws_region)
 
         user_repository = DynamoDBUserRepository(dynamodb)
-        record_repository = RecordRepository(dynamodb)
-    if configuration.database.database_type == "mongodb":
+        record_repository = DynamoDBRecordRepository(dynamodb)
+    else:
         mongo_client = initialize_mongo_client()
 
         # Create repositories and register them
         user_repository = MongoDBUserRepository(mongo_client)
-        record_repository = RecordRepository(mongo_client)
+        record_repository = MongoDBRecordRepository(mongo_client)
 
-    return user_repository.register(), record_repository.register()
+    return user_repository.register(
+        alias="user_repository"
+    ), record_repository.register(alias="record_repository")
 
 
-def initialize_dynamodb_client() -> boto3.resource:
+def initialize_dynamodb_client(aws_region: str) -> boto3.resource:
     """
     Initializes the DynamoDB client.
     """
-    dynamodb = boto3.resource("dynamodb", region_name=os.environ["AWS_REGION"])
-    dynamodb.list_tables()
+    dynamodb = boto3.resource("dynamodb", region_name=aws_region)
     logging.info("Successfully established connection to DynamoDB persistence backend.")
     return dynamodb
 

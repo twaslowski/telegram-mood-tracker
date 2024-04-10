@@ -1,20 +1,21 @@
+import logging
 from typing import Any
 
 from pydantic import BaseModel, field_validator
 
 
 class DatabaseConfig(BaseModel):
-    database_type: str = "mongodb"
+    type: str = "mongodb"
     aws_region: str | None = None
 
-    @field_validator("database_type")
+    @field_validator("type")
     @classmethod
     def validate_database_type(cls, value: str):
-        value = value.lower()
+        logging.info("Validating database type: %s", value)
         if value not in ["mongodb", "dynamodb"]:
-            raise ValueError("Database type must be either mongodb or mysql")
+            raise ValueError("Database type must be either mongodb or dynamodb")
         return value
 
     def model_post_init(self, __context: Any) -> None:
-        if self.database_type == "dynamodb":
-            assert self.aws_region is not None
+        if self.type == "dynamodb" and self.aws_region is None:
+            raise ValueError("AWS region must be provided for DynamoDB database type")

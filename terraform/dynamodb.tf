@@ -1,4 +1,9 @@
-module "dynamodb_table" {
+moved {
+  from = module.dynamodb_table
+  to   = module.user
+}
+
+module "user" {
   source = "terraform-aws-modules/dynamodb-table/aws"
 
   name     = "user"
@@ -14,7 +19,7 @@ module "dynamodb_table" {
   billing_mode = "PAY_PER_REQUEST"
 }
 
-module "dynamodb_table" {
+module "record" {
   source = "terraform-aws-modules/dynamodb-table/aws"
 
   name      = "record"
