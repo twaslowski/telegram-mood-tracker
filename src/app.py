@@ -77,7 +77,6 @@ def initialize_database(
     """
     Initializes the database by creating the tables if they do not exist.
     """
-    logging.info("Database configuration: %s", configuration)
     if configuration.database.type == "dynamodb":
         dynamodb = initialize_dynamodb_client(configuration.database.aws_region)
 

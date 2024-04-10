@@ -15,4 +15,6 @@ sudo docker run -d --rm \
   --log-opt awslogs-region="$LOG_REGION" \
   --log-opt awslogs-group="$LOG_GROUP" \
   --security-opt seccomp:unconfined \
+  -v "$HOME/.aws/credentials:/root/.aws/credentials:ro" \
+  -v ./config.yaml:/app/config.yaml \
   public.ecr.aws/c1o1h8f4/mood-tracker:latest

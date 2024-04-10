@@ -1,6 +1,5 @@
 ![Build](https://github.com/twaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
 
-
 # About
 
 This is a Telegram-based Mood Tracker bot. It allows users to record their mood states and other health-related
@@ -43,17 +42,17 @@ The bot currently supports the following commands:
 - from the configuration loaded from the `config.yaml` at application start.
 
 - `/record`: This command will prompt you to record your mood. It iterates through your metrics and asks you to
-provide values for each of them. Note that while creating a record, they are held in an `ExpiringDict` until they
-are completed; they expire after 300 seconds by default. Upon completion, a `record` is stored in the database.
+  provide values for each of them. Note that while creating a record, they are held in an `ExpiringDict` until they
+  are completed; they expire after 300 seconds by default. Upon completion, a `record` is stored in the database.
 
 - `/baseline`: If you have provided baselines for all your metrics in the configuration
-(for more details, check the [configuration section](#specifying-metrics)), you can use this command to create a
-record with your baseline metrics. This is useful if you are relatively stable and don't want to click through
-the entire record process every day.
+  (for more details, check the [configuration section](#specifying-metrics)), you can use this command to create a
+  record with your baseline metrics. This is useful if you are relatively stable and don't want to click through
+  the entire record process every day.
 
 - `auto_baseline`: This command enables automatically creating baseline records for you if you have not recorded your
-mood by a specific time. You can configure this feature in the [configuration section](#specifying-metrics)
-and toggle it via this command.
+  mood by a specific time. You can configure this feature in the [configuration section](#specifying-metrics)
+  and toggle it via this command.
 
 - `/graph`: Plot selected metrics over time.
 
@@ -73,7 +72,22 @@ Assuming you have a MongoDB instance running on your local machine that is bound
 Supported architectures are x86_64 (amd64) and arm64. If you require images
 for additional architectures, feel free to raise a ticket or build your own images (see [Development](#development)).
 
-## MongoDB Configuration
+## Persistence
+
+There are two persistence backends you can choose to store user data: MongoDB, for running everything locally,
+or DynamoDB, if you would like to take advantage of a serverless, managed database. This offers you the ability
+to not have to worry about scaling, backups, or any other database-related tasks.
+
+You can specify the persistence configuration in the `config.yaml`:
+
+    database:
+        type: 'dynamodb'
+        aws_region: 'us-east-1'
+
+Note that if you choose `dynamodb` as a persistence backend, you have to supply the `aws_region` as well.
+The default is `mongodb`.
+
+### MongoDB Configuration
 
 If your MongoDB instance is bound to a different hosts, you'll have to supply the connection string as an environment
 variable. If you're running Docker for Linux, I recommend using `--network="host"` for simplicity's sake.
@@ -85,6 +99,18 @@ The run command in that case could look like this:
           public.ecr.aws/c1o1h8f4/mood-tracker:latest
 
 For more guidance on Docker networking, please refer to the [official documentation](https://docs.docker.com/network/).
+
+### DynamoDB
+
+Using DynamoDB is more challenging, but brings substantial benefits.
+
+## Logging
+
+...
+
+## Mounting Configuration files onto a Docker container
+
+...
 
 # Configuration
 
@@ -163,6 +189,10 @@ metrics:
       SOMEWHAT_ANXIOUS: 1
       CALM: 0
 ```
+
+### Database Configuration
+
+...
 
 ## Notifications
 
