@@ -102,15 +102,37 @@ For more guidance on Docker networking, please refer to the [official documentat
 
 ### DynamoDB
 
-Using DynamoDB is more challenging, but brings substantial benefits.
+Using DynamoDB is more challenging, but brings substantial benefits, like scalability and automated backups.
+Beyond simply configuring DynamoDB as a backend for the bot, you'll have to set up authentication. I have set up
+static user credentials with the proper permissions and mount them onto the container as a volume.
 
-## Logging
+There are different mechanisms for providing Docker containers with AWS credentials.
+[This StackOverflow thread](https://stackoverflow.com/questions/36354423/what-is-the-best-way-to-pass-aws-credentials-to-a-docker-container)
+goes into a lot of depth on this topic. You can refer to `scripts/run.sh` for an example of how to do this:
 
-...
+```bash
+docker run -d --rm \
+  --name mood-tracker \
+  -e TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
+  -v "$HOME/.aws/credentials:/root/.aws/credentials:ro" \
+  public.ecr.aws/c1o1h8f4/mood-tracker:latest
+```
+
+Why `/root/.aws/credentials`? Because `boto3` checks in the home directory of the user running the script for the
+credentials, and that's what this happens to be. I tried a bunch of configurations and found this to just work.
 
 ## Mounting Configuration files onto a Docker container
 
-...
+You may not want to build a custom image in which your configuration is stored.
+You can write your own custom configuration and mount it into a container from one of my images like this:
+
+```shell
+docker run -d --rm \
+  --name mood-tracker \
+  -e TELEGRAM_TOKEN="$TELEGRAM_TOKEN" \
+  -v ./config.yaml:/app/config.yaml \
+  public.ecr.aws/c1o1h8f4/mood-tracker:latest
+  ```
 
 # Configuration
 
@@ -220,6 +242,17 @@ auto_baseline:
 
 You can toggle `auto_baseline` via the `/auto_baseline` command in the bot. However, you **need** to specify the `time`
 in the `config.yaml` first in order to do that.
+
+## Database
+
+As outlined above, you can choose between MongoDB and DynamoDB as a persistence backend. You can specify the type
+in the `config.yaml`:
+
+```yaml
+database:
+  type: 'dynamodb' | 'mongodb'
+  aws_region: 'us-east-1' [optional]
+```
 
 # Developing
 
