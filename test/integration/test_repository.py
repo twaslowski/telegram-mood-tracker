@@ -6,16 +6,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 from src.app import initialize_database
 
 
-def test_non_existent_mongo_host_times_out():
+def test_non_existent_mongo_host_times_out(configuration):
     os.environ["MONGODB_HOST"] = "255.255.255.255:27017"
     with pytest.raises(ServerSelectionTimeoutError):
-        initialize_database()
-
-
-@pytest.mark.skip(
-    reason="This test fails when a mongodb instance is running on localhost"
-)
-def test_unset_mongo_host_times_out():
-    del os.environ["MONGODB_HOST"]
-    with pytest.raises(ServerSelectionTimeoutError):
-        initialize_database()
+        initialize_database(configuration)

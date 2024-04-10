@@ -1,35 +1,35 @@
-import logging
-from abc import ABC
 import datetime
-from abc import abstractmethod
+import logging
 
-from pyautowire import Injectable
-from src.model.record import Record, DatabaseRecord
+import pymongo
+from pymongo import MongoClient
+
+from src.model.record import Record
+from src.repository.record_repository import RecordRepository
 
 
-class RecordRepository(Injectable, ABC):
-    @staticmethod
-    def parse_record(result: dict) -> Record:
-        result = DatabaseRecord(**result)
-        # transform the record data to a list of RecordData objects
-        return result.to_record()
+class MongoDBRecordRepository(RecordRepository):
+    def __init__(self, mongo_client: MongoClient):
+        super().__init__()
+        mood_tracker = mongo_client["mood_tracker"]
+        self.records = mood_tracker["records"]
 
-    @staticmethod
-    def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
-        timestamp = datetime.datetime.fromisoformat(timestamp)
-        return timestamp - datetime.timedelta(days=offset)
-
-    @abstractmethod
     def get_latest_record_for_user(self, user_id: int) -> Record | None:
-        pass
+        result = self.records.find_one(
+            {"user_id": user_id}, sort=[("timestamp", pymongo.DESCENDING)]
+        )
+        if result:
+            return self.parse_record(dict(result))
 
-    @abstractmethod
     def create_record(self, user_id: int, record_data: dict, timestamp: str):
-        pass
+        self.records.insert_one(
+            {"user_id": user_id, "record": record_data, "timestamp": timestamp}
+        )
 
-    @abstractmethod
     def find_records_for_user(self, user_id: int) -> list[Record]:
-        pass
+        return [
+            self.parse_record(r) for r in list(self.records.find({"user_id": user_id}))
+        ]
 
     def zeroes(self, from_date: datetime.date, to_date: datetime.date):
         """

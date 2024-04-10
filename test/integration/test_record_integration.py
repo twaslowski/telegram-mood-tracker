@@ -1,4 +1,5 @@
 import datetime
+import logging
 import time
 from unittest.mock import Mock, AsyncMock
 
@@ -105,11 +106,12 @@ async def test_record_registration(button_update, update):
 
 @pytest.mark.asyncio
 async def test_finish_record_creation(
-    update, button_update, user, metrics, record_repository, configuration
+    update, button_update, user, metrics, repositories, configuration
 ):
     """
     Tests state transition from recording Metric N to Finished.
     """
+    record_repository = repositories.record_repository
     # given a user with only one metric is registered
     configuration.metrics = configuration.metrics[:1]
     configuration.register()
@@ -184,23 +186,23 @@ async def test_record_with_offset(update):
 
 
 @pytest.mark.asyncio
-async def test_baseline_happy_path(update, record_repository):
-    update.effective_user.id = 2
+async def test_baseline_happy_path(update, repositories):
+    record_repository = repositories.record_repository
     await create_user(update, None)
 
     # when user calls /baseline
     await command_handlers.baseline_handler(update, None)
 
     # then a record with default values is created
-    record = record_repository.get_latest_record_for_user(2)
-    assert record.user_id == 2
+    record = record_repository.get_latest_record_for_user(1)
+    assert record.user_id == 1
     assert record.find_record_data_by_name("mood").value == 0
     assert record.find_record_data_by_name("sleep").value == 8
 
 
 @pytest.mark.asyncio
-async def test_baseline_for_incomplete_config(update, record_repository, configuration):
-    update.effective_user.id = 3
+async def test_baseline_for_incomplete_config(update, repositories, configuration):
+    record_repository = repositories.record_repository
     # given a configuration with a metric without a baseline
     metrics = [
         Metric(
@@ -219,5 +221,34 @@ async def test_baseline_for_incomplete_config(update, record_repository, configu
     await command_handlers.baseline_handler(update, None)
 
     # then no record is created and a corresponding message is sent to the user
-    assert record_repository.get_latest_record_for_user(3) is None
+    assert record_repository.get_latest_record_for_user(1) is None
     assert update.effective_user.get_bot().send_message.called
+
+
+@pytest.mark.asyncio
+async def test_latest_record_is_queried_correctly(update, repositories):
+    record_repository = repositories.record_repository
+    await create_user(update, None)
+
+    # Given a record from today and one from yesterday
+    timestamp_today = datetime.datetime.now().isoformat()
+    timestamp_yesterday = (
+        datetime.datetime.now() - datetime.timedelta(days=1)
+    ).isoformat()
+
+    record_repository.create_record(
+        user_id=1, timestamp=timestamp_today, record_data={}
+    )
+
+    record_repository.create_record(
+        user_id=1, timestamp=timestamp_yesterday, record_data={}
+    )
+
+    # There are two records in the database
+    assert len(record_repository.find_records_for_user(1)) == 2
+
+    # Then the latest entry in the database is from today
+    record = record_repository.get_latest_record_for_user(1)
+    logging.info(record)
+
+    assert record.timestamp.isoformat() == timestamp_today

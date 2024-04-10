@@ -53,9 +53,7 @@ jobs:
         run: poetry install --no-interaction --no-root --with dev
 
       - name: Run tests
-        run: |
-          source .venv/bin/activate
-          export PYTHONPATH=./ && poetry run pytest test/ --ignore test/integration/manual/ --disable-warnings -s
+        run: bash -c scripts/test.sh
 
   create_infrastructure:
     needs: test
@@ -67,7 +65,7 @@ jobs:
       - name: set up terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.0.11
+          terraform_version: 1.7.5
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -84,6 +82,7 @@ jobs:
   build_docker_multi_arch:
     needs: create_infrastructure
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     steps:
       - name: checkout
         uses: actions/checkout@v4

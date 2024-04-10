@@ -24,5 +24,9 @@ notifications:
     time: "18:00"
 
 auto_baseline:
-  enabled: false
+  enabled: true
   time: "20:00"  # Default time if it is enabled via toggle. UTC. Required as long as setting time in the chat is not implemented.
+
+database:
+  type: 'dynamodb'
+  aws_region: 'us-east-1'

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "telegram-mood-tracker"
-version = "0.3.1"
+version = "0.4.0"
 description = ""
 authors = ["Tobias Waslowski <tobiaswaslowski@gmail.com>"]
 readme = "README.md"
@@ -17,11 +17,12 @@ emoji = "^2.10.1"
 expiringdict = "^1.2.2"
 pandas = "^2.2.1"
 pytest-asyncio = "^0.23.6"
-
-# testing, linting, utilities
 pyyaml = "^6.0.1"
 kink = "^0.7.0"
-pyautowire = "^0.2.0"
+pyautowire = "0.3.1"
+boto3 = "^1.34.81"
+
+# testing, linting, utilities
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
 pytest = "^7.4.4"
