@@ -1,5 +1,4 @@
 import logging
-import os
 
 import src.repository.user_repository as user_repository
 from src.app import initialize_mongo_client, initialize_dynamodb_client
@@ -87,8 +86,3 @@ def migrate_from_mongodb_to_dynamodb():
             dynamodb_record_repository.create_record(
                 record.user_id, record.data, record.timestamp
             )
-
-
-if __name__ == "__main__":
-    os.environ["MONGODB_HOST"] = "192.168.178.61"
-    migrate_record_format()

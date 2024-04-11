@@ -5,16 +5,11 @@ from pydantic import BaseModel
 from src.model.metric import Metric
 
 
-class RecordData(BaseModel):
-    """
-    Represents an instance of a metric, i.e. the metric name and a corresponding value.
-    """
-
-    metric_name: str
-    value: int | None
-
-
 class Record(BaseModel):
+    """
+    Record model that is stored in the database.
+    """
+
     user_id: int
     data: dict[str, int]
     timestamp: datetime
@@ -22,7 +17,8 @@ class Record(BaseModel):
 
 class TempRecord(BaseModel):
     """
-    Record that are kept in the in-memory ExpiringDict while being completed.
+    Record that is being kept in the in-memory ExpiringDict while being completed.
+    Differs from the database Record in that it holds data on the Metrics that are being gathered.
     """
 
     metrics: list[Metric]
