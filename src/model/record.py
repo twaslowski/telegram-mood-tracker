@@ -14,32 +14,13 @@ class RecordData(BaseModel):
     value: int | None
 
 
-class DatabaseRecord(BaseModel):
-    """
-    This exists for backwards-compatibility, as an abstraction layer to deal with my previous bad decisions.
-    It wraps the existing database record structure and allows me to build on top of it with relative ease.
-    """
-
-    _id: str
-    user_id: int
-    record: dict[str, int]
-    timestamp: str  # iso-formatted
-
-    def to_record(self) -> "Record":
-        return Record(
-            user_id=self.user_id,
-            data=[RecordData(metric_name=k, value=v) for k, v in self.record.items()],
-            timestamp=datetime.fromisoformat(self.timestamp),
-        )
-
-
 class AbstractRecord(BaseModel):
     """
     Can provide shared methods for Record and TempRecord.
     """
 
-    def find_record_data_by_name(self, name: str) -> RecordData | None:
-        return next((x for x in self.data if x.metric_name == name), None)
+    def find_record_data_by_name(self, name: str) -> int:
+        return self.data[name]
 
     def find_metric_by_name(self, name: str) -> Metric | None:
         return next((x for x in self.metrics if x.name == name), None)
@@ -47,7 +28,7 @@ class AbstractRecord(BaseModel):
 
 class Record(AbstractRecord):
     user_id: int
-    data: list[RecordData]
+    data: dict[str, int]
     timestamp: datetime
 
 
@@ -57,22 +38,22 @@ class TempRecord(AbstractRecord):
     """
 
     metrics: list[Metric]
-    data: list[RecordData] = None  # initialised in __init__
+    data: dict[str, int | None] = {}
     timestamp: datetime = datetime.now()
 
-    # todo test
-    def update_data(self, name: str, value: int | None):
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.data = {metric.name: None for metric in self.metrics}
+
+    def update_data(self, name: str, value: int):
         record_data = self.find_record_data_by_name(name)
         if record_data:
             record_data.value = value
         else:
             raise ValueError(f"Metric {name} not found in record data.")
 
-    def is_complete(self) -> bool:
-        return all([x.value is not None for x in self.data])
+    def next_unanswered_metric(self) -> Metric:
+        return next(metric for metric in self.metrics if self.data[metric.name] is None)
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.data = [
-            RecordData(metric_name=metric.name, value=None) for metric in self.metrics
-        ]
+    def is_complete(self) -> bool:
+        return all(value is not None for value in self.data.values())

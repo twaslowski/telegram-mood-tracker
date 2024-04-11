@@ -99,7 +99,9 @@ def initialize_dynamodb_client(aws_region: str) -> boto3.resource:
     Initializes the DynamoDB client.
     """
     dynamodb = boto3.resource("dynamodb", region_name=aws_region)
-    logging.info("Successfully established connection to DynamoDB persistence backend.")
+    logging.info(
+        f"Successfully established connection to DynamoDB persistence backend in region {aws_region}."
+    )
     return dynamodb
 
 

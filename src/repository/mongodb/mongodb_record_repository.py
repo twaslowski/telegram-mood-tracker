@@ -23,7 +23,7 @@ class MongoDBRecordRepository(RecordRepository):
 
     def create_record(self, user_id: int, record_data: dict, timestamp: str):
         self.records.insert_one(
-            {"user_id": user_id, "record": record_data, "timestamp": timestamp}
+            {"user_id": user_id, "data": record_data, "timestamp": timestamp}
         )
 
     def find_records_for_user(self, user_id: int) -> list[Record]:

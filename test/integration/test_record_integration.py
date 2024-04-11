@@ -95,13 +95,8 @@ async def test_record_registration(button_update, update):
 
     # first metric is set in the temporary record
     # omit this in further tests
-    assert (
-        command_handlers.get_temp_record(1).find_record_data_by_name("mood").value == 3
-    )
-    assert (
-        command_handlers.get_temp_record(1).find_record_data_by_name("sleep").value
-        is None
-    )
+    assert command_handlers.get_temp_record(1).find_record_data_by_name("mood") == 3
+    assert command_handlers.get_temp_record(1).find_record_data_by_name("sleep") is None
 
 
 @pytest.mark.asyncio
@@ -130,7 +125,7 @@ async def test_finish_record_creation(
     # verify record was created
     user_records = record_repository.find_records_for_user(1)
     assert len(user_records) == 1
-    assert user_records[0].find_record_data_by_name("mood").value == 3
+    assert user_records[0].find_record_data_by_name("mood") == 3
     assert user_records[0].timestamp  # is not None
 
 
@@ -158,13 +153,8 @@ async def test_double_answer_works_as_intended(update, button_update):
     await button(button_update, None)
 
     # then the record is updated
-    assert (
-        command_handlers.get_temp_record(1).find_record_data_by_name("mood").value == 3
-    )
-    assert (
-        command_handlers.get_temp_record(1).find_record_data_by_name("sleep").value
-        is None
-    )
+    assert command_handlers.get_temp_record(1).find_record_data_by_name("mood") == 3
+    assert command_handlers.get_temp_record(1).find_record_data_by_name("sleep") is None
 
 
 @pytest.mark.asyncio
@@ -196,8 +186,8 @@ async def test_baseline_happy_path(update, repositories):
     # then a record with default values is created
     record = record_repository.get_latest_record_for_user(1)
     assert record.user_id == 1
-    assert record.find_record_data_by_name("mood").value == 0
-    assert record.find_record_data_by_name("sleep").value == 8
+    assert record.find_record_data_by_name("mood") == 0
+    assert record.find_record_data_by_name("sleep") == 8
 
 
 @pytest.mark.asyncio

@@ -4,15 +4,13 @@ import datetime
 from abc import abstractmethod
 
 from pyautowire import Injectable
-from src.model.record import Record, DatabaseRecord
+from src.model.record import Record
 
 
 class RecordRepository(Injectable, ABC):
     @staticmethod
     def parse_record(result: dict) -> Record:
-        result = DatabaseRecord(**result)
-        # transform the record data to a list of RecordData objects
-        return result.to_record()
+        return Record(**result)
 
     @staticmethod
     def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:

@@ -25,11 +25,11 @@ async def test_auto_baseline_happy_path_if_no_other_records_exist(
 
     # And the record holds the user's baseline values
     assert (
-        record.find_record_data_by_name("mood").value
+        record.find_record_data_by_name("mood")
         == user.get_metric_by_name("mood").baseline
     )
     assert (
-        record.find_record_data_by_name("sleep").value
+        record.find_record_data_by_name("sleep")
         == user.get_metric_by_name("sleep").baseline
     )
 
