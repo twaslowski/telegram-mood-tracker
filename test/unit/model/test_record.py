@@ -3,16 +3,14 @@ import datetime
 import pytest
 
 from src.model.metric import Metric
-from src.model.record import Record, RecordData, TempRecord
+from src.model.record import Record, TempRecord
 
 
 @pytest.fixture
 def record() -> Record:
     return Record(
         user_id=1,
-        data=[
-            RecordData(metric_name="metric1", value=1),
-        ],
+        data={"metric-1": 1},
         timestamp=datetime.datetime.now(),
     )
 
@@ -21,22 +19,36 @@ def record() -> Record:
 def temp_record() -> TempRecord:
     return TempRecord(
         metrics=[
-            Metric(name="metric1", user_prompt="metric user prompt", values={"1": 1}),
+            Metric(name="metric-1", user_prompt="metric user prompt", values={"1": 1}),
         ],
     )
 
 
-def test_find_existing_record_data_in_record(record: Record):
-    assert record.find_record_data_by_name("metric1") == 1
+def test_next_unanswered_metric(temp_record):
+    temp_record.data = {"metric-1": None}
+    assert temp_record.next_unanswered_metric().name == "metric-1"
 
 
-def test_find_non_existing_data_in_record(record: Record):
-    assert record.find_record_data_by_name("metric2") is None
+def test_next_unanswered_metric_for_two_unanswered_metrics(temp_record):
+    temp_record.data = {"metric-1": None, "metric-2": None}
+    assert temp_record.next_unanswered_metric().name == "metric-1"
 
 
-def test_find_existing_metric_in_temp_record(temp_record: TempRecord):
-    assert temp_record.find_metric_by_name("metric1").name == "metric1"
+def test_is_complete(temp_record):
+    temp_record.data = {"metric-1": 1}
+    assert temp_record.is_complete()
 
 
-def test_find_non_existing_metric_in_temp_record(temp_record: TempRecord):
-    assert temp_record.find_metric_by_name("metric2") is None
+def test_is_not_complete(temp_record):
+    temp_record.data = {"metric-1": None}
+    assert not temp_record.is_complete()
+
+
+def test_update_data(temp_record):
+    temp_record.update_data("metric-1", 1)
+    assert temp_record.data["metric-1"] == 1
+
+
+def test_update_data_raises_value_error(temp_record):
+    with pytest.raises(ValueError):
+        temp_record.update_data("unknown-metric", 1)

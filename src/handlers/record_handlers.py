@@ -10,7 +10,6 @@ from pyautowire import autowire
 from src.handlers.graphing import handle_graph_specification
 from src.handlers.metrics_handlers import prompt_user_for_metric
 from src.handlers.util import send, handle_no_known_state
-from src.model.metric import Metric
 from src.model.record import TempRecord
 from src.repository.user_repository import UserRepository
 from src.state import State, APPLICATION_STATE
@@ -51,23 +50,6 @@ def create_temporary_record(user_id: int, user_repository: UserRepository):
     APPLICATION_STATE[user_id] = State.RECORDING
 
 
-def find_first_metric(temp_record: TempRecord) -> Metric:
-    """
-    Finds the first metric in the record that has not been answered yet.
-    :param temp_record: The temporary record.
-    :return: The first metric that has not been answered yet.
-    """
-    # todo is there a scenario first_unanswered_data is None, i.e. all metrics have been answered already?
-    first_unanswered_data = list(filter(lambda x: x.value is None, temp_record.data))[
-        0
-    ]  # RecordData instance
-    return list(
-        filter(
-            lambda x: x.name == first_unanswered_data.metric_name, temp_record.metrics
-        )
-    )[0]
-
-
 async def record_handler(update: Update, _) -> None:
     """
     Handles /record.
@@ -85,11 +67,11 @@ async def record_handler(update: Update, _) -> None:
     else:
         # find the first metric for which the record value is still None
         temp_record = get_temp_record(user_id)
-        metric = find_first_metric(temp_record)
+        next_unanswered_metric = temp_record.next_unanswered_metric()
 
-        logging.info(f"collecting information on metric {metric}")
+        logging.info(f"collecting information on metric {next_unanswered_metric}")
         # this needs to be refactored, since I want to get rid of this distinction entirely eventually
-        await prompt_user_for_metric(update, metric)
+        await prompt_user_for_metric(update, next_unanswered_metric)
 
 
 async def button(update: Update, _) -> None:
@@ -178,11 +160,7 @@ def store_record(
     logging.info(f"Record for user {user_id} is complete: {user_record}")
     record_repository.create_record(
         user_id,
-        {
-            # todo refactor this
-            record_data.metric_name: record_data.value
-            for record_data in user_record.data
-        },
+        user_record.data,
         user_record.timestamp.isoformat(),
     )
     del temp_records[user_id]

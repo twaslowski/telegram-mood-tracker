@@ -24,14 +24,8 @@ async def test_auto_baseline_happy_path_if_no_other_records_exist(
     assert record is not None
 
     # And the record holds the user's baseline values
-    assert (
-        record.find_record_data_by_name("mood")
-        == user.get_metric_by_name("mood").baseline
-    )
-    assert (
-        record.find_record_data_by_name("sleep")
-        == user.get_metric_by_name("sleep").baseline
-    )
+    assert record.data["mood"] == user.get_metric_by_name("mood").baseline
+    assert record.data["sleep"] == user.get_metric_by_name("sleep").baseline
 
 
 @pytest.mark.asyncio

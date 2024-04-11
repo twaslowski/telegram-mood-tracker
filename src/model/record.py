@@ -14,25 +14,13 @@ class RecordData(BaseModel):
     value: int | None
 
 
-class AbstractRecord(BaseModel):
-    """
-    Can provide shared methods for Record and TempRecord.
-    """
-
-    def find_record_data_by_name(self, name: str) -> int:
-        return self.data[name]
-
-    def find_metric_by_name(self, name: str) -> Metric | None:
-        return next((x for x in self.metrics if x.name == name), None)
-
-
-class Record(AbstractRecord):
+class Record(BaseModel):
     user_id: int
     data: dict[str, int]
     timestamp: datetime
 
 
-class TempRecord(AbstractRecord):
+class TempRecord(BaseModel):
     """
     Record that are kept in the in-memory ExpiringDict while being completed.
     """
@@ -45,12 +33,11 @@ class TempRecord(AbstractRecord):
         super().__init__(**data)
         self.data = {metric.name: None for metric in self.metrics}
 
-    def update_data(self, name: str, value: int):
-        record_data = self.find_record_data_by_name(name)
-        if record_data:
-            record_data.value = value
+    def update_data(self, metric_name: str, value: int):
+        if metric_name in self.data:
+            self.data[metric_name] = value
         else:
-            raise ValueError(f"Metric {name} not found in record data.")
+            raise ValueError(f"Metric {metric_name} not found in record data.")
 
     def next_unanswered_metric(self) -> Metric:
         return next(metric for metric in self.metrics if self.data[metric.name] is None)
