@@ -13,8 +13,15 @@ from src.repository.record_repository import RecordRepository
 
 @autowire("record_repository")
 def retrieve_records(
-    user_id: int, record_repository: RecordRepository, month: Tuple[int, int] = None
+    user_id: int, record_repository: RecordRepository, month: Tuple[int, int]
 ) -> list[Record]:
+    """
+    Retrieve records for a given month.
+    :param user_id: user for whom to retrieve record data.
+    :param record_repository: autowired.
+    :param month: (year, month) tuple for the month to retrieve records for.
+    :return: list of records for the given month.
+    """
     (year, month) = month
 
     # Calculate the first and last day of the given month
@@ -28,7 +35,13 @@ def retrieve_records(
     return records
 
 
-def visualize(records: list[Record], month: Tuple[int, int]):
+def visualize(records: list[Record], month: Tuple[int, int]) -> str:
+    """
+    Generate a line graph of the record data for a given month.
+    :param records: List of records holding record data.
+    :param month: Tuple of (year, month) for the month to visualize.
+    :return: JPG file path of the generated graph.
+    """
     # Calculate the first and last day of the given month
     (year, month) = month
     first_day = datetime(year, month, 1)
