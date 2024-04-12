@@ -14,7 +14,7 @@ from src.repository.record_repository import RecordRepository
 
 @autowire("record_repository")
 def retrieve_records(
-    user_id: int, record_repository: RecordRepository, month: Tuple[int, int]
+    user_id: int, month: Tuple[int, int], record_repository: RecordRepository
 ) -> list[Record]:
     """
     Retrieve records for a given month.

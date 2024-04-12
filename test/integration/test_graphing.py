@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 
 from copy import deepcopy
+from unittest.mock import Mock, AsyncMock
 
 import pytest
 
+from src.handlers import graphing
 from src.model.record import Record
 import src.visualise as visualize
 
@@ -68,3 +70,28 @@ def test_visualize_creates_graph(record):
 
     assert Path(graph_path).exists()
     # Path(graph_path).unlink()  # Clean up
+
+
+@pytest.mark.asyncio
+async def test_visualization_end_to_end(record, repositories):
+    # mock button update
+    button_update = AsyncMock()
+    button_update.effective_user.id = 1
+    # mock user response to first record
+    mock_bot = AsyncMock()
+    button_update.effective_user.get_bot = Mock(return_value=mock_bot)
+    query = AsyncMock()
+    button_update.callback_query = query
+    mock_bot.send_photo = AsyncMock()
+
+    graphing.get_all_months_for_offset = Mock(return_value=[(2022, 3)])
+
+    # Given a record
+    records = [record]
+    repositories.record_repository.save_record(record)
+
+    # When visualizing the record
+    await graphing.handle_graph_specification(button_update)
+
+    # Then the graph should be created
+    assert button_update.effective_user.get_bot().send_photo.called
