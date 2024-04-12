@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 
 from copy import deepcopy
-from unittest.mock import Mock
 
 import pytest
 
 from src.model.record import Record
 import src.visualise as visualize
+
+from pathlib import Path
 
 
 @pytest.fixture
@@ -24,7 +25,6 @@ def record(user):
 
 
 def test_should_retrieve_one_record_for_time_range(record, repositories):
-    visualize.visualize = Mock()
     # Given two records for user 1
     record_days_past = deepcopy(record)
     record_days_future = deepcopy(record)
@@ -50,3 +50,21 @@ def test_should_retrieve_one_record_for_time_range(record, repositories):
     # Then only the record within the time range should be returned
     assert len(records) == 1
     assert records[0].timestamp == record.timestamp
+
+
+def test_visualize_creates_graph(record):
+    # Given a record
+    records = [record]
+
+    # When visualizing the record
+    graph_path = visualize.visualize(records, (2022, 3))
+
+    # Then the graph should be created
+    assert graph_path is not None
+    assert graph_path.endswith(".jpg")
+
+    assert "2022" in graph_path
+    assert "3" in graph_path
+
+    assert Path(graph_path).exists()
+    # Path(graph_path).unlink()  # Clean up

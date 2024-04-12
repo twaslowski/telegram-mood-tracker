@@ -1,6 +1,7 @@
 import calendar
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Tuple
 
 import matplotlib.pyplot as plt
@@ -35,6 +36,15 @@ def retrieve_records(
     return records
 
 
+def ensure_output_dir(output_dir: str = "graphs") -> None:
+    """
+    Ensure the output directory exists.
+    Creates the directory if it does not exist.
+    :param output_dir: Directory to ensure exists.
+    """
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+
 def visualize(records: list[Record], month: Tuple[int, int]) -> str:
     """
     Generate a line graph of the record data for a given month.
@@ -42,14 +52,15 @@ def visualize(records: list[Record], month: Tuple[int, int]) -> str:
     :param month: Tuple of (year, month) for the month to visualize.
     :return: JPG file path of the generated graph.
     """
+    ensure_output_dir()
     # Calculate the first and last day of the given month
     (year, month) = month
-    first_day = datetime(year, month, 1)
-    last_day = datetime(year, month, calendar.monthrange(year, month)[1])
+    first_day = datetime(year, month, 1).date()
+    last_day = datetime(year, month, calendar.monthrange(year, month)[1]).date()
 
-    df = pd.DataFrame(records)
-    df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.date
-    df[["mood", "sleep"]] = df[["mood", "sleep"]].astype(float)
+    records = [record.serialize() for record in records]
+
+    df = create_panda_df(records)
 
     # Calculate daily averages
     daily_avg = df.groupby("timestamp")[["mood", "sleep"]].mean().reset_index()
@@ -107,6 +118,19 @@ def visualize(records: list[Record], month: Tuple[int, int]) -> str:
     file_path = f"graphs/mood_sleep_{first_day}_{last_day}.jpg"
     plt.savefig(file_path, format="jpg", dpi=300)
     return file_path
+
+
+def create_panda_df(records: list[dict]):
+    """
+    Create a pandas DataFrame from the records for easier visualization purposes.
+    :param records: serialized records
+    :return: pandas DataFrame
+    """
+    df = pd.DataFrame(records)
+    df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.date
+    df["mood"] = df["data"].apply(lambda x: x["mood"])
+    df["sleep"] = df["data"].apply(lambda x: x["sleep"])
+    return df
 
 
 if __name__ == "__main__":
