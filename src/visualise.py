@@ -14,7 +14,7 @@ from src.repository.record_repository import RecordRepository
 @autowire("record_repository")
 def retrieve_records(
     user_id: int, record_repository: RecordRepository, month: Tuple[int, int] = None
-):
+) -> list[Record]:
     (year, month) = month
 
     # Calculate the first and last day of the given month
@@ -24,17 +24,16 @@ def retrieve_records(
     records = list(
         record_repository.find_records_for_time_range(user_id, first_day, last_day)
     )
-
     logging.info(f"Found {len(records)} records for {month}/{year}")
-
-    if not records:
-        return
-
-    # Process data
-    visualize(records, first_day, last_day)
+    return records
 
 
-def visualize(records: list[Record], first_day: datetime, last_day: datetime):
+def visualize(records: list[Record], month: Tuple[int, int]):
+    # Calculate the first and last day of the given month
+    (year, month) = month
+    first_day = datetime(year, month, 1)
+    last_day = datetime(year, month, calendar.monthrange(year, month)[1])
+
     df = pd.DataFrame(records)
     df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.date
     df[["mood", "sleep"]] = df[["mood", "sleep"]].astype(float)
@@ -87,15 +86,15 @@ def visualize(records: list[Record], first_day: datetime, last_day: datetime):
     ax2.set_ylim(4, 12)
 
     # Title and layout
-    plt.title(f"Average Mood and Sleep for {month}/{year}")
+    plt.title(f"Average Mood and Sleep from {first_day} to {last_day}")
     plt.xticks(rotation=45)
     plt.tight_layout()
 
     # Save the plot
-    file_path = f"graphs/mood_sleep_{year}_{month}.jpg"
+    file_path = f"graphs/mood_sleep_{first_day}_{last_day}.jpg"
     plt.savefig(file_path, format="jpg", dpi=300)
     return file_path
 
 
 if __name__ == "__main__":
-    retrieve_records()
+    retrieve_records(1, (2022, 1))

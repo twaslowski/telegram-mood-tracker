@@ -36,6 +36,20 @@ class DynamoDBRecordRepository(RecordRepository):
             )
         ]
 
+    def save_record(self, record: Record):
+        self.table.put_item(Item=record.serialize())
+
+    def find_records_for_time_range(
+        self, user_id: int, beginning: datetime.datetime, end: datetime.datetime
+    ) -> list[Record]:
+        return [
+            self.parse_record(r)
+            for r in self.table.scan(
+                FilterExpression=Key("user_id").eq(user_id)
+                & Key("timestamp").between(beginning.isoformat(), end.isoformat())
+            )["Items"]
+        ]
+
 
 def modify_timestamp(timestamp: str, offset: int) -> datetime.datetime:
     timestamp = datetime.datetime.fromisoformat(timestamp)

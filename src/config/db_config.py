@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 
 from pydantic import BaseModel, field_validator
@@ -11,7 +10,6 @@ class DatabaseConfig(BaseModel):
     @field_validator("type")
     @classmethod
     def validate_database_type(cls, value: str):
-        logging.info("Validating database type: %s", value)
         if value not in ["mongodb", "dynamodb"]:
             raise ValueError("Database type must be either mongodb or dynamodb")
         return value
