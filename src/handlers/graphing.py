@@ -1,7 +1,9 @@
 import datetime
 
+from pyautowire import autowire
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 
+from src.repository.user_repository import UserRepository
 from src.state import State, APPLICATION_STATE
 from src.visualise import retrieve_records, visualize
 
@@ -29,7 +31,8 @@ def get_all_months_for_offset(
     return months
 
 
-async def handle_graph_specification(update):
+@autowire("user_repository")
+async def handle_graph_specification(update, user_repository: UserRepository):
     """
     Button handler to determine the timeframe for the graph.
     :param update: button press.
@@ -48,10 +51,13 @@ async def handle_graph_specification(update):
     # get all months for the given time range
     months = get_all_months_for_offset(time_range, year, month)
 
+    # Get user data to access their metrics configuration
+    user = user_repository.find_user(update.effective_user.id)
+
     # create graphs for all months
     for month in months:
         records = retrieve_records(update.effective_user.id, month)
-        path = visualize(records, month)
+        path = visualize(user, records, month)
         if path:
             await update.effective_user.get_bot().send_photo(
                 update.effective_user.id, open(path, "rb")

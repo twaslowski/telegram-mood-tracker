@@ -29,8 +29,3 @@ auto_baseline:
 
 database:
   type: 'mongodb'
-
-graphing:
-  metrics:
-    - mood
-    - sleep

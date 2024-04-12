@@ -8,8 +8,33 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pyautowire import autowire
 
+from src.repository.initialize import initialize_database
+from src.config.config import ConfigurationProvider
+from src.model.metric import Metric
 from src.model.record import Record
+from src.model.user import User
 from src.repository.record_repository import RecordRepository
+
+"""
+Provide graphing functionality for record data.
+Is used by handlers/graphing_handler.py to visualize record data.
+Can also be used as a standalone by calling the main function.
+"""
+
+
+def main(user_id: int, months: list[Tuple[int, int]]):
+    """
+    Main function that retrieves records for a given month and visualizes them.
+    """
+    # Provide configuration and databases for application context
+    configuration = ConfigurationProvider().get_configuration().register()
+    user_repository, record_repository = initialize_database(configuration)
+
+    user = user_repository.find_user(user_id)
+    for month in months:
+        records = retrieve_records(user_id, month, record_repository=record_repository)
+        file_path = visualize(user, records, month)
+        logging.info(f"Graph saved to {file_path}")
 
 
 @autowire("record_repository")
@@ -45,11 +70,12 @@ def ensure_output_dir(output_dir: str = "graphs") -> None:
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
 
-def visualize(records: list[Record], month: Tuple[int, int]) -> str:
+def visualize(user: User, records: list[Record], month: Tuple[int, int]) -> str:
     """
     Generate a line graph of the record data for a given month.
+    :param user: User for whom to generate the graph. Needed for metric information.
     :param records: List of records holding record data.
-    :param month: Tuple of (year, month) for the month to visualize.
+    :param month: Tuple of (year, month) for the month to visualize. For naming purposes only.
     :return: JPG file path of the generated graph.
     """
     ensure_output_dir()
@@ -57,57 +83,26 @@ def visualize(records: list[Record], month: Tuple[int, int]) -> str:
     (year, month) = month
     first_day = datetime(year, month, 1).date()
     last_day = datetime(year, month, calendar.monthrange(year, month)[1]).date()
+    user_metrics = user.metrics
 
     records = [record.serialize() for record in records]
+    metric_names = [metric.name for metric in user_metrics]
 
-    df = create_panda_df(records)
+    df = create_panda_df(records, metric_names)
 
-    # Calculate daily averages
-    daily_avg = df.groupby("timestamp")[["mood", "sleep"]].mean().reset_index()
+    # In case of multiple records per day, take the average
+    daily_avg = df.groupby("timestamp")[metric_names].mean().reset_index()
 
     # Generate a complete date range for the month
-    date_range = pd.date_range(start=first_day, end=last_day).date
+    date_range = pd.date_range(start=first_day, end=last_day)
 
     plt.style.use("seaborn-v0_8-dark")
 
     # Plotting
     plt.figure(figsize=(10, 6))
 
-    # Creating two y-axes
-    # Creating two y-axes
-    ax1 = plt.gca()
-    ax2 = ax1.twinx()
-
-    # Mood plot on ax1
-    ax1.plot(
-        date_range,
-        daily_avg.set_index("timestamp").reindex(date_range)["mood"],
-        marker="o",
-        color="blue",
-        label="Mood",
-        markersize=3,
-        linestyle="-",
-    )
-    ax1.axhline(y=0, color="gray", linestyle="--", linewidth=0.5)  # Baseline for mood
-    ax1.set_xlabel("Date")
-    ax1.set_ylabel("Mood", color="blue")
-    ax1.tick_params(axis="y", labelcolor="blue")
-    ax1.set_ylim(-5, 5)
-
-    # Sleep plot on ax2
-    ax2.plot(
-        date_range,
-        daily_avg.set_index("timestamp").reindex(date_range)["sleep"],
-        marker="o",
-        color="red",
-        label="Sleep",
-        markersize=3,
-        linestyle="--",
-    )
-    ax2.axhline(y=8, color="gray", linestyle="--", linewidth=0.5)  # sleep baseline
-    ax2.set_ylabel("Sleep", color="red")
-    ax2.tick_params(axis="y", labelcolor="red")
-    ax2.set_ylim(4, 12)
+    ax = visualize_metric(plt, date_range, daily_avg, "red", user_metrics[0])
+    visualize_metric(plt, date_range, daily_avg, "blue", user_metrics[1], ax)
 
     # Title and layout
     plt.title(f"Average Mood and Sleep from {first_day} to {last_day}")
@@ -120,18 +115,60 @@ def visualize(records: list[Record], month: Tuple[int, int]) -> str:
     return file_path
 
 
-def create_panda_df(records: list[dict]):
+def visualize_metric(
+    plt, date_range, daily_avg, color: str, metric: Metric, axis=None
+) -> str:
+    """
+    Create matplotlib axis for a given metric.
+    :param records:
+    :param metric:
+    :return:
+    """
+    if not axis:
+        ax = plt.gca()
+    else:
+        ax = axis.twinx()
+    ax.plot(
+        date_range,
+        daily_avg.set_index("timestamp").reindex(date_range)[metric.name],
+        marker="o",
+        color=color,
+        label=metric.name.capitalize(),
+        markersize=3,
+        linestyle="-",
+    )
+    ax.axhline(y=0, color="gray", linestyle="--", linewidth=0.5)  # Baseline for mood
+    ax.set_xlabel("Date")
+    ax.set_ylabel(metric.name.capitalize(), color=color)
+    ax.tick_params(axis="y", labelcolor=color)
+    ax.set_ylim(metric.min_value(), metric.max_value())
+    return ax
+
+
+def create_panda_df(records: list[dict], metrics: list[str]):
     """
     Create a pandas DataFrame from the records for easier visualization purposes.
     :param records: serialized records
+    :param metrics: metrics from those records.
     :return: pandas DataFrame
     """
     df = pd.DataFrame(records)
-    df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.date
-    df["mood"] = df["data"].apply(lambda x: x["mood"])
-    df["sleep"] = df["data"].apply(lambda x: x["sleep"])
+    df["timestamp"] = pd.to_datetime(df["timestamp"], format="ISO8601").dt.date
+    for metric in metrics:
+        df[metric] = df["data"].apply(lambda x: x[metric])
     return df
 
 
+def extract_metrics_from_records(records: list[Record]) -> list[str]:
+    """
+    Extract metrics to visualize from list of records
+    Assumes coherent record data, i.e. all records have the same metrics.
+    :param records: list of records.
+    :return: list of metrics.
+    """
+    sample_record = records[0]
+    return list(sample_record["data"].keys())
+
+
 if __name__ == "__main__":
-    retrieve_records(1, (2022, 1))
+    main(1965256751, [(2024, 2), (2024, 3), (2024, 4)])

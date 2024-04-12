@@ -54,12 +54,12 @@ def test_should_retrieve_one_record_for_time_range(record, repositories):
     assert records[0].timestamp == record.timestamp
 
 
-def test_visualize_creates_graph(record):
+def test_visualize_creates_graph(record, user):
     # Given a record
     records = [record]
 
     # When visualizing the record
-    graph_path = visualize.visualize(records, (2022, 3))
+    graph_path = visualize.visualize(user, records, (2022, 3))
 
     # Then the graph should be created
     assert graph_path is not None
@@ -69,7 +69,7 @@ def test_visualize_creates_graph(record):
     assert "3" in graph_path
 
     assert Path(graph_path).exists()
-    # Path(graph_path).unlink()  # Clean up
+    Path(graph_path).unlink()  # Clean up
 
 
 @pytest.mark.asyncio
@@ -87,7 +87,6 @@ async def test_visualization_end_to_end(record, repositories):
     graphing.get_all_months_for_offset = Mock(return_value=[(2022, 3)])
 
     # Given a record
-    records = [record]
     repositories.record_repository.save_record(record)
 
     # When visualizing the record
