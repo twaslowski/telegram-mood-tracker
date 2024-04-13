@@ -8,11 +8,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pyautowire import autowire
 
-from src.repository.initialize import initialize_database
 from src.config.config import ConfigurationProvider
 from src.model.metric import Metric
 from src.model.record import Record
 from src.model.user import User
+from src.repository.initialize import initialize_database
 from src.repository.record_repository import RecordRepository
 
 """
@@ -22,19 +22,50 @@ Can also be used as a standalone by calling the main function.
 """
 
 
-def main(user_id: int, months: list[Tuple[int, int]]):
+def visualize(user: User, month: Tuple[int, int]) -> str:
     """
-    Main function that retrieves records for a given month and visualizes them.
+    Generate a line graph of the record data for a given month.
+    :param user: User for whom to generate the graph. Needed for metric information.
+    :param month: Tuple of (year, month) for the month to visualize. For naming purposes only.
+    :return: JPG file path of the generated graph.
     """
-    # Provide configuration and databases for application context
-    configuration = ConfigurationProvider().get_configuration().register()
-    user_repository, record_repository = initialize_database(configuration)
+    ensure_output_dir()
+    # Calculate the first and last day of the given month
+    (year, month) = month
+    first_day = datetime(year, month, 1).date()
+    last_day = datetime(year, month, calendar.monthrange(year, month)[1]).date()
+    user_metrics = user.metrics
 
-    user = user_repository.find_user(user_id)
-    for month in months:
-        records = retrieve_records(user_id, month, record_repository=record_repository)
-        file_path = visualize(user, records, month)
-        logging.info(f"Graph saved to {file_path}")
+    records = retrieve_records(user.user_id, month)
+
+    records = [record.serialize() for record in records]
+    metric_names = [metric.name for metric in user_metrics]
+
+    df = create_panda_df(records, metric_names)
+
+    # In case of multiple records per day, take the average
+    daily_avg = df.groupby("timestamp")[metric_names].mean().reset_index()
+
+    # Generate a complete date range for the month
+    date_range = pd.date_range(start=first_day, end=last_day)
+
+    plt.style.use("seaborn-v0_8-dark")
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+
+    ax = visualize_metric(plt, date_range, daily_avg, "red", user_metrics[0])
+    visualize_metric(plt, date_range, daily_avg, "blue", user_metrics[1], ax)
+
+    # Title and layout
+    plt.title(f"Average Mood and Sleep from {first_day} to {last_day}")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    # Save the plot
+    file_path = f"graphs/mood_sleep_{first_day}_{last_day}.jpg"
+    plt.savefig(file_path, format="jpg", dpi=300)
+    return file_path
 
 
 @autowire("record_repository")
@@ -67,52 +98,8 @@ def ensure_output_dir(output_dir: str = "graphs") -> None:
     Creates the directory if it does not exist.
     :param output_dir: Directory to ensure exists.
     """
+    logging.info(f"Ensuring output directory {output_dir} exists")
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-
-def visualize(user: User, records: list[Record], month: Tuple[int, int]) -> str:
-    """
-    Generate a line graph of the record data for a given month.
-    :param user: User for whom to generate the graph. Needed for metric information.
-    :param records: List of records holding record data.
-    :param month: Tuple of (year, month) for the month to visualize. For naming purposes only.
-    :return: JPG file path of the generated graph.
-    """
-    ensure_output_dir()
-    # Calculate the first and last day of the given month
-    (year, month) = month
-    first_day = datetime(year, month, 1).date()
-    last_day = datetime(year, month, calendar.monthrange(year, month)[1]).date()
-    user_metrics = user.metrics
-
-    records = [record.serialize() for record in records]
-    metric_names = [metric.name for metric in user_metrics]
-
-    df = create_panda_df(records, metric_names)
-
-    # In case of multiple records per day, take the average
-    daily_avg = df.groupby("timestamp")[metric_names].mean().reset_index()
-
-    # Generate a complete date range for the month
-    date_range = pd.date_range(start=first_day, end=last_day)
-
-    plt.style.use("seaborn-v0_8-dark")
-
-    # Plotting
-    plt.figure(figsize=(10, 6))
-
-    ax = visualize_metric(plt, date_range, daily_avg, "red", user_metrics[0])
-    visualize_metric(plt, date_range, daily_avg, "blue", user_metrics[1], ax)
-
-    # Title and layout
-    plt.title(f"Average Mood and Sleep from {first_day} to {last_day}")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-
-    # Save the plot
-    file_path = f"graphs/mood_sleep_{first_day}_{last_day}.jpg"
-    plt.savefig(file_path, format="jpg", dpi=300)
-    return file_path
 
 
 def visualize_metric(
@@ -159,15 +146,19 @@ def create_panda_df(records: list[dict], metrics: list[str]):
     return df
 
 
-def extract_metrics_from_records(records: list[Record]) -> list[str]:
+def main(user_id: int, months: list[Tuple[int, int]]):
     """
-    Extract metrics to visualize from list of records
-    Assumes coherent record data, i.e. all records have the same metrics.
-    :param records: list of records.
-    :return: list of metrics.
+    Main function that retrieves records for a given month and visualizes them.
     """
-    sample_record = records[0]
-    return list(sample_record["data"].keys())
+    # Provide configuration and databases for application context
+    configuration = ConfigurationProvider().get_configuration().register()
+    user_repository, record_repository = initialize_database(configuration)
+
+    user = user_repository.find_user(user_id)
+    for month in months:
+        records = retrieve_records(user_id, month, record_repository=record_repository)
+        file_path = visualize(user, records, month)
+        logging.info(f"Graph saved to {file_path}")
 
 
 if __name__ == "__main__":
