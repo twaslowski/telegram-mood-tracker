@@ -12,7 +12,12 @@ else
   echo "no virtual environment found. assuming dependencies are available."
 fi
 
-export PYTHONPATH=./ && poetry run pytest test/ --ignore test/integration/manual/ --disable-warnings -s -v
+export PYTHONPATH=./ && poetry run coverage run -m pytest \
+  --cov=src \
+  --cov-report=html \
+  --ignore test/integration/manual/ \
+   --disable-warnings -s -v \
+  test/
 
 echo "cleaning up"
 docker stop localstack
