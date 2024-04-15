@@ -10,3 +10,4 @@ package/
 .terraform*
 requirements.txt
 htmlcov/
+.coverage

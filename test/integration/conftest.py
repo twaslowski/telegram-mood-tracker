@@ -143,7 +143,7 @@ def application():
 def user_service(repositories):
     user_repository = repositories.user_repository
     user_service = UserService(user_repository=user_repository)
-    user_service.register()
+    return user_service.register()
 
 
 @pytest.fixture(autouse=True)

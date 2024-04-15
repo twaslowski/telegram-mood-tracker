@@ -1,9 +1,9 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 import datetime
-from abc import abstractmethod
 
 from pyautowire import Injectable
+
 from src.model.record import Record
 
 
@@ -29,6 +29,10 @@ class RecordRepository(Injectable, ABC):
     def find_records_for_user(self, user_id: int) -> list[Record]:
         pass
 
+    @abstractmethod
+    def save_record(self, record: Record):
+        pass
+
     def zeroes(self, from_date: datetime.date, to_date: datetime.date):
         """
         Inserts records with default values for missed days within a date range.
@@ -46,3 +50,9 @@ class RecordRepository(Injectable, ABC):
         for date in date_range:
             logging.info(f"Inserting neutral record for timestamp {date}")
             self.create_record(user_id, default_record, f"{date}T12:00:00.000000")
+
+    @abstractmethod
+    def find_records_for_time_range(
+        self, user_id: int, beginning: datetime.datetime, end: datetime.datetime
+    ) -> list[Record]:
+        pass

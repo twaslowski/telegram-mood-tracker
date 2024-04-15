@@ -14,6 +14,13 @@ class Record(BaseModel):
     data: dict[str, int]
     timestamp: datetime
 
+    def serialize(self):
+        return {
+            "user_id": self.user_id,
+            "data": self.data,
+            "timestamp": self.timestamp.isoformat(),
+        }
+
 
 class TempRecord(BaseModel):
     """
