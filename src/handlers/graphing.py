@@ -9,9 +9,12 @@ from src.visualise import visualize, Month
 
 
 @autowire("user_repository")
-async def handle_graph_specification(update, user_repository: UserRepository):
+async def handle_graph_specification(
+    update, user_repository: UserRepository
+) -> list[str]:
     """
     Button handler to determine the timeframe for the graph.
+    :param user_repository: autowired.
     :param update: button press.
     :return: None
     """
@@ -28,13 +31,16 @@ async def handle_graph_specification(update, user_repository: UserRepository):
     # Get user data to access their metrics configuration
     user = user_repository.find_user(update.effective_user.id)
 
+    paths = []
     # create graphs for all months
     for month in months:
         path = visualize(user, month)
+        paths.append(path)
         if path:
             await update.effective_user.get_bot().send_photo(
                 update.effective_user.id, open(path, "rb")
             )
+    return paths
 
 
 def get_month_tuples_for_time_range(

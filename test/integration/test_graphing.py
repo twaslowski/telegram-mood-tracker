@@ -6,6 +6,7 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 
 from src.handlers import graphing
+from src.model.metric import Metric
 from src.model.record import Record
 import src.visualise as visualize
 
@@ -29,6 +30,20 @@ def record(user):
 @pytest.fixture
 def month():
     return visualize.Month(2022, 3)
+
+
+@pytest.fixture
+def graph_spec_button():
+    # mock button update
+    button_update = AsyncMock()
+    button_update.effective_user.id = 1
+    # mock user response to first record
+    mock_bot = AsyncMock()
+    button_update.effective_user.get_bot = Mock(return_value=mock_bot)
+    query = AsyncMock()
+    button_update.callback_query = query
+    mock_bot.send_photo = AsyncMock()
+    return button_update
 
 
 def test_should_retrieve_one_record_for_time_range(month, record, repositories):
@@ -69,26 +84,16 @@ def test_visualize_creates_graph(record, repositories, user, month):
     # Then the graph should be created
     assert graph_path is not None
     assert graph_path.endswith(".jpg")
+    assert Path(graph_path).exists()
 
     assert "2022" in graph_path
     assert "3" in graph_path
 
-    assert Path(graph_path).exists()
     Path(graph_path).unlink()  # Clean up
 
 
 @pytest.mark.asyncio
-async def test_visualization_end_to_end(record, repositories):
-    # mock button update
-    button_update = AsyncMock()
-    button_update.effective_user.id = 1
-    # mock user response to first record
-    mock_bot = AsyncMock()
-    button_update.effective_user.get_bot = Mock(return_value=mock_bot)
-    query = AsyncMock()
-    button_update.callback_query = query
-    mock_bot.send_photo = AsyncMock()
-
+async def test_visualization_end_to_end(graph_spec_button, record, repositories):
     graphing.get_month_tuples_for_time_range = Mock(
         return_value=[visualize.Month(2022, 3)]
     )
@@ -97,7 +102,40 @@ async def test_visualization_end_to_end(record, repositories):
     repositories.record_repository.save_record(record)
 
     # When visualizing the record
-    await graphing.handle_graph_specification(button_update)
+    paths = await graphing.handle_graph_specification(graph_spec_button)
 
     # Then the graph should be created
-    assert button_update.effective_user.get_bot().send_photo.called
+    assert graph_spec_button.effective_user.get_bot().send_photo.called
+    assert len(paths) == 1
+    assert Path(paths[0]).exists()
+    assert "2022" in paths[0]
+    assert "mood" in paths[0]
+    assert "sleep" in paths[0]
+
+
+@pytest.mark.asyncio
+async def test_visualization_for_different_metrics(
+    graph_spec_button, record, repositories, user
+):
+    # Given a user with different metrics
+    user.metrics = [
+        Metric(name="some-metric", user_prompt="Some metric", values={"10": 10})
+    ]
+    repositories.user_repository.update_user(user)
+
+    # And a corresponding record
+    record.data = {"some-metric": "8"}
+    repositories.record_repository.save_record(record)
+
+    # When visualizing the record for a specified time range
+    graphing.get_month_tuples_for_time_range = Mock(
+        return_value=[visualize.Month(2022, 3)]
+    )
+    paths = await graphing.handle_graph_specification(graph_spec_button)
+
+    # Then the graph should be created
+    assert graph_spec_button.effective_user.get_bot().send_photo.called
+
+    assert len(paths) == 1
+    assert Path(paths[0]).exists()
+    assert "some-metric" in paths[0]

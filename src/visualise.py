@@ -66,8 +66,10 @@ def visualize(user: User, month: Month) -> str:
     # Plotting
     plt.figure(figsize=(10, 6))
 
-    ax = visualize_metric(plt, date_range, daily_avg, "red", user_metrics[0])
-    visualize_metric(plt, date_range, daily_avg, "blue", user_metrics[1], ax)
+    ax = None
+    colors = ["blue", "green", "orange", "purple", "brown", "pink", "gray"]
+    for i, metric in enumerate(user_metrics):
+        ax = visualize_metric(plt, date_range, daily_avg, colors[i], metric, ax)
 
     # Title and layout
     plt.title(f"Average Mood and Sleep from {first_day} to {last_day}")
@@ -75,8 +77,10 @@ def visualize(user: User, month: Month) -> str:
     plt.tight_layout()
 
     # Save the plot
-    file_path = f"graphs/mood_sleep_{first_day}_{last_day}.jpg"
+    file_path = f"graphs/{'_'.join(metric_names)}_{first_day}_{last_day}.jpg"
     plt.savefig(file_path, format="jpg", dpi=300)
+    plt.close()
+    logging.info(f"Graph saved to {file_path}")
     return file_path
 
 
