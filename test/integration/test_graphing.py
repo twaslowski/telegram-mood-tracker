@@ -26,7 +26,12 @@ def record(user):
     )
 
 
-def test_should_retrieve_one_record_for_time_range(record, repositories):
+@pytest.fixture
+def month():
+    return visualize.Month(2022, 3)
+
+
+def test_should_retrieve_one_record_for_time_range(month, record, repositories):
     # Given two records for user 1
     record_days_past = deepcopy(record)
     record_days_future = deepcopy(record)
@@ -46,7 +51,7 @@ def test_should_retrieve_one_record_for_time_range(record, repositories):
 
     # When retrieving records for the last 7 days
     records = visualize.retrieve_records(
-        1, record_repository=repositories.record_repository, month=(2022, 3)
+        1, month, record_repository=repositories.record_repository
     )
 
     # Then only the record within the time range should be returned
@@ -54,12 +59,12 @@ def test_should_retrieve_one_record_for_time_range(record, repositories):
     assert records[0].timestamp == record.timestamp
 
 
-def test_visualize_creates_graph(record, user):
+def test_visualize_creates_graph(record, repositories, user, month):
     # Given a record
-    records = [record]
+    repositories.record_repository.save_record(record)
 
     # When visualizing the record
-    graph_path = visualize.visualize(user, records, (2022, 3))
+    graph_path = visualize.visualize(user, month)
 
     # Then the graph should be created
     assert graph_path is not None
@@ -84,7 +89,9 @@ async def test_visualization_end_to_end(record, repositories):
     button_update.callback_query = query
     mock_bot.send_photo = AsyncMock()
 
-    graphing.get_all_months_for_offset = Mock(return_value=[(2022, 3)])
+    graphing.get_month_tuples_for_time_range = Mock(
+        return_value=[visualize.Month(2022, 3)]
+    )
 
     # Given a record
     repositories.record_repository.save_record(record)

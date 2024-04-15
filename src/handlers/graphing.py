@@ -5,7 +5,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.repository.user_repository import UserRepository
 from src.state import State, APPLICATION_STATE
-from src.visualise import visualize
+from src.visualise import visualize, Month
 
 
 @autowire("user_repository")
@@ -20,13 +20,10 @@ async def handle_graph_specification(update, user_repository: UserRepository):
     await query.answer()
 
     # calculate arguments for determining time range
-    now = datetime.datetime.now()
-    current_year = now.year
-    current_month = now.month
     time_range = int(update.callback_query.data)
 
     # get all months for the given time range
-    months = get_all_months_for_offset(time_range, current_year, current_month)
+    months = get_month_tuples_for_time_range(time_range)
 
     # Get user data to access their metrics configuration
     user = user_repository.find_user(update.effective_user.id)
@@ -40,9 +37,11 @@ async def handle_graph_specification(update, user_repository: UserRepository):
             )
 
 
-def get_all_months_for_offset(
-    time_range: int, year: int, month: int
-) -> list[tuple[int, int]]:
+def get_month_tuples_for_time_range(
+    time_range: int,
+    year: int = datetime.datetime.now().year,
+    month: int = datetime.datetime.now().month,
+) -> list[Month]:
     """
     Determines how many months should be considered for the graph.
     :param time_range: The number of months to consider.
@@ -51,14 +50,15 @@ def get_all_months_for_offset(
     :param month: The current month.
     :return: a list of tuples (year, month) for the given time range.
     """
-    months = [(year, month)]
+
+    months = [Month(year, month)]
     for i in range(time_range - 1):
         if month == 1:
             year -= 1
             month = 12
         else:
             month -= 1
-        months.append((year, month))
+        months.append(Month(year, month))
     months.reverse()
     return months
 

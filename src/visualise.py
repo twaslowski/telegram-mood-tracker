@@ -1,5 +1,6 @@
 import calendar
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Tuple
@@ -22,21 +23,32 @@ Can also be used as a standalone by calling the main function.
 """
 
 
-def visualize(user: User, month: Tuple[int, int]) -> str:
+@dataclass
+class Month:
+    year: int
+    month: int
+
+    def unpack(self) -> (int, int):
+        return self.year, self.month
+
+
+def visualize(user: User, month: Month) -> str:
     """
     Generate a line graph of the record data for a given month.
     :param user: User for whom to generate the graph. Needed for metric information.
     :param month: Tuple of (year, month) for the month to visualize. For naming purposes only.
     :return: JPG file path of the generated graph.
     """
+
+    records = retrieve_records(user.user_id, month)
+    year, month = month.unpack()
+
+    logging.info(f"Visualizing records for user {user.user_id} and month {month}")
     ensure_output_dir()
     # Calculate the first and last day of the given month
-    (year, month) = month
     first_day = datetime(year, month, 1).date()
     last_day = datetime(year, month, calendar.monthrange(year, month)[1]).date()
     user_metrics = user.metrics
-
-    records = retrieve_records(user.user_id, month)
 
     records = [record.serialize() for record in records]
     metric_names = [metric.name for metric in user_metrics]
@@ -70,17 +82,17 @@ def visualize(user: User, month: Tuple[int, int]) -> str:
 
 @autowire("record_repository")
 def retrieve_records(
-    user_id: int, month: Tuple[int, int], record_repository: RecordRepository
+    user_id: int, month: Month, record_repository: RecordRepository
 ) -> list[Record]:
     """
     Retrieve records for a given month.
+    :param year:
     :param user_id: user for whom to retrieve record data.
     :param record_repository: autowired.
     :param month: (year, month) tuple for the month to retrieve records for.
     :return: list of records for the given month.
     """
-    (year, month) = month
-
+    year, month = month.unpack()
     # Calculate the first and last day of the given month
     first_day = datetime(year, month, 1)
     last_day = datetime(year, month, calendar.monthrange(year, month)[1])
