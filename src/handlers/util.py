@@ -1,8 +1,14 @@
 import logging
 
 from telegram import Update
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_fixed(1),
+    retry=retry_if_exception_type(TimeoutError),
+)
 async def send(update: Update, text: str):
     """
     Sends a message to the chat. Shorthand utility to keep the code clean.

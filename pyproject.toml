@@ -20,8 +20,8 @@ pyyaml = "^6.0.1"
 kink = "^0.7.0"
 pyautowire = "0.3.1"
 boto3 = "^1.34.81"
+tenacity = "^8.2.3"
 
-# testing, linting, utilities
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
 pytest = "^7.4.4"
@@ -37,3 +37,10 @@ pytest-asyncio = "^0.23.6"
 package-mode = false
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+minversion = "7.4.4"
+addopts = "-s -v --cov=src --cov-report=html --disable-warnings --ignore=test/integration/manual/"
+testpaths = [
+    "test",
+]

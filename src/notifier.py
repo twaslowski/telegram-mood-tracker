@@ -6,6 +6,8 @@ from functools import partial
 from telegram.ext import CallbackContext, JobQueue
 
 from pyautowire import Injectable, autowire
+from tenacity import stop_after_attempt, wait_fixed, retry_if_exception_type, retry
+
 from src.model.notification import Notification
 from src.model.record import Record
 from src.model.user import User
@@ -17,11 +19,20 @@ from src.repository.record_repository import RecordRepository
 class Notifier(Injectable):
     job_queue: JobQueue
 
-    @staticmethod
-    async def reminder(context: CallbackContext, user_id: int, text: str = None):
+    async def reminder(self, context: CallbackContext, user_id: int, text: str = None):
         """Send the reminder message."""
         if not text:
             text = "Hi! It's time to record your mood :)"
+        await self.send_from_context(context, user_id, text)
+
+    @staticmethod
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        retry=retry_if_exception_type(TimeoutError),
+    )
+    async def send_from_context(context: CallbackContext, user_id: int, text: str):
+        """Send a message to a user from a context."""
         await context.bot.send_message(user_id, text=text)
 
     @staticmethod
