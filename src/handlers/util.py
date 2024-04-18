@@ -1,13 +1,14 @@
 import logging
 
 from telegram import Update
+from telegram.error import TimedOut
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 
 
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_fixed(1),
-    retry=retry_if_exception_type(TimeoutError),
+    retry=retry_if_exception_type((TimeoutError, TimedOut)),
 )
 async def send(update: Update, text: str):
     """

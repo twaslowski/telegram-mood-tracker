@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import datetime
 from functools import partial
 
+from telegram.error import TimedOut
 from telegram.ext import CallbackContext, JobQueue
 
 from pyautowire import Injectable, autowire
@@ -29,7 +30,7 @@ class Notifier(Injectable):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_fixed(1),
-        retry=retry_if_exception_type(TimeoutError),
+        retry=retry_if_exception_type((TimeoutError, TimedOut)),
     )
     async def send_from_context(context: CallbackContext, user_id: int, text: str):
         """Send a message to a user from a context."""

@@ -24,7 +24,7 @@ from src.service.user_service import UserService
 
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    format=" %(levelname)s - %(asctime)s - %(name)s - %(message)s", level=logging.INFO
 )
 logging.getLogger("httpx").setLevel(logging.WARNING)
 

@@ -1,4 +1,5 @@
 import json
+import logging
 
 import boto3
 from pyautowire import autowire
@@ -12,6 +13,7 @@ class DynamoDBUserRepository(UserRepository):
     def __init__(self, dynamodb: boto3.resource):
         self.table = dynamodb.Table("user")
         self.table.load()
+        logging.info("DynamoDBUserRepository initialized.")
 
     @autowire("configuration")
     def create_user(self, user_id: int, configuration: Configuration) -> User:

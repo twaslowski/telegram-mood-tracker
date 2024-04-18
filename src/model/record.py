@@ -21,6 +21,9 @@ class Record(BaseModel):
             "timestamp": self.timestamp.isoformat(),
         }
 
+    def __str__(self):
+        return f"user_id: {self.user_id}, data: {self.data}, timestamp: {self.timestamp.isoformat()}"
+
 
 class TempRecord(BaseModel):
     """
@@ -35,6 +38,9 @@ class TempRecord(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
         self.data = {metric.name: None for metric in self.metrics}
+
+    def __str__(self):
+        return f"data: {self.data}, timestamp: {self.timestamp.isoformat()}"
 
     def update_data(self, metric_name: str, value: int):
         if metric_name in self.data:

@@ -13,6 +13,7 @@ class MongoDBUserRepository(UserRepository):
         super().__init__()
         mood_tracker = mongo_client["mood_tracker"]
         self.user = mood_tracker["user"]
+        logging.info("MongoDBUserRepository initialized.")
 
     def find_user(self, user_id: int) -> User | None:
         result = self.user.find_one({"user_id": user_id})

@@ -14,6 +14,7 @@ sudo docker run -d --rm \
   --log-driver=awslogs \
   --log-opt awslogs-region="$LOG_REGION" \
   --log-opt awslogs-group="$LOG_GROUP" \
+  --log-opt awslogs-multiline-pattern='^ERROR' \
   --security-opt seccomp:unconfined \
   -v "$HOME/.aws/credentials:/root/.aws/credentials:ro" \
   -v ./config.yaml:/app/config.yaml \

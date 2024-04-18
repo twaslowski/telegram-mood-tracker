@@ -22,6 +22,10 @@ class RecordRepository(Injectable, ABC):
         pass
 
     @abstractmethod
+    def get_latest_records_for_user(self, user_id: int, limit: int) -> list[Record]:
+        pass
+
+    @abstractmethod
     def create_record(self, user_id: int, record_data: dict, timestamp: str):
         pass
 

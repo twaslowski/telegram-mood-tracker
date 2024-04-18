@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -11,15 +12,25 @@ class DynamoDBRecordRepository(RecordRepository):
     def __init__(self, dynamodb: boto3.resource):
         self.table = dynamodb.Table("record")
         self.table.load()
+        logging.info("DynamoDBRecordRepository initialized.")
 
     def get_latest_record_for_user(self, user_id: int) -> Record | None:
+        result = self.get_latest_records_for_user(user_id, 1)
+        if result:
+            return result[0]
+
+    def get_latest_records_for_user(
+        self, user_id: int, limit: int
+    ) -> list[Record] | None:
+        logging.info(f"Retrieving {limit} latest records for user {user_id}")
         result = self.table.query(
             KeyConditionExpression=Key("user_id").eq(user_id),
             ScanIndexForward=False,
-            Limit=1,
+            Limit=limit,
         )
         if result.get("Items"):
-            return self.parse_record(result["Items"][0])
+            return [self.parse_record(record) for record in result["Items"]]
+        return []
 
     def create_record(self, user_id: int, record_data: dict, timestamp: str):
         self.table.put_item(

@@ -157,7 +157,7 @@ def store_record(
     :param user_record: the temporary record being saved
     :return:
     """
-    logging.info(f"Record for user {user_id} is complete: {user_record}")
+    logging.info(f"Persisting record for user {user_id}: {user_record}")
     record_repository.create_record(
         user_id,
         user_record.data,

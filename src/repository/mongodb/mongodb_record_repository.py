@@ -13,6 +13,14 @@ class MongoDBRecordRepository(RecordRepository):
         super().__init__()
         mood_tracker = mongo_client["mood_tracker"]
         self.records = mood_tracker["records"]
+        logging.info("MongoDBRecordRepository initialized.")
+
+    def get_latest_records_for_user(self, user_id: int, limit: int) -> list[Record]:
+        result = self.records.find(
+            {"user_id": user_id}, sort=[("timestamp", pymongo.DESCENDING)], limit=limit
+        )
+        if result:
+            return [self.parse_record(r) for r in result]
 
     def get_latest_record_for_user(self, user_id: int) -> Record | None:
         result = self.records.find_one(
