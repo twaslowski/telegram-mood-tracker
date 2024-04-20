@@ -11,3 +11,4 @@ package/
 requirements.txt
 htmlcov/
 .coverage
+config.local.yaml

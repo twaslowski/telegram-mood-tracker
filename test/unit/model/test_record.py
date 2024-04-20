@@ -18,7 +18,7 @@ def record() -> Record:
 @pytest.fixture
 def temp_record() -> TempRecord:
     return TempRecord(
-        metrics=[
+        [
             Metric(name="metric-1", user_prompt="metric user prompt", values={"1": 1}),
         ],
     )

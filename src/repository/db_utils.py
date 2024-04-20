@@ -19,3 +19,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     user_id = int(os.getenv("USER_ID"))
     user_repository, record_repository = init()
+    for record in record_repository.get_latest_records_for_user(user_id, 2):
+        print(record)

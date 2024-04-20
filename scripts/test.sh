@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 echo "launching localstack container"
 docker run -d --rm --name localstack -p 4566:4566 -p 4571:4571 localstack/localstack
 

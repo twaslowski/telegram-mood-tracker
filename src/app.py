@@ -72,7 +72,8 @@ def initialize_application() -> MoodTrackerApplication:
     :return:
     """
     # Load and register configuration object
-    configuration = ConfigurationProvider().get_configuration().register()
+    config_path = os.environ.get("CONFIG_PATH", "config.yaml")
+    configuration = ConfigurationProvider(config_path).get_configuration().register()
     initialize_database(configuration)
 
     application = MoodTrackerApplication(TOKEN)

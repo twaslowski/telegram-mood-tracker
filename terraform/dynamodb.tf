@@ -1,8 +1,3 @@
-moved {
-  from = module.dynamodb_table
-  to   = module.user
-}
-
 module "user" {
   source = "terraform-aws-modules/dynamodb-table/aws"
 

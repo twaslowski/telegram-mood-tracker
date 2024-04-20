@@ -25,20 +25,20 @@ class Record(BaseModel):
         return f"user_id: {self.user_id}, data: {self.data}, timestamp: {self.timestamp.isoformat()}"
 
 
-class TempRecord(BaseModel):
+class TempRecord:
     """
     Record that is being kept in the in-memory ExpiringDict while being completed.
     Differs from the database Record in that it holds data on the Metrics that are being gathered.
     """
 
     metrics: list[Metric]
-    timestamp: datetime | None
-    data: dict[str, int | None] = {}
+    timestamp: datetime
+    data: dict[str, int | None]
 
-    def __init__(self, **data):
-        super().__init__(**data)
+    def __init__(self, metrics: list[Metric]):
+        self.metrics = metrics
         self.data = {metric.name: None for metric in self.metrics}
-        self.datetime = datetime.now()
+        self.timestamp = datetime.now()
 
     def __str__(self):
         return f"data: {self.data}, timestamp: {self.timestamp.isoformat()}"

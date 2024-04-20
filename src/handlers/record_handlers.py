@@ -42,7 +42,7 @@ def create_temporary_record(user_id: int, user_repository: UserRepository):
     # todo handle find_user() == None?
     logging.info("Using user repository to find user: %s", user_repository)
     metrics = user_repository.find_user(user_id).metrics
-    record = TempRecord(metrics=metrics)
+    record = TempRecord(metrics)
 
     logging.info(f"Creating temporary record for user {user_id}: {record}")
     # Store temporary record in the record ExpiringDict
