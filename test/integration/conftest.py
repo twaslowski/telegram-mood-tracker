@@ -43,7 +43,9 @@ def mongodb_record_repository(mongo_client):
 
 @pytest.fixture
 def dynamodb():
-    dynamodb = boto3.resource("dynamodb", endpoint_url="http://localhost:4566")
+    dynamodb = boto3.resource(
+        "dynamodb", endpoint_url="http://localhost:4566", region_name="us-east-1"
+    )
     return dynamodb
 
 
