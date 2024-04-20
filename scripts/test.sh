@@ -16,6 +16,9 @@ else
   echo "no virtual environment found. assuming dependencies are available."
 fi
 
+export AWS_ACCESS_KEY_ID=foo
+export AWS_SECRET_ACCESS_KEY=bar
+
 export PYTHONPATH=./ && poetry run coverage run -m pytest
 
 echo "cleaning up"
