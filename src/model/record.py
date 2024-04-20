@@ -32,12 +32,13 @@ class TempRecord(BaseModel):
     """
 
     metrics: list[Metric]
+    timestamp: datetime | None
     data: dict[str, int | None] = {}
-    timestamp: datetime = datetime.now()
 
     def __init__(self, **data):
         super().__init__(**data)
         self.data = {metric.name: None for metric in self.metrics}
+        self.datetime = datetime.now()
 
     def __str__(self):
         return f"data: {self.data}, timestamp: {self.timestamp.isoformat()}"
