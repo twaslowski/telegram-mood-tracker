@@ -20,6 +20,8 @@ export AWS_ACCESS_KEY_ID=foo
 export AWS_SECRET_ACCESS_KEY=bar
 
 export PYTHONPATH=./ && poetry run coverage run -m pytest
+poetry run coverage xml -o test/coverage.xml
+poetry run coverage-badge -f -o test/coverage.svg
 
 echo "cleaning up"
 docker stop localstack

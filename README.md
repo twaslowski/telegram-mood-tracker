@@ -1,4 +1,5 @@
 ![Build](https://github.com/twaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
+![Coverage](./test/coverage.svg)
 
 # About
 
