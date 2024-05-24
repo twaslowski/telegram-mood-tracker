@@ -18,4 +18,4 @@ sudo docker run -d --rm \
   --security-opt seccomp:unconfined \
   -v "$HOME/.aws/credentials:/root/.aws/credentials:ro" \
   -v ./config.yaml:/app/config.yaml \
-  public.ecr.aws/c1o1h8f4/mood-tracker:latest
+  tobiaswaslowski/mood-tracker:latest
