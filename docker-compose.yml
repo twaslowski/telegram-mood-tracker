@@ -7,7 +7,7 @@ services:
       - mongo_data:/data/db
 
   mood-tracker:
-    image: public.ecr.aws/c1o1h8f4/mood-tracker:latest
+    image: tobiaswaslowski/mood-tracker:latest
     build:
       context: .
       dockerfile: Dockerfile
