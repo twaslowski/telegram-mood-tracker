@@ -69,7 +69,7 @@ jobs:
         run: poetry export -f requirements.txt -o requirements.txt --without-hashes
 
       - name: Docker meta
-        id: meta
+        id: meta-dockerhub
         uses: docker/metadata-action@v5
         with:
           images: tobiaswaslowski/mood-tracker
@@ -85,18 +85,42 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
+      - name: Docker meta
+        id: meta-ecr
+        uses: docker/metadata-action@v5
+        with:
+          images: public.ecr.aws/c1o1h8f4/mood-tracker
+          flavor: |
+            latest=true
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-dockerhub.outputs.tags }}
+          labels: ${{ steps.meta-dockerhub.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Push to Amazon ECR
-        run: |
-          docker tag tobiaswaslowski/mood-tracker:${{ steps.meta.outputs.version }} ${{ steps.login-ecr.outputs.registry }}:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}:latest
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta-ecr.outputs.tags }}
+          labels: ${{ steps.meta-ecr.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
