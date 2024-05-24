@@ -15,7 +15,6 @@ on:
 
 jobs:
   build_docker_multi_arch:
-    needs: create_infrastructure
     runs-on: ubuntu-latest
     steps:
       - name: checkout
