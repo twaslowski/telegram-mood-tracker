@@ -86,7 +86,21 @@ def initialize_application() -> MoodTrackerApplication:
     return application
 
 
+def display_deprecation_notice():
+    """
+    As of 27-05-2024, I am planning to stop hosting this image in ECR.
+    There is no reason for me to be paying AWS for storage if I can host the image on Dockerhub more conveniently.
+    I will stop hosting the image in ECR entirely from 01-09-2024.
+    """
+    if os.environ.get("REGISTRY", "dockerhub") == "ecr":
+        logging.warning(
+            "DEPRECATION NOTICE: This image will no longer be hosted in ECR from September 1st, 2024."
+            "Please use the Dockerhub image instead with `docker pull tobiaswaslowski/mood-tracker`. "
+        )
+
+
 def main():
+    display_deprecation_notice()
     application = initialize_application()
     application.run()
 

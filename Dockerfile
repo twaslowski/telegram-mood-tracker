@@ -13,4 +13,8 @@ COPY config.yaml /app
 
 RUN python3 -m pip install -r /app/requirements.txt
 
+# Temporarily add registry ARG so that deprecation notice can be displayed only for ECR-hosted images
+ARG REGISTRY="dockerhub"
+ENV REGISTRY=${REGISTRY}
+
 CMD ["python", "src/app.py"]
