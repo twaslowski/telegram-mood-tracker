@@ -1,6 +1,15 @@
 ![Build](https://github.com/twaslowski/telegram-mood-tracker/actions/workflows/build.yml/badge.svg)
 ![Coverage](./test/coverage.svg)
 
+# Archival Notice
+
+As of October 2024, I'm archiving this repository. It turns out that Python is simply not well-suited to deal with the degree
+of complexity that I would have liked to achieve to implement all of the features I imagined.
+
+Several bad architectural choices in the beginning are limiting what I can do with this project, so I will be doing
+a complete rewrite in Java. I will keep running the public bot from this Docker image until I achieve feature parity
+with the rewritten code. You can find the new project [here](https://github.com/twaslowski/spring-boot-mood-tracker).
+
 # About
 
 This is a Telegram-based Mood Tracker bot. It allows users to record their mood states and other health-related
